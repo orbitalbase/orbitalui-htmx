@@ -1,0 +1,46 @@
+// TabBar — the orbital TabBar filter pills server-side (docs/ui-v1-plan.md
+// §6): a nav of links that each set one query parameter and preserve the
+// sibling filters. Clicking a pill navigates (full GET) — or, with
+// opts.HXTarget set, re-renders just the rows region over htmx (full page
+// response, hx-select picks the region — docs/ui-components.md §1). No
+// role=tablist on purpose: these are links, not an arrow-keyed tab pattern.
+//
+//	Params: tabs []Tab, active string, opts TabBarOpts.
+//
+// Usage (journal status filter; every pill keeps the search/date params):
+//
+//	@components.TabBar([]components.Tab{
+//		{Value: "", Label: "All", Count: totals.All},
+//		{Value: "DRAFT", Label: "Draft", Count: totals.Drafts},
+//		{Value: "POSTED", Label: "Posted", Count: totals.Posted},
+//	}, f.Status, components.TabBarOpts{
+//		Param: "status", BaseHref: "/journal", BaseQuery: r.URL.Query(),
+//		ShowCounts: true, HXTarget: "#rows",
+//	})
+package components
+
+templ TabBar(tabs []Tab, active string, opts TabBarOpts) {
+	<nav class={ tabListClass(opts) } aria-label={ tabAriaLabel(opts) }>
+		for _, t := range tabs {
+			<a
+				class={ tabItemClass(t.Value, active) }
+				href={ tabHref(opts, t.Value) }
+				if t.Value == active {
+					aria-current="true"
+				}
+				if opts.HXTarget != "" {
+					hx-get={ string(tabHref(opts, t.Value)) }
+					hx-target={ opts.HXTarget }
+					hx-select={ opts.HXTarget }
+					hx-swap="outerHTML"
+					hx-push-url="true"
+				}
+			>
+				<span class="tab__label">{ t.Label }</span>
+				if opts.ShowCounts {
+					<span class="tab__count">{ CountText(t.Count) }</span>
+				}
+			</a>
+		}
+	</nav>
+}

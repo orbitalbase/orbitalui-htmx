@@ -1,0 +1,72 @@
+package components
+
+templ RecordStateSummary(opts RecordStateSummaryOpts) {
+	<ul class="record-state-summary" aria-label="Record state">
+		if opts.Posting != "" {
+			<li><span>Posting</span><strong>{ opts.Posting }</strong></li>
+		}
+		if opts.Review != "" {
+			<li><span>Review</span><strong>{ opts.Review }</strong></li>
+		}
+		if opts.Reconciliation != "" {
+			<li><span>Reconciliation</span><strong>{ opts.Reconciliation }</strong></li>
+		}
+		if opts.Period != "" {
+			<li><span>Period</span><strong>{ opts.Period }</strong></li>
+		}
+		if opts.Provenance != "" {
+			<li><span>Source</span><strong>{ opts.Provenance }</strong></li>
+		}
+	</ul>
+}
+
+templ AsyncRegion(opts AsyncRegionOpts, body templ.Component) {
+	<section id={ opts.ID } class="async-region" aria-label={ opts.Label } aria-live="polite" aria-busy={ asyncBusy(opts.State) } data-async-state={ opts.State }>
+		if opts.State == "loading" {
+			<div class="async-region__skeleton" aria-hidden="true"></div>
+		} else if opts.State == "error" {
+			<p role="alert">{ opts.Message }</p>
+			if internalInteractionHref(opts.RetryHref) != "" {
+				<a href={ templ.SafeURL(internalInteractionHref(opts.RetryHref)) }>Retry</a>
+			}
+		} else if opts.State == "stale" {
+			<p role="status">{ opts.Message }</p>
+			if internalInteractionHref(opts.RetryHref) != "" {
+				<a href={ templ.SafeURL(internalInteractionHref(opts.RetryHref)) }>Retry</a>
+			}
+			@body
+		} else {
+			@body
+		}
+	</section>
+}
+
+templ DependencyPanel(id string, title string, dependencies []Dependency) {
+	<section class="dependency-panel" aria-labelledby={ id + "-title" }>
+		<h2 id={ id + "-title" }>{ title }</h2>
+		<ul>
+			for _, dependency := range dependencies {
+			<li>
+				<div><strong>{ dependency.Label }</strong><p>{ dependency.Detail }</p></div>
+				if internalInteractionHref(dependency.Href) != "" {
+					<a href={ templ.SafeURL(internalInteractionHref(dependency.Href)) }>Resolve</a>
+				}
+			</li>
+			}
+		</ul>
+	</section>
+}
+
+templ SelectionToolbar(opts SelectionToolbarOpts, actions templ.Component) {
+	<div class="selection-toolbar" role="region" aria-label="Selected records" aria-live="polite">
+		<p><strong>{ selectionPopulation(opts) }</strong> · { IntText(opts.Eligible) } eligible
+			if opts.Excluded > 0 {
+				<span> · { IntText(opts.Excluded) } excluded</span>
+			}
+		</p>
+		if opts.ExcludedReason != "" {
+			<p class="selection-toolbar__reason">{ opts.ExcludedReason }</p>
+		}
+		<div class="selection-toolbar__actions">@actions</div>
+	</div>
+}

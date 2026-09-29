@@ -1,0 +1,50 @@
+// ModalShell — the native <dialog> shell behind every modal in the UI (v2
+// Modal semantics, docs/ui-v1-plan.md §6, docs/ui-components.md §3). Behaviour
+// is entirely in assets/static/app.js (window.LedgerUI): openDialog(id) /
+// closeDialog(id) + Esc + backdrop-click close + focus restore. The dialog
+// element carries a tiny Alpine x-data only for the backdrop hit-test.
+//
+//	Params: opts ModalOpts, children templ.Component (the modal content —
+//	forms post normally inside; htmx forms target the dialog and close via
+//	an HX-Trigger: closeDialog response, see the doc).
+//
+// Usage — page renders the shell once (id "dlg-new-party") and a trigger
+// anywhere else:
+//
+//	@components.Button(components.ButtonVariantPrimary, "", components.ButtonOpts{
+//		Icon: "plus", Label: "New party",
+//		Attrs: templ.Attributes{"data-open-dialog": "dlg-new-party"},
+//	})
+//	@components.ModalShell(components.ModalOpts{ID: "dlg-new-party", Title: "New party"}) {
+//		<form method="post" action="/parties"> … </form>
+//	}
+//
+//	Forms that must survive a full-page 422 (server-side validation errors
+//	re-render the whole page) set ModalOpts.Open — the dialog renders open
+//	and app.js promotes it to the real modal (window.LedgerUI.
+//	promoteOpenDialog).
+package components
+
+templ ModalShell(opts ModalOpts, children templ.Component) {
+	<dialog
+		id={ opts.ID }
+		class={ dialogClass(opts) }
+		aria-labelledby={ ModalTitleID(opts.ID) }
+		open?={ opts.Open }
+		x-data="LedgerUI.dialog()"
+		x-on:click="backdrop($event)"
+		x-on:cancel.prevent="LedgerUI.closeDialog($el.id)"
+	>
+		<div class="ui-dialog__panel">
+			<header class="ui-dialog__header">
+				<h2 id={ ModalTitleID(opts.ID) }>{ opts.Title }</h2>
+				<button type="button" class="ui-dialog__close" aria-label={ modalCloseLabel(opts) } data-close-dialog>
+					@Icon("close")
+				</button>
+			</header>
+			<div class="ui-dialog__body">
+				@children
+			</div>
+		</div>
+	</dialog>
+}

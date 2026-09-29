@@ -1,0 +1,42 @@
+// Alert — the v2 Alert ported to server HTML: a tinted message band with an
+// optional title and a body block (docs/ui-v1-plan.md §6). role is "alert"
+// for danger (assertive) and "status" otherwise, matching v2. Tones: info
+// (default) | warning | danger | success; the neutral tone renders info.
+//
+//	Params: tone Tone, title string (optional), opts AlertOpts, body — the
+//	message content (templ.Component; nil renders an empty band). Use
+//	Text(s) for a plain-string body, or a local templ body for rich content
+//	(a list of FieldErrors).
+//
+// Usage (the page form-error region — docs/ui-components.md §2):
+//
+//	@components.Alert(components.ToneDanger, "The entry wasn't posted",
+//		components.AlertOpts{}, components.Text("Re-open the period first."))
+//
+// When opts.Dismissible is set the band carries a local x-show dismiss
+// button (Alpine); htmx-swapped alerts re-render with fresh state.
+package components
+
+templ Alert(tone Tone, title string, opts AlertOpts, body templ.Component) {
+	<div
+		class={ alertClass(tone, opts) }
+		role={ roleFor(tone) }
+		if opts.Dismissible {
+			x-data="{ hidden: false }"
+			x-show="!hidden"
+		}
+	>
+		if title != "" {
+			<span class="ui-alert__title">{ title }</span>
+		}
+		if body != nil {
+			<div class="ui-alert__content">@body
+</div>
+		}
+		if opts.Dismissible {
+			<button type="button" class="ui-alert__close" aria-label={ alertDismissLabel(opts) } x-on:click="hidden = true">
+				@Icon("close")
+			</button>
+		}
+	</div>
+}

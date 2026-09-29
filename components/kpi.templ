@@ -1,0 +1,46 @@
+// KPITile — the stat-card tile (new component; reuses the phase-1 dashboard
+// .kpi-tile markup/classes so Overview and report headers render through the
+// library). The value is preformatted by the page (ui.FormatMoney /
+// components.CountText) — tiles never format money themselves.
+//
+//	Params: label string, value string, opts KPITileOpts.
+//
+// Usage:
+//
+//	@components.KPITile("Open AR", components.FormatMoney(arOpen, "USD"),
+//		components.KPITileOpts{Hint: "unpaid invoices", Icon: "payments"})
+//	@components.KPITile("Trial balance", "Balanced",
+//		components.KPITileOpts{Tone: components.ToneSuccess})
+package components
+
+templ KPITile(label string, value string, opts KPITileOpts) {
+	if opts.Href != "" {
+		<a class={ kpiClass(opts) } href={ opts.Href }>
+			<p class="kpi-tile__label">
+				if opts.Icon != "" {
+					<span class="kpi-tile__icon" aria-hidden="true">@Icon(opts.Icon)
+</span>
+				}
+				{ label }
+			</p>
+			<p class={ kpiValueClass(opts) }>{ value }</p>
+			if opts.Hint != "" {
+				<p class="kpi-tile__note">{ opts.Hint }</p>
+			}
+		</a>
+	} else {
+		<div class={ kpiClass(opts) }>
+			<p class="kpi-tile__label">
+				if opts.Icon != "" {
+					<span class="kpi-tile__icon" aria-hidden="true">@Icon(opts.Icon)
+</span>
+				}
+				{ label }
+			</p>
+			<p class={ kpiValueClass(opts) }>{ value }</p>
+			if opts.Hint != "" {
+				<p class="kpi-tile__note">{ opts.Hint }</p>
+			}
+		</div>
+	}
+}

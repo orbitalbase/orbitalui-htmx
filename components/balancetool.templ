@@ -1,0 +1,54 @@
+// BalanceTool — the v2 BalanceBeam ported to pure server rendering: the
+// journal-entry form shows Debits | bar | Credits with an exact verdict —
+// "Balanced" (success) or "Out of balance by X" (danger) — computed from
+// Amount totals (docs/ui-v1-plan.md §6). The server renders it on every
+// GET/422 of the new-entry form from the exact Amounts — that render is the
+// authoritative verdict (the beam never shows client-rounded money).
+//
+// Live upgrade contract (journal phase): the journal new-entry form mounts
+// this component inside an Alpine lines-editor root (app.js
+// LedgerUI.lines) that recomputes the beam's numbers between submits at the
+// 2-decimal display scale only. The behaviour reads the beam's DOM
+// positions (.beam state class, .beam__side .amount x2, .beam__fill x2,
+// .beam__verdict) — keep this structure stable (docs/ui-components.md §3).
+//
+//	Params: debits Amount, credits Amount, opts BalanceToolOpts{Currency,
+//	Ready}. Ready=false appends the v2 hint " — complete the lines above"
+//	to a balanced verdict (date/period constraints still unmet).
+//
+// Usage:
+//
+//	@components.BalanceTool(drTotal, crTotal, components.BalanceToolOpts{
+//		Currency: book.Currency, Ready: form.DateValid && len(f.Lines) >= 2,
+//	})
+package components
+
+templ BalanceTool(debits Amount, credits Amount, opts BalanceToolOpts) {
+	<div
+		class={ beamClass(balanceVerdict(debits, credits), opts) }
+		role="status"
+		aria-live="polite"
+		aria-label={ beamAriaLabel(debits, credits, opts) }
+	>
+		<div class="beam__side">
+			<span class="beam__label">Debits</span>
+			<span class="amount">{ FormatMoney(debits, opts.Currency) }</span>
+		</div>
+		<div class="beam__track" aria-hidden="true">
+			<div class="beam__fill beam__fill--debit" style={ beamWidthStyle(beamShare(debits, credits)) }></div>
+			<div class="beam__fill beam__fill--credit" style={ beamWidthStyle(beamShare(credits, debits)) }></div>
+			<div class="beam__pivot"></div>
+		</div>
+		<div class="beam__side beam__side--right">
+			<span class="beam__label">Credits</span>
+			<span class="amount">{ FormatMoney(credits, opts.Currency) }</span>
+		</div>
+		<p class="beam__verdict">
+			{ beamVerdictText(balanceVerdict(debits, credits), opts) }
+			if !balanceVerdict(debits, credits).balanced && !balanceVerdict(debits, credits).empty {
+				<span class="amount">{ FormatMoney(balanceVerdict(debits, credits).diff, opts.Currency) }</span>
+			}
+			{ beamBalancedNote(balanceVerdict(debits, credits), opts) }
+		</p>
+	</div>
+}

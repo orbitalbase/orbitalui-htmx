@@ -1,0 +1,29 @@
+// Disclosure — the v2 Disclosure ported to a native <details>: a quiet
+// expander for secondary content ("Posting details", "Audit trail",
+// "Advanced" in forms). Works with zero JavaScript — open state is native
+// (docs/ui-v1-plan.md §6).
+//
+//	Params: label string (summary text), opts DisclosureOpts, children — the
+//	revealed content.
+//
+// Usage:
+//
+//	@components.Disclosure("Audit trail", components.DisclosureOpts{Summary: "created 3 Sep 2026"}) {
+//		Entry #42 · posted by …
+//	}
+package components
+
+templ Disclosure(label string, opts DisclosureOpts, children templ.Component) {
+	<details class="disclosure" open?={ opts.Open }>
+		<summary>
+			<span class="disclosure__chevron" aria-hidden="true">›</span>
+			{ label }
+			if opts.Summary != "" && !opts.Open {
+				<span class="disclosure__hint">{ opts.Summary }</span>
+			}
+		</summary>
+		<div class="disclosure__body">
+			@children
+		</div>
+	</details>
+}

@@ -1,0 +1,107 @@
+// Button — the app's single button primitive (ui/Button + .ui-button in v2,
+// docs/ui-v1-plan.md §6). Renders a <button type="button|submit"> or an
+// <a href> when opts.Href is set (link-buttons for GET navigations).
+//
+//	Params: variant ButtonVariant (default secondary), size ButtonSize
+//	("" or ButtonSizeSM), opts ButtonOpts (see button.go).
+//
+// Usage:
+//
+//	@components.Button(components.ButtonVariantPrimary, "", components.ButtonOpts{
+//		Icon: "plus", Label: "New entry", Href: templ.SafeURL("/journal/new"),
+//	})
+//	@components.Button(components.ButtonVariantDanger, components.ButtonSizeSM,
+//		components.ButtonOpts{Label: "Void entry", Type: "submit", Form: "f-void"},
+//	)
+//
+// Buttons inside htmx partial flows pass their hx attributes through opts
+// (HXGet/HXPost/HXTarget/HXSwap/HXTrigger/HXIndicator); server-side
+// validation flows keep Type "submit" inside their <form>. Modal triggers set
+// Attrs: templ.Attributes{"data-open-dialog": "dlg-id"} (modal.templ).
+package components
+
+templ Button(variant ButtonVariant, size ButtonSize, opts ButtonOpts) {
+	if opts.Href != "" {
+		<a
+			href={ opts.Href }
+			class={ buttonClass(variant, size, opts.Class) }
+			if opts.Target != "" {
+				target={ opts.Target }
+			}
+			if opts.HXGet != "" {
+				hx-get={ opts.HXGet }
+			}
+			if opts.HXPost != "" {
+				hx-post={ opts.HXPost }
+			}
+			if opts.HXTarget != "" {
+				hx-target={ opts.HXTarget }
+			}
+			if opts.HXSwap != "" {
+				hx-swap={ opts.HXSwap }
+			}
+			if opts.HXTrigger != "" {
+				hx-trigger={ opts.HXTrigger }
+			}
+			if opts.HXIndicator != "" {
+				hx-indicator={ opts.HXIndicator }
+			}
+			{ opts.Attrs... }
+		>
+			if opts.Icon != "" {
+				@Icon(opts.Icon)
+			}
+			if opts.Label != "" {
+				<span>{ opts.Label }</span>
+			}
+		</a>
+	} else {
+		<button
+			type={ buttonType(opts.Type) }
+			class={ buttonClass(variant, size, opts.Class) }
+			disabled?={ opts.Disabled || opts.Loading }
+			aria-busy?={ opts.Loading }
+			if opts.Name != "" {
+				name={ opts.Name }
+			}
+			if opts.Value != "" {
+				value={ opts.Value }
+			}
+			if opts.Form != "" {
+				form={ opts.Form }
+			}
+			if opts.HXGet != "" {
+				hx-get={ opts.HXGet }
+			}
+			if opts.HXPost != "" {
+				hx-post={ opts.HXPost }
+			}
+			if opts.HXDelete != "" {
+				hx-delete={ opts.HXDelete }
+			}
+			if opts.HXTarget != "" {
+				hx-target={ opts.HXTarget }
+			}
+			if opts.HXSwap != "" {
+				hx-swap={ opts.HXSwap }
+			}
+			if opts.HXTrigger != "" {
+				hx-trigger={ opts.HXTrigger }
+			}
+			if opts.HXIndicator != "" {
+				hx-indicator={ opts.HXIndicator }
+			}
+			{ opts.Attrs... }
+		>
+			if opts.Loading {
+				<span class="ui-button__progress" aria-hidden="true"></span>
+			}
+			if opts.Icon != "" {
+				@Icon(opts.Icon)
+			}
+			if opts.Label != "" {
+				<span>{ opts.Label }</span>
+			}
+		</button>
+	}
+}

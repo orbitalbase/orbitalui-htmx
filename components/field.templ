@@ -1,0 +1,87 @@
+// Field — the v2 LabelledField + shared field-control trio: a label wrapper
+// for arbitrary controls, the standalone error paragraph and the canonical
+// single-line input (docs/ui-v1-plan.md §6, docs/ui-components.md §2).
+//
+//	LabelledField(label, htmlFor string, opts FieldOpts, children) renders
+//	    <div class="field"> label + children + error/help paragraphs.
+//	FieldError(message string) renders the .field-error paragraph alone
+//	    (lists of errors inside an Alert body).
+//	FieldInput(o FieldInputOpts) renders the styled <input class="field-control">.
+//
+// Usage — the canonical validated field (error id + aria wiring):
+//
+//	@components.LabelledField("Entry date", "j-date", components.FieldOpts{
+//		Required: true,
+//		Help:     "Must fall in an open fiscal period.",
+//		Error:    "That date is in a closed period.",
+//	}) {
+//		@components.FieldInput(components.FieldInputOpts{
+//			Type: "date", Name: "entry_date", ID: "j-date", Value: "2026-09-03",
+//			Required: true, Invalid: true, AriaDescribedBy: components.FieldErrorID("j-date"),
+//		})
+//	}
+package components
+
+templ LabelledField(label string, htmlFor string, opts FieldOpts, children templ.Component) {
+	<div class={ fieldClass(opts) }>
+		<label class="field-label" for={ htmlFor }>
+			{ label }
+			if opts.Required {
+				<span class="field-label__req" aria-hidden="true">*</span>
+			}
+		</label>
+		@children
+		if opts.Error != "" {
+			<p class="field-error" id={ FieldErrorID(htmlFor) }>{ opts.Error }</p>
+		}
+		if opts.Help != "" {
+			<p class="field-help">{ opts.Help }</p>
+		}
+	</div>
+}
+
+// FieldError is the standalone .field-error paragraph — for error lists
+// inside Alert bodies or forms that render errors outside a LabelledField.
+templ FieldError(message string) {
+	<p class="field-error">{ message }</p>
+}
+
+templ FieldInput(o FieldInputOpts) {
+	<input
+		type={ fieldControlType(o.Type) }
+		class={ fieldControlClass(o) }
+		if o.Name != "" {
+			name={ o.Name }
+		}
+		if o.ID != "" {
+			id={ o.ID }
+		}
+		if o.Value != "" {
+			value={ o.Value }
+		}
+		if o.Placeholder != "" {
+			placeholder={ o.Placeholder }
+		}
+		required?={ o.Required }
+		disabled?={ o.Disabled }
+		if o.Invalid {
+			aria-invalid="true"
+		}
+		if o.AriaDescribedBy != "" {
+			aria-describedby={ o.AriaDescribedBy }
+		}
+		if o.Autocomplete != "" {
+			autocomplete={ o.Autocomplete }
+		}
+		if o.InputMode != "" {
+			inputmode={ o.InputMode }
+		}
+		if v, ok := fieldMaxLengthAttr(o); ok {
+			maxlength={ v }
+		}
+		if o.Pattern != "" {
+			pattern={ o.Pattern }
+		}
+		{ o.Attrs... }
+	/>
+}

@@ -1,0 +1,37 @@
+// StatePanel — the v2 StatePanel card: a centred title over an optional
+// body, used for loading skeletons and empty states (docs/ui-v1-plan.md §6).
+// Pages supply their own copy (v2 wording where it maps: "No journal
+// entries yet", "Nothing matches these filters", …).
+//
+//	Params: title string, opts StatePanelOpts, children templ.Component
+//	(nil hides the body block).
+//
+// Usage — empty table state (docs/ui-components.md §1):
+//
+//	@components.StatePanel("No journal entries yet", components.StatePanelOpts{
+//		Icon: "journal",
+//	}) {
+//		Post an entry from the New entry button above.
+//	}
+package components
+
+templ StatePanel(title string, opts StatePanelOpts, children templ.Component) {
+	<div
+		class={ statePanelClass(opts) }
+		aria-live="polite"
+		aria-busy={ busyAttr(opts.Loading) }
+	>
+		if opts.Loading {
+			<div class="ui-state__skeleton" aria-hidden="true"></div>
+		}
+		if opts.Icon != "" {
+			<span class="ui-state__icon" aria-hidden="true">@Icon(opts.Icon)
+</span>
+		}
+		<h2>{ title }</h2>
+		if children != nil {
+			<div class="ui-state__content">@children
+</div>
+		}
+	</div>
+}

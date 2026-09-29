@@ -1,0 +1,129 @@
+// TableShell — the canonical ledger table frame (v2 DataTable server-mode
+// semantics, docs/ui-v1-plan.md §6): a hairline .ledger-table inside a
+// bordered scroll region, sticky uppercase header, optional sr-only caption,
+// page-supplied rows, optional tfoot totals and an empty state. Sorting is
+// per-column GET links preserving filters (opts.Sort); the filter/pager
+// composition lives in docs/ui-components.md §1. The cell helpers (MoneyCell,
+// SignedMoneyCell, MonoCell) render the tabular data cells pages use inside
+// their row content.
+//
+//	Params: columns []Column, opts TableOpts, rows templ.Component (the
+//	<tbody> content — each row one <tr>), footer templ.Component (optional
+//	<tfoot> rows, e.g. a totals line).
+//
+// Usage (journal list + totals footer; page branches rows vs Empty):
+//
+//	@components.TableShell(cols, components.TableOpts{
+//		ID: "rows", Caption: "Journal entries",
+//		Empty: len(rows) == 0, EmptyTitle: "No journal entries yet",
+//		EmptyIcon: "journal",
+//		Sort: &components.SortState{Key: f.Sort, Dir: f.SortDir,
+//			BaseHref: "/journal", BaseQuery: q},
+//	}, rowsComponent, footerComponent)
+package components
+
+templ TableShell(columns []Column, opts TableOpts, rows templ.Component, footer templ.Component) {
+	<div
+		class={ tableRegionClass(opts) }
+		if opts.ID != "" {
+			id={ opts.ID }
+		}
+	>
+		<table class="ledger-table">
+			if opts.Caption != "" {
+				<caption class="visually-hidden">{ opts.Caption }</caption>
+			}
+			<thead>
+				<tr>
+					for _, c := range columns {
+						<th
+							scope="col"
+							data-column-key={ c.Key }
+							data-column-optional?={ c.Optional }
+							class={ thClass(c) }
+							if c.Width != "" {
+								style={ tableColStyle(c) }
+							}
+							if opts.Sort != nil && c.Sortable {
+								aria-sort={ sortAria(opts.Sort, c.Key) }
+							}
+						>
+							if opts.Sort != nil && c.Sortable {
+								<a
+									class="th-sort"
+									href={ sortHref(opts.Sort, c.Key) }
+									if sortAria(opts.Sort, c.Key) != "" {
+										aria-label={ sortAriaLabel(opts.Sort, c.Key, c.Label) }
+									}
+								>
+									{ c.Label }
+									if opts.Sort.Key == c.Key {
+										if opts.Sort.Dir == "desc" {
+											@Icon("chevron-down")
+										} else {
+											@Icon("chevron-up")
+										}
+									}
+								</a>
+							} else {
+								{ c.Label }
+							}
+						</th>
+					}
+				</tr>
+			</thead>
+			if opts.Empty {
+				<tbody>
+					<tr class="ledger-table__empty-row">
+						<td colspan={ colSpanText(columns) }>
+							<div class="table-empty">
+								if opts.EmptyIcon != "" {
+									<span class="table-empty__icon" aria-hidden="true">@Icon(opts.EmptyIcon)
+</span>
+								}
+								<p class="table-empty__title">{ opts.EmptyTitle }</p>
+								if opts.EmptyMessage != "" {
+									<p class="table-empty__message">{ opts.EmptyMessage }</p>
+								}
+								if opts.EmptyActionHref != "" {
+									<a class="ui-button ui-button--secondary ui-button--sm" href={ opts.EmptyActionHref }>
+										{ opts.EmptyActionLabel }
+									</a>
+								}
+							</div>
+						</td>
+					</tr>
+				</tbody>
+			} else {
+				if rows != nil {
+					<tbody>
+						@rows
+					</tbody>
+				}
+			}
+			if footer != nil {
+				<tfoot>
+					@footer
+				</tfoot>
+			}
+		</table>
+	</div>
+}
+
+// MoneyCell is a right-aligned tabular money cell: pass an Amount + the
+// currency code and the cell formats it exactly (thousands + fixed decimals)
+// with .amount .mono classes. Extra class names are appended.
+templ MoneyCell(value Amount, code string, class ...string) {
+	<td class={ tdClass("amount mono", class...) }>{ FormatMoney(value, code) }</td>
+}
+
+// SignedMoneyCell renders a Dr/Cr-side money cell (ui.FormatSigned
+// semantics: positive = "Dr", negative = "Cr", zero plain).
+templ SignedMoneyCell(value Amount, code string, class ...string) {
+	<td class={ tdClass("amount mono", class...) }>{ FormatSigned(value, code) }</td>
+}
+
+// MonoCell renders a mono text cell (codes, reference numbers, date keys).
+templ MonoCell(text string, class ...string) {
+	<td class={ tdClass("mono", class...) }>{ text }</td>
+}

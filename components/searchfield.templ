@@ -1,0 +1,41 @@
+// SearchField — the table-filter search input (orbital SearchField
+// semantics, server-rendered): a sr-only label + icon + type=search input.
+// Inside a GET filters bar it debounces 300ms and re-renders the rows region
+// over htmx (hx-include = closest form), falling back to a plain GET submit
+// (Enter) without htmx. Canonical list-page pattern: docs/ui-components.md §1.
+//
+//	Params: opts SearchFieldOpts. The page builds HXGet as the filters URL
+//	WITHOUT q and WITHOUT page/pageSize (the hx-include carries q; the URL
+//	carries the sibling filter params such as the active status pill):
+//
+//	@components.SearchField(components.SearchFieldOpts{
+//		Value: f.Q,
+//		HXGet: filtersURL("/journal", f.Status, f.From, f.To),
+//	})
+package components
+
+templ SearchField(opts SearchFieldOpts) {
+	<div class={ searchClass(opts) }>
+		<span class="search-field__icon" aria-hidden="true">@Icon("search")
+</span>
+		<label class="visually-hidden" for={ searchID(opts) }>{ searchLabel(opts) }</label>
+		<input
+			class="search-field__input"
+			type="search"
+			id={ searchID(opts) }
+			name={ searchName(opts) }
+			value={ opts.Value }
+			placeholder={ searchPlaceholder(opts) }
+			autocomplete="off"
+			if opts.HXGet != "" {
+				hx-get={ string(opts.HXGet) }
+				hx-trigger="input changed delay:300ms"
+				hx-include="closest form"
+				hx-target={ searchTarget(opts) }
+				hx-select={ searchTarget(opts) }
+				hx-swap="outerHTML"
+				hx-push-url="true"
+			}
+		/>
+	</div>
+}

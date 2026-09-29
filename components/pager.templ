@@ -1,0 +1,115 @@
+// Pager — the v2 DataTable pager server-side (docs/ui-components.md §1): a
+// row-range summary, windowed prev/1…n/next links and per-page-size links.
+// Every link is a GET that preserves the filter query params; with
+// opts.HXTarget set the links re-render just the rows region over htmx
+// (full page response, hx-select). Renders nothing when there are no rows.
+//
+//	Params: currentPage, pageSize, total int, opts PagerOpts.
+//
+// Usage (under the TableShell, inside the #rows region so htmx refreshes
+// both):
+//
+//	@components.Pager(f.Page, f.PageSize, f.Total, components.PagerOpts{
+//		BaseHref: "/journal", BaseQuery: q, HXTarget: "#rows",
+//	})
+package components
+
+templ Pager(currentPage int, pageSize int, total int, opts PagerOpts) {
+	if total > 0 {
+		<nav class={ pagerClass(opts) } aria-label="Pagination">
+			<p class="pager__summary">{ pagerRangeText(currentPage, pageSize, total) }</p>
+			<ul class="pager__nav">
+				if currentPage > 1 {
+					<li>
+						<a
+							class="pager__page pager__page--arrow"
+							href={ pageHref(opts, currentPage-1) }
+							aria-label="Previous page"
+							if opts.HXTarget != "" {
+								hx-get={ string(pageHref(opts, currentPage-1)) }
+								hx-target={ opts.HXTarget }
+								hx-select={ opts.HXTarget }
+								hx-swap="outerHTML"
+								hx-push-url="true"
+							}
+						>
+							@Icon("chevron-left")
+						</a>
+					</li>
+				} else {
+					<li><span class="pager__page pager__page--arrow pager__page--disabled" aria-hidden="true">@Icon("chevron-left")
+</span></li>
+				}
+				for _, it := range pagerItems(currentPage, pageCount(total, pageSize)) {
+					if it.gap {
+						<li><span class="pager__page pager__page--gap" aria-hidden="true">…</span></li>
+					} else {
+						<li>
+							<a
+								class={ pagerPageClass(it.number, currentPage) }
+								href={ pageHref(opts, it.number) }
+								if it.number == currentPage {
+									aria-current="page"
+								}
+								if opts.HXTarget != "" {
+									hx-get={ string(pageHref(opts, it.number)) }
+									hx-target={ opts.HXTarget }
+									hx-select={ opts.HXTarget }
+									hx-swap="outerHTML"
+									hx-push-url="true"
+								}
+							>
+								{ IntText(it.number) }
+							</a>
+						</li>
+					}
+				}
+				if currentPage < pageCount(total, pageSize) {
+					<li>
+						<a
+							class="pager__page pager__page--arrow"
+							href={ pageHref(opts, currentPage+1) }
+							aria-label="Next page"
+							if opts.HXTarget != "" {
+								hx-get={ string(pageHref(opts, currentPage+1)) }
+								hx-target={ opts.HXTarget }
+								hx-select={ opts.HXTarget }
+								hx-swap="outerHTML"
+								hx-push-url="true"
+							}
+						>
+							@Icon("chevron-right")
+						</a>
+					</li>
+				} else {
+					<li><span class="pager__page pager__page--arrow pager__page--disabled" aria-hidden="true">@Icon("chevron-right")
+</span></li>
+				}
+			</ul>
+			if showPageSizes(opts) {
+				<p class="pager__sizes">
+					<span class="pager__sizes-label">Rows</span>
+					for _, size := range pageSizeOptions(opts) {
+						if size == pageSize {
+							<span class="pager__size pager__size--active" aria-current="true">{ IntText(size) }</span>
+						} else {
+							<a
+								class="pager__size"
+								href={ sizeHref(opts, size) }
+								if opts.HXTarget != "" {
+									hx-get={ string(sizeHref(opts, size)) }
+									hx-target={ opts.HXTarget }
+									hx-select={ opts.HXTarget }
+									hx-swap="outerHTML"
+									hx-push-url="true"
+								}
+							>
+								{ IntText(size) }
+							</a>
+						}
+					}
+				</p>
+			}
+		</nav>
+	}
+}

@@ -1,0 +1,50 @@
+// StatusBadge — the v2 StatusBadge dot-pill ported to server HTML: a small
+// .ui-status chip with an optional leading dot and a text label in a tone.
+// Tones are never used alone — the label always carries the meaning
+// (docs/ui-v1-plan.md §4/§6).
+//
+//	Params: label string, tone Tone, opts StatusBadgeOpts.
+//	Dot: nil/true shows the leading mark; Subtle renders the quiet neutral
+//	chip (no tint) for meta labels (sources, "Current", …) where colour
+//	would be noise.
+//
+// Usage (domain packages map their enum → label + tone in one place):
+//
+//	@components.StatusBadge("Draft", components.ToneInfo, components.StatusBadgeOpts{})
+//	@components.StatusBadge("Posted", components.ToneSuccess, components.StatusBadgeOpts{})
+package components
+
+// StatusBadgeOpts tweaks the chip: Dot nil/true = show the leading mark,
+// Subtle = drop the tinted tone and render the quiet neutral chip.
+type StatusBadgeOpts struct {
+	Dot    *bool // nil or true → leading mark; false → text-only chip
+	Subtle bool
+	Class  string // extra classes
+}
+
+// showBadgeDot resolves the dot default (true unless explicitly false).
+func showBadgeDot(o StatusBadgeOpts) bool {
+	return o.Dot == nil || *o.Dot
+}
+
+// badgeClass assembles the chip classes: base + tone modifier (unless
+// subtle) + extras.
+func badgeClass(t Tone, o StatusBadgeOpts) string {
+	c := "ui-status"
+	if !o.Subtle {
+		c += " " + t.StatusClass()
+	}
+	if o.Class != "" {
+		c += " " + o.Class
+	}
+	return c
+}
+
+templ StatusBadge(label string, tone Tone, opts StatusBadgeOpts) {
+	<span class={ badgeClass(tone, opts) }>
+		if showBadgeDot(opts) {
+			<span class="ui-status__mark" aria-hidden="true"></span>
+		}
+		{ label }
+	</span>
+}

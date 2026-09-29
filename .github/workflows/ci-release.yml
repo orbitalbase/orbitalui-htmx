@@ -1,0 +1,92 @@
+name: CI and release
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+    branches:
+      - "**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  validate:
+    name: Validate Go and templ sources
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source and tags
+        uses: actions/checkout@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go from go.mod
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Check module files are tidy
+        run: |
+          go mod tidy
+          git diff --exit-code -- go.mod go.sum
+
+      - name: Check Go formatting
+        run: |
+          files="$(find components -type f -name '*.go' ! -name '*_templ.go' -print0 | xargs -0 gofmt -l)"
+          if [ -n "$files" ]; then
+            echo "These Go files need gofmt:" >&2
+            echo "$files" >&2
+            exit 1
+          fi
+
+      - name: Check pull request title convention
+        if: github.event_name == 'pull_request'
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          pattern='^(feat|fix|perf|build|chore|ci|docs|refactor|revert|style|test)(\([[:alnum:]_./-]+\))?!?: .+'
+          if [[ ! "$PR_TITLE" =~ $pattern ]]; then
+            echo "Use a Conventional Commit PR title, for example: feat(forms): add accessible textarea helper" >&2
+            exit 1
+          fi
+
+      - name: Generate templ code and check generated files
+        run: |
+          go tool templ generate
+          changes="$(git status --porcelain -- components)"
+          if [ -n "$changes" ]; then
+            echo "templ generated files are stale; run 'go tool templ generate' and commit the result:" >&2
+            echo "$changes" >&2
+            exit 1
+          fi
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test
+        run: go test -race ./...
+
+  release:
+    name: Semantic version and GitHub release
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: validate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check out full history and tags
+        uses: actions/checkout@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          fetch-depth: 0
+
+      - name: Create release from Conventional Commits
+        uses: go-semantic-release/action@2e9dc4247a6004f8377781bef4cb9dad273a741f # v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}

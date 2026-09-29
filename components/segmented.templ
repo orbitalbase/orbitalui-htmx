@@ -1,0 +1,45 @@
+// SegmentedControl — the orbital SegmentedControl ported to a radio-like
+// link group (docs/ui-v1-plan.md §6): one option active, each segment a GET
+// link that sets a query param and preserves the sibling filters (AR/AP
+// side, report variant, doc direction). Works with no JavaScript; htmx
+// partial mode mirrors TabBar when opts.HXTarget is set.
+//
+//	Params: options []SegOption, active string, opts SegmentedOpts.
+//
+// Usage (payments workspace side switch):
+//
+//	@components.SegmentedControl([]components.SegOption{
+//		{Value: "ar", Label: "AR"},
+//		{Value: "ap", Label: "AP"},
+//	}, f.Side, components.SegmentedOpts{
+//		Param: "side", BaseHref: "/payments", BaseQuery: r.URL.Query(),
+//		AriaLabel: "Receivables or payables",
+//	})
+package components
+
+templ SegmentedControl(options []SegOption, active string, opts SegmentedOpts) {
+	<nav class={ segmentedClass(opts) } aria-label={ segAriaLabel(opts) }>
+		for _, o := range options {
+			if o.Disabled {
+				<span class="segmented__item segmented__item--disabled" aria-disabled="true">{ o.Label }</span>
+			} else {
+				<a
+					class={ segItemClass(o.Value, active) }
+					href={ segHref(opts, o.Value) }
+					if o.Value == active {
+						aria-current="true"
+					}
+					if opts.HXTarget != "" {
+						hx-get={ string(segHref(opts, o.Value)) }
+						hx-target={ opts.HXTarget }
+						hx-select={ opts.HXTarget }
+						hx-swap="outerHTML"
+						hx-push-url="true"
+					}
+				>
+					{ o.Label }
+				</a>
+			}
+		}
+	</nav>
+}

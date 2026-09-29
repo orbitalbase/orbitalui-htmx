@@ -1,0 +1,78 @@
+// ConfirmButton — the v2 ConfirmAction semantics with NO native confirm():
+// a trigger button whose submit opens a confirm <dialog> stating the subject
+// and the consequence in a plain sentence, with the real submit inside
+// (docs/ui-v1-plan.md §3/§6, docs/ui-components.md §3). The dialog's submit
+// button targets the trigger's own <form> via the form attribute, so the
+// POST carries the hidden Fields (and any extra inputs pages place in the
+// dialog body with form={ConfirmFormID(opts.ID)}).
+//
+//	Params: submitLabel, confirmLabel, subject, consequence string,
+//	opts ConfirmOpts, children templ.Component (optional dialog-body fields
+//	such as a void reason — nil skips).
+//
+// Usage (row action, journal entry void):
+//
+//	@components.ConfirmButton("Void", "Void entry", "Void entry #12?",
+//		"It can't be undone; the entry keeps its number and shows as voided.",
+//		components.ConfirmOpts{ID: "void-12", Action: templ.SafeURL("/journal/12/void"),
+//			Fields: []components.KV{{Name: "reason", Value: "entered twice"}}}, nil)
+//
+// The consequence sentence is the confirm contract: subject names the
+// record, consequence states what happens — never bury the action.
+package components
+
+templ ConfirmButton(submitLabel string, confirmLabel string, subject string, consequence string, opts ConfirmOpts, children templ.Component) {
+	<form
+		id={ ConfirmFormID(opts.ID) }
+		method={ confirmMethod(opts) }
+		action={ opts.Action }
+		if opts.HX {
+			hx-post={ string(opts.Action) }
+			hx-target={ opts.HXTarget }
+			hx-disabled-elt={ confirmDisabledAttr(opts) }
+		}
+		if opts.HX && opts.HXSwap != "" {
+			hx-swap={ opts.HXSwap }
+		}
+	>
+		for _, f := range opts.Fields {
+			<input type="hidden" name={ f.Name } value={ f.Value }/>
+		}
+		<button type="button" class={ confirmButtonClass(opts) } data-open-dialog={ opts.ID }>
+			{ submitLabel }
+		</button>
+	</form>
+	<dialog
+		id={ opts.ID }
+		class="ui-dialog ui-dialog--confirm"
+		aria-labelledby={ ModalTitleID(opts.ID) }
+		x-data="LedgerUI.dialog()"
+		x-on:click="backdrop($event)"
+		x-on:cancel.prevent="LedgerUI.closeDialog($el.id)"
+	>
+		<div class="ui-dialog__panel">
+			<header class="ui-dialog__header">
+				<h2 id={ ModalTitleID(opts.ID) }>{ subject }</h2>
+			</header>
+			<div class="ui-dialog__body">
+				<p class="ui-dialog__consequence">{ consequence }</p>
+				if children != nil {
+					@children
+				}
+				<div class="ui-dialog__actions">
+					<button type="button" class="ui-button ui-button--secondary" data-close-dialog>
+						{ confirmCancelLabel(opts) }
+					</button>
+					<button type="submit" form={ ConfirmFormID(opts.ID) } class={ confirmButtonClass(opts) }>
+						<span class="confirm-label">{ confirmLabel }</span>
+						if opts.HX && opts.BusyLabel != "" {
+							<span class="confirm-busy">
+								<span class="ui-button__progress" aria-hidden="true"></span>{ opts.BusyLabel }
+							</span>
+						}
+					</button>
+				</div>
+			</div>
+		</div>
+	</dialog>
+}
