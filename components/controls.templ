@@ -1,0 +1,59 @@
+package components
+
+templ TextInputField(label string, id string, name string, model string, placeholder string, controlClass string, autocomplete string, maxLength string, required bool, iconName string) {
+	<div>
+		<label for={ id } class="oui-field-label">{ label }</label>
+		<div class="relative">
+			if iconName != "" {
+				<span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-ink-muted">@Icon(iconName, "h-4 w-4")</span>
+			}
+			<input id={ id } name={ name } type="text" class={ controlClass } placeholder={ placeholder } x-model={ model } autocomplete={ autocomplete } maxlength={ maxLength } required?={ required } />
+		</div>
+	</div>
+}
+
+templ DropdownField(label string, id string, name string, model string, options []SelectOption, controlClass string, withChevron bool) {
+	<div>
+		<label for={ id } class="oui-field-label">{ label }</label>
+		<div class="relative">
+			<select id={ id } name={ name } class={ controlClass } x-model={ model }>
+				for _, option := range options {
+					<option value={ option.Value }>{ option.Label }</option>
+				}
+			</select>
+			if withChevron {
+				<span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-ink-muted">@Icon("chevron-down", "h-4 w-4")</span>
+			}
+		</div>
+	</div>
+}
+
+templ CompactDropdown(id string, name string, model string, accessibleLabel string, options []SelectOption, controlClass string) {
+	<label class="relative inline-flex items-center">
+		<span class="sr-only">{ accessibleLabel }</span>
+		<select id={ id } name={ name } class={ controlClass + " appearance-none" } x-model={ model }>
+			for _, option := range options {
+				<option value={ option.Value }>{ option.Label }</option>
+			}
+		</select>
+		<span class="pointer-events-none absolute right-1 text-ink-muted">@Icon("chevron-down", "h-3 w-3")</span>
+	</label>
+}
+
+templ NumberInputControl(id string, name string, model string, accessibleLabel string, placeholder string, controlClass string, iconName string) {
+	<div class="relative min-w-0">
+		<label for={ id } class="sr-only">{ accessibleLabel }</label>
+		if iconName != "" {
+			<span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-ink-muted">@Icon(iconName, "h-4 w-4")</span>
+		}
+		<input id={ id } name={ name } type="number" inputmode="numeric" min="0" class={ controlClass } placeholder={ placeholder } x-model={ model } />
+	</div>
+}
+
+templ TextAreaControl(id string, name string, model string, placeholder string, rows string, maxLength string, controlClass string) {
+	<textarea id={ id } name={ name } rows={ rows } maxlength={ maxLength } class={ controlClass } placeholder={ placeholder } x-model={ model }></textarea>
+}
+
+templ CharacterCount(expression string, maximum string) {
+	<span class="text-[10px] tabular-nums text-ink-muted"><span x-text={ expression }>0</span> / { maximum }</span>
+}

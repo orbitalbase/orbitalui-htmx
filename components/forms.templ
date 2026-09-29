@@ -1,0 +1,8 @@
+package components
+
+// HTMXPostForm wraps child components in a POST form with standard HTMX targeting.
+templ HTMXPostForm(id string, action string, target string, swap string, indicator string, className string, children templ.Component) {
+	<form id={ id } class={ className } hx-post={ action } hx-target={ target } hx-swap={ swap } hx-indicator={ indicator }>
+		@children
+	</form>
+}
