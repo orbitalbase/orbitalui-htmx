@@ -7,7 +7,7 @@ templ TextInputField(label string, id string, name string, model string, placeho
 			if iconName != "" {
 				<span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-ink-muted">@Icon(iconName, "h-4 w-4")</span>
 			}
-			<input id={ id } name={ name } type="text" class={ controlClass } placeholder={ placeholder } x-model={ model } autocomplete={ autocomplete } maxlength={ maxLength } required?={ required } />
+			<input id={ id } name={ name } type="text" class={ "oui-control " + controlClass } placeholder={ placeholder } x-model={ model } autocomplete={ autocomplete } maxlength={ maxLength } required?={ required } />
 		</div>
 	</div>
 }
@@ -16,7 +16,7 @@ templ DropdownField(label string, id string, name string, model string, options 
 	<div>
 		<label for={ id } class="oui-field-label">{ label }</label>
 		<div class="relative">
-			<select id={ id } name={ name } class={ controlClass } x-model={ model }>
+			<select id={ id } name={ name } class={ "oui-control " + controlClass } x-model={ model }>
 				for _, option := range options {
 					<option value={ option.Value }>{ option.Label }</option>
 				}
@@ -31,7 +31,7 @@ templ DropdownField(label string, id string, name string, model string, options 
 templ CompactDropdown(id string, name string, model string, accessibleLabel string, options []SelectOption, controlClass string) {
 	<label class="relative inline-flex items-center">
 		<span class="sr-only">{ accessibleLabel }</span>
-		<select id={ id } name={ name } class={ controlClass + " appearance-none" } x-model={ model }>
+		<select id={ id } name={ name } class={ "oui-control " + controlClass + " appearance-none" } x-model={ model }>
 			for _, option := range options {
 				<option value={ option.Value }>{ option.Label }</option>
 			}
@@ -46,12 +46,12 @@ templ NumberInputControl(id string, name string, model string, accessibleLabel s
 		if iconName != "" {
 			<span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-ink-muted">@Icon(iconName, "h-4 w-4")</span>
 		}
-		<input id={ id } name={ name } type="number" inputmode="numeric" min="0" class={ controlClass } placeholder={ placeholder } x-model={ model } />
+		<input id={ id } name={ name } type="number" inputmode="numeric" min="0" class={ "oui-control " + controlClass } placeholder={ placeholder } x-model={ model } />
 	</div>
 }
 
 templ TextAreaControl(id string, name string, model string, placeholder string, rows string, maxLength string, controlClass string) {
-	<textarea id={ id } name={ name } rows={ rows } maxlength={ maxLength } class={ controlClass } placeholder={ placeholder } x-model={ model }></textarea>
+	<textarea id={ id } name={ name } rows={ rows } maxlength={ maxLength } class={ "oui-control " + controlClass } placeholder={ placeholder } x-model={ model }></textarea>
 }
 
 templ CharacterCount(expression string, maximum string) {

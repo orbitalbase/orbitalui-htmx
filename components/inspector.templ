@@ -1,0 +1,43 @@
+package components
+
+// Inspector is always mounted, including when closed, so partial navigation
+// has a stable target. Ordinary hrefs remain the no-JavaScript path. Load the
+// embedded assets/inspector.css and assets/inspector.js to enable resizing,
+// panel-only navigation, focus management, and browser history.
+templ Inspector(o InspectorOpts, body templ.Component) {
+	<aside id={ o.ID } class={ "ui-inspector", templ.KV("ui-inspector--expanded", o.Expanded) }
+		data-orbital-inspector data-inspector-state-keys={ inspectorStateKeys(o) }
+		data-inspector-ignore-empty-query?={ o.IgnoreEmptyQuery }
+		data-inspector-storage-key={ o.StorageKey } data-inspector-close={ o.CloseHref }
+		aria-labelledby={ o.ID + "-title" } hidden?={ !o.Open }>
+		if o.Open {
+			if o.Resizable {
+				<div class="ui-inspector__resizer" role="separator" tabindex="0" aria-orientation="vertical" aria-label="Resize record panel" aria-valuemin="320" aria-valuemax="1000" aria-valuenow="520" data-inspector-resizer></div>
+			}
+			<header class="ui-inspector__header">
+				<div class="ui-inspector__heading">
+					<h2 id={ o.ID + "-title" } tabindex="-1" data-inspector-title>{ o.Title }</h2>
+					if o.Subtitle != "" {
+						<p>{ o.Subtitle }</p>
+					}
+				</div>
+				<div class="ui-inspector__tools">
+					if o.BackHref != "" {
+						<a href={ templ.SafeURL(o.BackHref) } class="ui-inspector__tool" aria-label="Back to previous record">@Icon("chevron-left")</a>
+					}
+					if o.ExpandHref != "" {
+						<a href={ templ.SafeURL(o.ExpandHref) } class="ui-inspector__tool" aria-label={ inspectorExpandLabel(o.Expanded) } title={ inspectorExpandLabel(o.Expanded) }>
+							if o.Expanded {
+								@Icon("contract")
+							} else {
+								@Icon("expand")
+							}
+						</a>
+					}
+					<a href={ templ.SafeURL(o.CloseHref) } class="ui-inspector__tool" aria-label="Close record panel" title="Close record panel" data-inspector-close-link>@Icon("close")</a>
+				</div>
+			</header>
+			<div class="ui-inspector__body">@body</div>
+		}
+	</aside>
+}

@@ -73,7 +73,7 @@ func TextInputField(label string, id string, name string, model string, placehol
 				return templ_7745c5c3_Err
 			}
 		}
-		var templ_7745c5c3_Var4 = []any{controlClass}
+		var templ_7745c5c3_Var4 = []any{"oui-control " + controlClass}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var4...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -124,7 +124,7 @@ func TextInputField(label string, id string, name string, model string, placehol
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.ResolveAttributeValue(placeholder)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/controls.templ`, Line: 10, Col: 94}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/controls.templ`, Line: 10, Col: 111}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var8)
 		if templ_7745c5c3_Err != nil {
@@ -137,7 +137,7 @@ func TextInputField(label string, id string, name string, model string, placehol
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue(model)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/controls.templ`, Line: 10, Col: 112}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/controls.templ`, Line: 10, Col: 129}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 		if templ_7745c5c3_Err != nil {
@@ -150,7 +150,7 @@ func TextInputField(label string, id string, name string, model string, placehol
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.ResolveAttributeValue(autocomplete)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/controls.templ`, Line: 10, Col: 142}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/controls.templ`, Line: 10, Col: 159}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var10)
 		if templ_7745c5c3_Err != nil {
@@ -163,7 +163,7 @@ func TextInputField(label string, id string, name string, model string, placehol
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.ResolveAttributeValue(maxLength)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/controls.templ`, Line: 10, Col: 166}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/controls.templ`, Line: 10, Col: 183}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var11)
 		if templ_7745c5c3_Err != nil {
@@ -238,7 +238,7 @@ func DropdownField(label string, id string, name string, model string, options [
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var15 = []any{controlClass}
+		var templ_7745c5c3_Var15 = []any{"oui-control " + controlClass}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var15...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -289,7 +289,7 @@ func DropdownField(label string, id string, name string, model string, options [
 		var templ_7745c5c3_Var19 string
 		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.ResolveAttributeValue(model)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/controls.templ`, Line: 19, Col: 73}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/controls.templ`, Line: 19, Col: 90}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var19)
 		if templ_7745c5c3_Err != nil {
@@ -395,7 +395,7 @@ func CompactDropdown(id string, name string, model string, accessibleLabel strin
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var24 = []any{controlClass + " appearance-none"}
+		var templ_7745c5c3_Var24 = []any{"oui-control " + controlClass + " appearance-none"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var24...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -446,7 +446,7 @@ func CompactDropdown(id string, name string, model string, accessibleLabel strin
 		var templ_7745c5c3_Var28 string
 		templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.ResolveAttributeValue(model)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/controls.templ`, Line: 34, Col: 93}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/controls.templ`, Line: 34, Col: 110}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var28)
 		if templ_7745c5c3_Err != nil {
@@ -569,7 +569,7 @@ func NumberInputControl(id string, name string, model string, accessibleLabel st
 				return templ_7745c5c3_Err
 			}
 		}
-		var templ_7745c5c3_Var34 = []any{controlClass}
+		var templ_7745c5c3_Var34 = []any{"oui-control " + controlClass}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var34...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -620,7 +620,7 @@ func NumberInputControl(id string, name string, model string, accessibleLabel st
 		var templ_7745c5c3_Var38 string
 		templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.ResolveAttributeValue(placeholder)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/controls.templ`, Line: 49, Col: 123}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/controls.templ`, Line: 49, Col: 140}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var38)
 		if templ_7745c5c3_Err != nil {
@@ -633,7 +633,7 @@ func NumberInputControl(id string, name string, model string, accessibleLabel st
 		var templ_7745c5c3_Var39 string
 		templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.ResolveAttributeValue(model)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/controls.templ`, Line: 49, Col: 141}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/controls.templ`, Line: 49, Col: 158}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var39)
 		if templ_7745c5c3_Err != nil {
@@ -668,7 +668,7 @@ func TextAreaControl(id string, name string, model string, placeholder string, r
 			templ_7745c5c3_Var40 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var41 = []any{controlClass}
+		var templ_7745c5c3_Var41 = []any{"oui-control " + controlClass}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var41...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -745,7 +745,7 @@ func TextAreaControl(id string, name string, model string, placeholder string, r
 		var templ_7745c5c3_Var47 string
 		templ_7745c5c3_Var47, templ_7745c5c3_Err = templ.ResolveAttributeValue(placeholder)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/controls.templ`, Line: 54, Col: 121}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/controls.templ`, Line: 54, Col: 138}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var47)
 		if templ_7745c5c3_Err != nil {
@@ -758,7 +758,7 @@ func TextAreaControl(id string, name string, model string, placeholder string, r
 		var templ_7745c5c3_Var48 string
 		templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.ResolveAttributeValue(model)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/controls.templ`, Line: 54, Col: 139}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/controls.templ`, Line: 54, Col: 156}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var48)
 		if templ_7745c5c3_Err != nil {
