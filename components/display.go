@@ -133,7 +133,8 @@ func Initials(name string) string {
 
 // ProgressOpts configures ProgressBar.
 type ProgressOpts struct {
-	Label     string // visible label left of the value
+	Label     string // visible label left of the value; also the accessible name
+	AriaLabel string // accessible name when Label is empty ("Upload progress"); defaults to "Progress"
 	ShowValue bool   // render "40%" at the end of the label row
 	Tone      Tone   // "" brand; success/warning/danger for consequence
 	Class     string
@@ -145,6 +146,18 @@ func progressClass(o ProgressOpts) string {
 		tone = "ui-progress--" + o.Tone.Modifier()
 	}
 	return joinClass("ui-progress", tone, o.Class)
+}
+
+// progressName is the progressbar's accessible name: the visible Label, else
+// AriaLabel, else a generic "Progress", so the role never renders nameless.
+func progressName(o ProgressOpts) string {
+	if label := strings.TrimSpace(o.Label); label != "" {
+		return label
+	}
+	if label := strings.TrimSpace(o.AriaLabel); label != "" {
+		return label
+	}
+	return "Progress"
 }
 
 func clampPercent(v int) int {

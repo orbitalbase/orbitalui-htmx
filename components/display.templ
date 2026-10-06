@@ -72,9 +72,7 @@ templ ProgressBar(value int, opts ProgressOpts) {
 			aria-valuemin="0"
 			aria-valuemax="100"
 			aria-valuenow={ strconv.Itoa(clampPercent(value)) }
-			if opts.Label != "" {
-				aria-label={ opts.Label }
-			}
+			aria-label={ progressName(opts) }
 		>
 			<span class={ progressFillClass(value) }></span>
 		</div>

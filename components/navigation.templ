@@ -90,10 +90,12 @@ templ Breadcrumbs(crumbs []Crumb) {
 								@Icon("chevron-right")
 							</span>
 						}
-						if crumb.Href != "" && i < len(crumbs)-1 {
+						if i == len(crumbs)-1 {
+							<span aria-current="page">{ crumb.Label }</span>
+						} else if crumb.Href != "" {
 							<a href={ crumb.Href }>{ crumb.Label }</a>
 						} else {
-							<span aria-current="page">{ crumb.Label }</span>
+							<span>{ crumb.Label }</span>
 						}
 					</li>
 				}
