@@ -181,3 +181,22 @@ func TestDisclosureBlockTakesChildren(t *testing.T) {
 	empty := renderC(t, DisclosureBlock("Empty", DisclosureOpts{}))
 	want(t, empty, `<div class="disclosure__body"></div>`)
 }
+
+func TestReviewLeftovers(t *testing.T) {
+	out := renderC(t, ChoiceRow(ChoiceRowOpts{Name: "n", Attrs: map[string]any{"class": "x", "data-k": "v"}}))
+	want(t, out, `class="x"`)
+	want(t, out, `data-k="v"`)
+	if strings.Count(out, "class=") != 4 { // label, input, copy span, label span
+		t.Errorf("unexpected class attributes: %s", out)
+	}
+	for in, wantOut := range map[string]string{"-0.000": "0", "-0": "0", "-1.50": "-1.5"} {
+		if got := Quantity(in); got != wantOut {
+			t.Errorf("Quantity(%q) = %q, want %q", in, got, wantOut)
+		}
+	}
+	for in, wantOut := range map[string]string{"-0": "0%", "-0.00": "0%", "-2.50": "-2.5%"} {
+		if got := Percent(in); got != wantOut {
+			t.Errorf("Percent(%q) = %q, want %q", in, got, wantOut)
+		}
+	}
+}

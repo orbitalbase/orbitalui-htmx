@@ -225,6 +225,9 @@ func Quantity(raw string) string {
 	}
 	grouped := groupInt(whole)
 	if fraction = strings.TrimRight(fraction, "0"); fraction == "" {
+		if whole == "0" {
+			return "0" // negative zero reads as zero
+		}
 		return sign + grouped
 	}
 	return sign + grouped + "." + fraction
@@ -271,6 +274,9 @@ func Percent(raw string) string {
 	}
 	if fraction = strings.TrimRight(fraction, "0"); fraction != "" {
 		return sign + whole + "." + fraction + "%"
+	}
+	if strings.TrimLeft(whole, "0") == "" {
+		return "0%" // negative zero reads as zero
 	}
 	return sign + whole + "%"
 }

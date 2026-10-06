@@ -170,6 +170,9 @@ templ ChoiceRow(opts ChoiceRowOpts) {
 			checked?={ opts.Checked }
 			required?={ opts.Required }
 			disabled?={ opts.Disabled }
+			if mergeClass("", opts.Attrs) != "" {
+				class={ mergeClass("", opts.Attrs) }
+			}
 			{ attrsWithoutClass(opts.Attrs)... }
 		/>
 		<span class="ui-choice__copy">
