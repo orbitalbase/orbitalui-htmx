@@ -157,8 +157,12 @@ func clampPercent(v int) int {
 	return v
 }
 
-func progressStyle(v int) templ.SafeCSS {
-	return templ.SafeCSS("--ui-progress:" + strconv.Itoa(clampPercent(v)) + "%")
+// progressFillClass rounds to the nearest 5% step class. Widths come from
+// classes rather than an inline style so the bar renders under a strict
+// style-src 'self' Content-Security-Policy; aria-valuenow stays exact.
+func progressFillClass(v int) string {
+	step := (clampPercent(v) + 2) / 5 * 5
+	return "ui-progress__fill ui-progress__fill--" + strconv.Itoa(step)
 }
 
 // ChecklistItem is one onboarding or readiness step. Href/ActionLabel make

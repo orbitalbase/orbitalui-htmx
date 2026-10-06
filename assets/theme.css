@@ -388,7 +388,29 @@ a.kpi-tile:hover { border-color: var(--oui-border-primary); box-shadow: var(--ou
 .ui-progress__label { display: flex; justify-content: space-between; gap: var(--oui-space-3); color: var(--oui-text-secondary); font-size: var(--oui-text-sm); font-weight: 500; }
 .ui-progress__value { color: var(--oui-text-secondary); font-variant-numeric: tabular-nums; }
 .ui-progress__track { position: relative; height: 0.5rem; overflow: hidden; background: var(--oui-bg-quaternary); border-radius: var(--oui-radius-full); }
-.ui-progress__fill { position: absolute; inset: 0 auto 0 0; width: var(--ui-progress, 0%); background: var(--oui-fg-brand); border-radius: inherit; transition: width var(--oui-duration) var(--oui-ease-out); }
+/* Width steps keep the bar CSP-safe (no inline style attribute). */
+.ui-progress__fill--0 { width: 0%; }
+.ui-progress__fill--5 { width: 5%; }
+.ui-progress__fill--10 { width: 10%; }
+.ui-progress__fill--15 { width: 15%; }
+.ui-progress__fill--20 { width: 20%; }
+.ui-progress__fill--25 { width: 25%; }
+.ui-progress__fill--30 { width: 30%; }
+.ui-progress__fill--35 { width: 35%; }
+.ui-progress__fill--40 { width: 40%; }
+.ui-progress__fill--45 { width: 45%; }
+.ui-progress__fill--50 { width: 50%; }
+.ui-progress__fill--55 { width: 55%; }
+.ui-progress__fill--60 { width: 60%; }
+.ui-progress__fill--65 { width: 65%; }
+.ui-progress__fill--70 { width: 70%; }
+.ui-progress__fill--75 { width: 75%; }
+.ui-progress__fill--80 { width: 80%; }
+.ui-progress__fill--85 { width: 85%; }
+.ui-progress__fill--90 { width: 90%; }
+.ui-progress__fill--95 { width: 95%; }
+.ui-progress__fill--100 { width: 100%; }
+.ui-progress__fill { position: absolute; inset: 0 auto 0 0; background: var(--oui-fg-brand); border-radius: inherit; transition: width var(--oui-duration) var(--oui-ease-out); }
 .ui-progress--success .ui-progress__fill { background: var(--oui-success-500); }
 .ui-progress--warning .ui-progress__fill { background: var(--oui-warning-500); }
 .ui-progress--danger .ui-progress__fill { background: var(--oui-error-500); }

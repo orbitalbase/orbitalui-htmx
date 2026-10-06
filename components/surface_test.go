@@ -93,7 +93,11 @@ func TestProgressBarClampsValue(t *testing.T) {
 	out := renderC(t, ProgressBar(140, ProgressOpts{Label: "Profile", ShowValue: true}))
 	want(t, out, `aria-valuenow="100"`)
 	want(t, out, `>100%</span>`)
-	want(t, out, `style="--ui-progress:100%;"`)
+	want(t, out, `class="ui-progress__fill ui-progress__fill--100"`)
+	if strings.Contains(out, "style=") {
+		t.Errorf("progress bar must not need an inline style: %s", out)
+	}
+	want(t, renderC(t, ProgressBar(11, ProgressOpts{})), `ui-progress__fill--10`)
 }
 
 func TestChecklistLinksOnlyOpenSteps(t *testing.T) {

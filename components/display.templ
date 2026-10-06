@@ -76,7 +76,7 @@ templ ProgressBar(value int, opts ProgressOpts) {
 				aria-label={ opts.Label }
 			}
 		>
-			<span class="ui-progress__fill" style={ progressStyle(value) }></span>
+			<span class={ progressFillClass(value) }></span>
 		</div>
 	</div>
 }
