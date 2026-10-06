@@ -18,6 +18,9 @@ import (
 //	Meta — optional inline status row under the title (badges, timestamps).
 //	Actions — right-aligned buttons; place the single primary action last.
 //	Tabs — optional tab bar rendered flush under the header.
+//	Leading — a mark before the copy: an Avatar for a record page (square for
+//	    an organisation), a logo, a monogram. It is decoration beside the
+//	    title, so give the Avatar no Label.
 //	Compact — a denser header for registers and split views.
 type PageHeaderOpts struct {
 	Eyebrow     string
@@ -25,6 +28,7 @@ type PageHeaderOpts struct {
 	Meta        templ.Component
 	Actions     templ.Component
 	Tabs        templ.Component
+	Leading     templ.Component
 	Compact     bool
 	ID          string
 	Class       string
@@ -115,4 +119,33 @@ func modifier(on bool, class string) string {
 		return class
 	}
 	return ""
+}
+
+// RecordHeaderOpts configures RecordHeader.
+//
+//	Title — the record's name. It renders as a paragraph, not a heading: the
+//	    inspector chrome already owns the panel heading, and a record header
+//	    inside it must not compete in the outline.
+//	Eyebrow — the record type ("Statutory officer", "Company action").
+//	Subtitle — one line of context ("Director · authorised signatory").
+//	Leading — an Avatar or logo; Icon is used when Leading is nil, in a tile
+//	    tinted by IconTone.
+//	Status — a badge on the trailing edge.
+type RecordHeaderOpts struct {
+	Title    string
+	Eyebrow  string
+	Subtitle string
+	Leading  templ.Component
+	Icon     string
+	IconTone Tone
+	Status   templ.Component
+	Class    string
+}
+
+func recordHeaderIconClass(o RecordHeaderOpts) string {
+	tone := ""
+	if o.IconTone != "" && o.IconTone != ToneNeutral {
+		tone = "ui-record-header__icon--" + o.IconTone.Modifier()
+	}
+	return joinClass("ui-record-header__icon", tone)
 }

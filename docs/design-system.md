@@ -78,6 +78,20 @@ application means aliasing its own names to the semantic layer
 | `Menu`, `MenuLink`, `MenuHeader`, `MenuSeparator` | Native `<details>` popover menus. |
 | `WorkspaceSwitcher(opts, panel)` | One-line scope identity that discloses details and switching. |
 | `CountBadge(n)` | Neutral count pill for titles. |
+| `RecordHeader(RecordHeaderOpts)` | Identity block an inspector opens with: mark, eyebrow, title, subtitle, status. No heading element. |
+| `PageHeaderOpts.Leading` | Avatar or logo beside a record page's title. |
+| `ActionList` / `ActionRow` | The workspace list shape: leading icon or avatar, title + one meta line, trailing value/badge/controls; linked rows get a chevron. Variants: divided, plain, cards. |
+| `FactList([]Fact)` | One-line term/value facts too small for a DescriptionList. |
+| `CriteriaList([]Criterion)` | Pass/fail evidence with sr-only "Met:/Not met:" prefixes. |
+| `ChoiceRow` / `ChoiceGroup` | Checkbox or radio framed as a row with a one-line description; tinted when checked. |
+| `Callout(tone, CalloutOpts, body)` | A titled, toned frame that can hold rows — the queue to clear first. |
+| `DecisionCard(DecisionCardOpts, body)` | One review decision: subject, context, proposal, evidence disclosure, explicit actions. |
+| `FilterChips([]ChipLink, active, opts)` | GET-link chips that narrow a list; shareable and script-free. |
+| `SectionNav([]SectionLink, opts)` | Sticky in-page index; a scrolling strip on phones. |
+| `Disclosure` variants | `DisclosurePanel` (editor surface), `DisclosureQuiet` (text-link evidence), `DisclosureDanger` (danger zone); `Hint` for a trailing count or consequence. |
+| `StatePanelOpts.Compact` | In-card empty state without a competing heading. |
+| `ButtonVariantText` | A link-styled submit for per-row mutations. |
+| Formatters (`format.go`) | `DateText`, `DateTimeText`, `RelativeDate(Text)`, `DayDuration`, `Count`, `Plural`, `Quantity`, `GroupedAmount`, `Percent` — total functions over stored strings (including PostgreSQL timestamptz text). |
 
 Shell layout classes (`.ui-icon-button`, `.ui-nav*`, `.ui-switcher*`,
 `.ui-breadcrumbs`) are styled in `theme.css`; the host owns the outer grid,

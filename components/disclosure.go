@@ -1,9 +1,50 @@
 // Disclosure types (disclosure.templ).
 package components
 
-// DisclosureOpts: Open renders the <details> expanded; Summary is a muted
-// hint shown next to the label while collapsed (v2 "Posting details" style).
+// DisclosureVariant selects the frame a disclosure wears. The shape is always
+// the same native <details>; only its weight changes, so one component covers
+// a text link, an editing surface and a danger zone.
+type DisclosureVariant string
+
+const (
+	// DisclosureDefault is a hairline-ruled row whose summary reads as a
+	// heading — the "Posting details", "Audit trail", "Advanced" expander.
+	DisclosureDefault DisclosureVariant = ""
+	// DisclosurePanel frames the whole disclosure as a bordered surface and
+	// turns the summary into its header, so an open editor reads as its own
+	// surface without needing a second card around it.
+	DisclosurePanel DisclosureVariant = "panel"
+	// DisclosureQuiet reads as a text link until it is opened — for evidence
+	// (a quote, a payload, a long explanation) that would otherwise crowd the
+	// decision it belongs to.
+	DisclosureQuiet DisclosureVariant = "quiet"
+	// DisclosureDanger frames the block as a danger zone, so a destructive
+	// control never needs a tinted slab in the main flow.
+	DisclosureDanger DisclosureVariant = "danger"
+)
+
+// DisclosureOpts configures Disclosure.
+//
+//	Open — render the <details> expanded.
+//	Variant — the frame; see DisclosureVariant.
+//	Hint — muted text on the trailing edge of the summary, shown open or
+//	    closed. Use it for a count or a consequence ("Creates a linked
+//	    request", "4 fields").
+//	Summary — a muted hint shown only while collapsed, for a value the open
+//	    body repeats anyway ("created 3 Sep 2026").
 type DisclosureOpts struct {
 	Open    bool
+	Variant DisclosureVariant
+	Hint    string
 	Summary string
+	ID      string
+	Class   string
+}
+
+func disclosureClass(o DisclosureOpts) string {
+	variant := ""
+	if o.Variant != DisclosureDefault {
+		variant = "disclosure--" + string(o.Variant)
+	}
+	return joinClass("disclosure", variant, o.Class)
 }

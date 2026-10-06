@@ -20,6 +20,11 @@ const (
 	ButtonVariantSecondary ButtonVariant = "secondary"
 	ButtonVariantDanger    ButtonVariant = "danger"
 	ButtonVariantQuiet     ButtonVariant = "quiet"
+	// ButtonVariantText is a submit control styled as a text link: no frame,
+	// no height of its own. It is how a per-row mutation ("Mark read",
+	// "Resend", "Revoke") stays a real form submission without reading as a
+	// button and competing with the page's one primary action.
+	ButtonVariantText ButtonVariant = "text"
 )
 
 // ButtonSize is a size preset; "" = md (the default height).
@@ -73,6 +78,8 @@ func buttonClass(variant ButtonVariant, size ButtonSize, extra string) string {
 		parts = append(parts, "ui-button--danger")
 	case ButtonVariantQuiet:
 		parts = append(parts, "ui-button--quiet")
+	case ButtonVariantText:
+		parts = append(parts, "ui-button--text")
 	default:
 		parts = append(parts, "ui-button--secondary")
 	}

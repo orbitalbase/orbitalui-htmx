@@ -22,6 +22,11 @@ templ PageHeader(title string, opts PageHeaderOpts) {
 		}
 	>
 		<div class="ui-page-header__row">
+			if opts.Leading != nil {
+				<div class="ui-page-header__leading">
+					@opts.Leading
+				</div>
+			}
 			<div class="ui-page-header__copy">
 				if opts.Eyebrow != "" {
 					<p class="ui-page-header__eyebrow">{ opts.Eyebrow }</p>
@@ -144,4 +149,35 @@ templ SettingsSection(opts SettingsSectionOpts, body templ.Component) {
 // CountBadge is the small neutral pill used beside titles and nav labels.
 templ CountBadge(n int) {
 	<span class="ui-count">{ strconv.Itoa(n) }</span>
+}
+
+// RecordHeader is the identity block a record inspector or detail panel
+// opens with: a leading mark, a small eyebrow naming the record type, the
+// record's title, one line of context and its status on the trailing edge.
+templ RecordHeader(opts RecordHeaderOpts) {
+	<header class={ joinClass("ui-record-header", opts.Class) }>
+		if opts.Leading != nil {
+			<span class="ui-record-header__leading">
+				@opts.Leading
+			</span>
+		} else if opts.Icon != "" {
+			<span class={ recordHeaderIconClass(opts) } aria-hidden="true">
+				@Icon(opts.Icon)
+			</span>
+		}
+		<div class="ui-record-header__copy">
+			if opts.Eyebrow != "" {
+				<p class="ui-record-header__eyebrow">{ opts.Eyebrow }</p>
+			}
+			<p class="ui-record-header__title">{ opts.Title }</p>
+			if opts.Subtitle != "" {
+				<p class="ui-record-header__subtitle">{ opts.Subtitle }</p>
+			}
+		</div>
+		if opts.Status != nil {
+			<div class="ui-record-header__status">
+				@opts.Status
+			</div>
+		}
+	</header>
 }

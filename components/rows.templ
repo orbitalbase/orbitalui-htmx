@@ -1,0 +1,205 @@
+// ActionList, ActionRow, FactList, CriteriaList, ChoiceRow and ChoiceGroup —
+// see rows.go for options.
+//
+// Usage:
+//
+//	@components.ActionList(components.ActionListOpts{}, documentRows())
+//
+//	templ documentRows() {
+//		@components.ActionRow(components.ActionRowOpts{
+//			Title: "Board minutes", Meta: "Signed · 3 Mar 2024",
+//			Icon: "document", Href: "/documents/42",
+//			Trailing: components.StatusBadge("Signed", components.ToneSuccess, components.StatusBadgeOpts{}),
+//		})
+//	}
+//
+//	@components.ChoiceGroup("Email alerts", components.ChoiceGroupOpts{}, alertChoices())
+package components
+
+templ ActionList(opts ActionListOpts, rows templ.Component) {
+	if opts.Label != "" {
+		<nav
+			class={ actionListClass(opts) }
+			aria-label={ opts.Label }
+			if opts.ID != "" {
+				id={ opts.ID }
+			}
+		>
+			<ul class="ui-rows__list" role="list">
+				@rows
+			</ul>
+		</nav>
+	} else {
+		<ul
+			class={ actionListClass(opts) + " ui-rows__list" }
+			role="list"
+			if opts.ID != "" {
+				id={ opts.ID }
+			}
+		>
+			@rows
+		</ul>
+	}
+}
+
+templ ActionRow(opts ActionRowOpts) {
+	<li class={ actionRowItemClass(opts) }>
+		if opts.Href != "" {
+			<a
+				class={ actionRowClass(opts) }
+				href={ opts.Href }
+				if opts.ID != "" {
+					id={ opts.ID }
+				}
+				if opts.Current {
+					aria-current="page"
+				}
+				{ opts.Attrs... }
+			>
+				@actionRowInner(opts)
+			</a>
+		} else {
+			<div
+				class={ actionRowClass(opts) }
+				if opts.ID != "" {
+					id={ opts.ID }
+				}
+				{ opts.Attrs... }
+			>
+				@actionRowInner(opts)
+			</div>
+		}
+		if opts.Below != nil {
+			<div class="ui-row__below">
+				@opts.Below
+			</div>
+		}
+	</li>
+}
+
+templ actionRowInner(opts ActionRowOpts) {
+	if opts.Leading != nil {
+		<span class="ui-row__leading">
+			@opts.Leading
+		</span>
+	} else if opts.Icon != "" {
+		<span class={ actionRowIconClass(opts) } aria-hidden="true">
+			@Icon(opts.Icon)
+		</span>
+	}
+	<span class="ui-row__copy">
+		<span class="ui-row__title">{ opts.Title }</span>
+		if opts.Meta != "" {
+			<span class="ui-row__meta">{ opts.Meta }</span>
+		}
+	</span>
+	if actionRowHasTrail(opts) {
+		<span class="ui-row__trail">
+			if opts.Value != "" {
+				<span class="ui-row__value">{ opts.Value }</span>
+			}
+			if opts.Trailing != nil {
+				@opts.Trailing
+			}
+			if opts.Href != "" {
+				<span class="ui-row__chevron" aria-hidden="true">
+					@Icon("chevron-right")
+				</span>
+			}
+		</span>
+	}
+}
+
+// FactList states a few short term/value pairs on one line, for the facts
+// that are too small to deserve a DescriptionList row (a quota, a period, a
+// cap). It renders nothing for an empty slice.
+templ FactList(facts []Fact) {
+	if len(facts) > 0 {
+		<dl class="ui-facts">
+			for _, fact := range facts {
+				<div class="ui-facts__item">
+					<dt>{ fact.Term }</dt>
+					<dd>{ fact.Value }</dd>
+				</div>
+			}
+		</dl>
+	}
+}
+
+// CriteriaList is the pass/fail list an eligibility or readiness check shows:
+// one row per stated criterion, a tick or a cross, and optionally the value
+// that was read. The verdict is also spelled out for a screen reader, so the
+// icon and its colour never carry the meaning alone.
+templ CriteriaList(items []Criterion) {
+	<ul class="ui-criteria" role="list">
+		for _, item := range items {
+			<li class={ criterionClass(item) }>
+				<span class="ui-criteria__mark" aria-hidden="true">
+					@Icon(criterionIcon(item))
+				</span>
+				<span class="ui-criteria__copy">
+					<span class="ui-criteria__label">
+						<span class="sr-only">{ criterionPrefix(item) }</span>{ item.Label }
+					</span>
+					if item.Note != "" {
+						<span class="ui-criteria__note">{ item.Note }</span>
+					}
+				</span>
+			</li>
+		}
+	</ul>
+}
+
+templ ChoiceRow(opts ChoiceRowOpts) {
+	<label class={ choiceRowClass(opts) }>
+		<input
+			type={ choiceRowType(opts) }
+			if opts.Name != "" {
+				name={ opts.Name }
+			}
+			if opts.Value != "" {
+				value={ opts.Value }
+			}
+			if opts.ID != "" {
+				id={ opts.ID }
+			}
+			checked?={ opts.Checked }
+			required?={ opts.Required }
+			disabled?={ opts.Disabled }
+			{ opts.Attrs... }
+		/>
+		<span class="ui-choice__copy">
+			<span class="ui-choice__label">{ opts.Label }</span>
+			if opts.Description != "" {
+				<span class="ui-choice__hint">{ opts.Description }</span>
+			}
+		</span>
+	</label>
+}
+
+// ChoiceGroupOpts configures ChoiceGroup. ShowLegend renders the legend
+// visibly; by default it is screen-reader only, because the surrounding
+// SettingsSection or Card title normally already names the group.
+type ChoiceGroupOpts struct {
+	ShowLegend bool
+	ID         string
+	Class      string
+}
+
+// ChoiceGroup is the fieldset a set of ChoiceRows needs: radios must share
+// one, and a checkbox list reads better with a named group.
+templ ChoiceGroup(legend string, opts ChoiceGroupOpts, body templ.Component) {
+	<fieldset
+		class={ joinClass("ui-choices", opts.Class) }
+		if opts.ID != "" {
+			id={ opts.ID }
+		}
+	>
+		if opts.ShowLegend {
+			<legend class="ui-choices__legend">{ legend }</legend>
+		} else {
+			<legend class="sr-only">{ legend }</legend>
+		}
+		@body
+	</fieldset>
+}

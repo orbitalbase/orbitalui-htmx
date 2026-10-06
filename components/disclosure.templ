@@ -1,6 +1,7 @@
-// Disclosure — the v2 Disclosure ported to a native <details>: a quiet
-// expander for secondary content ("Posting details", "Audit trail",
-// "Advanced" in forms). Works with zero JavaScript — open state is native
+// Disclosure — a native <details> expander for secondary content ("Posting
+// details", "Audit trail", "Advanced" in forms, an inline editor, a danger
+// zone). Works with zero JavaScript: open state is native, which is what lets
+// progressive disclosure survive a strict script-src 'self' policy
 // (docs/ui-v1-plan.md §6).
 //
 //	Params: label string (summary text), opts DisclosureOpts, children — the
@@ -11,14 +12,30 @@
 //	@components.Disclosure("Audit trail", components.DisclosureOpts{Summary: "created 3 Sep 2026"}) {
 //		Entry #42 · posted by …
 //	}
+//	@components.Disclosure("Edit service information", components.DisclosureOpts{
+//		Variant: components.DisclosurePanel, Hint: "4 fields",
+//	}) { … }
+//	@components.Disclosure("Delete this package", components.DisclosureOpts{
+//		Variant: components.DisclosureDanger,
+//	}) { … }
 package components
 
 templ Disclosure(label string, opts DisclosureOpts, children templ.Component) {
-	<details class="disclosure" open?={ opts.Open }>
+	<details
+		class={ disclosureClass(opts) }
+		open?={ opts.Open }
+		if opts.ID != "" {
+			id={ opts.ID }
+		}
+	>
 		<summary>
-			<span class="disclosure__chevron" aria-hidden="true">›</span>
-			{ label }
-			if opts.Summary != "" && !opts.Open {
+			<span class="disclosure__chevron" aria-hidden="true">
+				@Icon("chevron-right")
+			</span>
+			<span class="disclosure__label">{ label }</span>
+			if opts.Hint != "" {
+				<span class="disclosure__hint">{ opts.Hint }</span>
+			} else if opts.Summary != "" && !opts.Open {
 				<span class="disclosure__hint">{ opts.Summary }</span>
 			}
 		</summary>

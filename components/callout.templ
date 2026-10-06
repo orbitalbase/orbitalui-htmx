@@ -1,0 +1,114 @@
+// Callout and DecisionCard — see callout.go for options.
+//
+// Usage:
+//
+//	@components.Callout(components.ToneWarning, components.CalloutOpts{
+//		ID: "join-queue", Title: "Companies waiting to connect",
+//		Description: "Three companies asked to join your firm.",
+//		Icon:        "link",
+//	}, joinRows())
+//
+//	@components.DecisionCard(components.DecisionCardOpts{
+//		Subject: "Share transfer", Context: "share_transfer · v3",
+//		Evidence: sourceQuote(), Actions: decisionButtons(),
+//	}, components.Text("Your firm normally requires a board resolution."))
+package components
+
+templ Callout(tone Tone, opts CalloutOpts, body templ.Component) {
+	<section
+		class={ calloutClass(tone, opts) }
+		if opts.ID != "" {
+			id={ opts.ID }
+			aria-labelledby={ calloutHeadingID(opts) }
+		}
+		{ opts.Attrs... }
+	>
+		<div class="ui-callout__head">
+			if opts.Icon != "" {
+				<span class="ui-callout__icon" aria-hidden="true">
+					@Icon(opts.Icon)
+				</span>
+			}
+			<div class="ui-callout__heading">
+				if opts.HeadingLevel == 3 {
+					<h3
+						class="ui-callout__title"
+						if opts.ID != "" {
+							id={ calloutHeadingID(opts) }
+						}
+					>{ opts.Title }</h3>
+				} else {
+					<h2
+						class="ui-callout__title"
+						if opts.ID != "" {
+							id={ calloutHeadingID(opts) }
+						}
+					>{ opts.Title }</h2>
+				}
+				if opts.Description != "" {
+					<p class="ui-callout__description">{ opts.Description }</p>
+				}
+			</div>
+			if opts.Actions != nil {
+				<div class="ui-callout__actions">
+					@opts.Actions
+				</div>
+			}
+		</div>
+		if body != nil {
+			<div class="ui-callout__body">
+				@body
+			</div>
+		}
+	</section>
+}
+
+templ DecisionCard(opts DecisionCardOpts, body templ.Component) {
+	<article
+		class={ joinClass("ui-decision", opts.Class) }
+		if opts.ID != "" {
+			id={ opts.ID }
+			aria-labelledby={ decisionCardHeadingID(opts) }
+		}
+		{ opts.Attrs... }
+	>
+		<div class="ui-decision__head">
+			if opts.HeadingLevel == 2 {
+				<h2
+					class="ui-decision__subject"
+					if opts.ID != "" {
+						id={ decisionCardHeadingID(opts) }
+					}
+				>{ opts.Subject }</h2>
+			} else {
+				<h3
+					class="ui-decision__subject"
+					if opts.ID != "" {
+						id={ decisionCardHeadingID(opts) }
+					}
+				>{ opts.Subject }</h3>
+			}
+			if opts.Context != "" {
+				<span class="ui-decision__context">{ opts.Context }</span>
+			}
+			if opts.Status != nil {
+				@opts.Status
+			}
+		</div>
+		if body != nil {
+			<div class="ui-decision__body">
+				@body
+			</div>
+		}
+		if opts.Evidence != nil {
+			<div class="ui-decision__evidence">
+				@opts.Evidence
+			</div>
+		}
+		if opts.Actions != nil {
+			<div class="ui-decision__actions">
+				@opts.Actions
+			</div>
+		}
+	</article>
+}
