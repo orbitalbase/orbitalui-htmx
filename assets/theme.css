@@ -713,7 +713,10 @@ a.ui-row:hover .ui-row__chevron { color: var(--oui-fg-brand); }
 .ui-rows--plain .ui-row { padding-inline: 0; }
 .ui-rows--plain .ui-row__below { padding-inline: 3.125rem 0; }
 .ui-rows--compact .ui-row { padding-block: .625rem; }
-.ui-rows--cards, nav.ui-rows--cards > .ui-rows__list { grid-template-columns: repeat(auto-fill, minmax(min(16rem, 100%), 1fr)); gap: .75rem; }
+/* The tile grid belongs on the list itself. A labelled list renders a <nav>
+   around its <ul>; that wrapper must stay a single column or the whole list
+   is squeezed into its first track. */
+ul.ui-rows--cards, nav.ui-rows--cards > .ui-rows__list { grid-template-columns: repeat(auto-fill, minmax(min(16rem, 100%), 1fr)); gap: .75rem; }
 .ui-rows--cards .ui-rows__item + .ui-rows__item { border-top: 0; }
 .ui-rows--cards .ui-row { height: 100%; padding: 1rem; background: var(--oui-bg-primary); border: 1px solid var(--oui-border-secondary); border-radius: var(--oui-radius-lg); box-shadow: var(--oui-shadow-xs); }
 .ui-rows--cards a.ui-row:hover { background: var(--oui-bg-primary); border-color: var(--oui-border-primary); box-shadow: var(--oui-shadow-sm); }
