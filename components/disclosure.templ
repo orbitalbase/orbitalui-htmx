@@ -9,13 +9,16 @@
 //
 // Usage:
 //
-//	@components.Disclosure("Audit trail", components.DisclosureOpts{Summary: "created 3 Sep 2026"}) {
+// Disclosure takes its body as an argument; DisclosureBlock (disclosure.go)
+// takes it from a templ children block instead:
+//
+//	@components.DisclosureBlock("Audit trail", components.DisclosureOpts{Summary: "created 3 Sep 2026"}) {
 //		Entry #42 · posted by …
 //	}
-//	@components.Disclosure("Edit service information", components.DisclosureOpts{
+//	@components.DisclosureBlock("Edit service information", components.DisclosureOpts{
 //		Variant: components.DisclosurePanel, Hint: "4 fields",
 //	}) { … }
-//	@components.Disclosure("Delete this package", components.DisclosureOpts{
+//	@components.DisclosureBlock("Delete this package", components.DisclosureOpts{
 //		Variant: components.DisclosureDanger,
 //	}) { … }
 package components

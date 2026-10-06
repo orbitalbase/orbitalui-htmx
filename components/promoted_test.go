@@ -1,9 +1,13 @@
 package components
 
 import (
+	"context"
+	"io"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/a-h/templ"
 )
 
 func TestActionRowLinkedAndPlain(t *testing.T) {
@@ -166,4 +170,14 @@ func TestDisclosureHostHooksAndTextDanger(t *testing.T) {
 
 	btn := renderC(t, Button(ButtonVariantTextDanger, "", ButtonOpts{Label: "Remove", Type: "submit"}))
 	want(t, btn, `class="ui-button ui-button--text ui-button--text-danger"`)
+}
+
+func TestDisclosureBlockTakesChildren(t *testing.T) {
+	out := renderC(t, templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
+		return DisclosureBlock("Add a fee", DisclosureOpts{Variant: DisclosurePanel}).Render(templ.WithChildren(ctx, Text("FORM")), w)
+	}))
+	want(t, out, `<details class="disclosure disclosure--panel">`)
+	want(t, out, `<div class="disclosure__body">FORM</div>`)
+	empty := renderC(t, DisclosureBlock("Empty", DisclosureOpts{}))
+	want(t, empty, `<div class="disclosure__body"></div>`)
 }

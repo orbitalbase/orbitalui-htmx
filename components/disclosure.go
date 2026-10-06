@@ -1,7 +1,12 @@
 // Disclosure types (disclosure.templ).
 package components
 
-import "github.com/a-h/templ"
+import (
+	"context"
+	"io"
+
+	"github.com/a-h/templ"
+)
 
 // DisclosureVariant selects the frame a disclosure wears. The shape is always
 // the same native <details>; only its weight changes, so one component covers
@@ -58,4 +63,23 @@ func disclosureClass(o DisclosureOpts) string {
 		variant = "disclosure--" + string(o.Variant)
 	}
 	return joinClass("disclosure", variant, o.Class)
+}
+
+// DisclosureBlock is Disclosure with its body taken from a templ children
+// block, so a call site keeps an inline form in place:
+//
+//	@components.DisclosureBlock("Add a fee", components.DisclosureOpts{Variant: components.DisclosurePanel}) {
+//		<form method="post">…</form>
+//	}
+//
+// It only hands the block to Disclosure; frame, variants and open state are
+// Disclosure's.
+func DisclosureBlock(label string, opts DisclosureOpts) templ.Component {
+	return templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
+		body := templ.GetChildren(ctx)
+		if body == nil {
+			body = templ.NopComponent
+		}
+		return Disclosure(label, opts, body).Render(templ.ClearChildren(ctx), w)
+	})
 }

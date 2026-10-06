@@ -192,12 +192,14 @@ func Quantity(raw string) string {
 	return sign + grouped + "." + fraction
 }
 
-// GroupedAmount pairs a currency code with a grouped amount
-// ("MYR 50,000.00"). An empty amount yields "" so a caller can choose its own
-// placeholder wording; an empty currency yields the figure alone.
+// GroupedAmount pairs a currency code with a grouped amount, trimming
+// trailing fractional zeros the way Quantity does ("37500.00" → "MYR 37,500",
+// "2.50" → "MYR 2.5"). An empty amount yields "" so a caller can choose its
+// own placeholder wording; an empty currency yields the figure alone.
 //
-// Use it for a stored decimal the host must show verbatim. FormatMoney is for
-// an Amount that has already been scaled to the currency's own decimals.
+// Use it for unit prices and terms where the stored precision is noise. For
+// an amount that must show the currency's own decimals ("MYR 1,500.50"),
+// parse it with AmountFromString and render it with FormatMoney.
 func GroupedAmount(currency, raw string) string {
 	amount := Quantity(raw)
 	if amount == "" {

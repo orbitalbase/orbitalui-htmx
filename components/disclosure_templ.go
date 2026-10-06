@@ -23,19 +23,25 @@
 
 //
 
-//	@components.Disclosure("Audit trail", components.DisclosureOpts{Summary: "created 3 Sep 2026"}) {
+// Disclosure takes its body as an argument; DisclosureBlock (disclosure.go)
+
+// takes it from a templ children block instead:
+
+//
+
+//	@components.DisclosureBlock("Audit trail", components.DisclosureOpts{Summary: "created 3 Sep 2026"}) {
 
 //		Entry #42 · posted by …
 
 //	}
 
-//	@components.Disclosure("Edit service information", components.DisclosureOpts{
+//	@components.DisclosureBlock("Edit service information", components.DisclosureOpts{
 
 //		Variant: components.DisclosurePanel, Hint: "4 fields",
 
 //	}) { … }
 
-//	@components.Disclosure("Delete this package", components.DisclosureOpts{
+//	@components.DisclosureBlock("Delete this package", components.DisclosureOpts{
 
 //		Variant: components.DisclosureDanger,
 
@@ -105,7 +111,7 @@ func Disclosure(label string, opts DisclosureOpts, children templ.Component) tem
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.ResolveAttributeValue(opts.ID)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/disclosure.templ`, Line: 28, Col: 15}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/disclosure.templ`, Line: 31, Col: 15}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
 			if templ_7745c5c3_Err != nil {
@@ -124,7 +130,7 @@ func Disclosure(label string, opts DisclosureOpts, children templ.Component) tem
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(opts.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/disclosure.templ`, Line: 31, Col: 19}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/disclosure.templ`, Line: 34, Col: 19}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 			if templ_7745c5c3_Err != nil {
@@ -154,7 +160,7 @@ func Disclosure(label string, opts DisclosureOpts, children templ.Component) tem
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/disclosure.templ`, Line: 39, Col: 42}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/disclosure.templ`, Line: 42, Col: 42}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -172,7 +178,7 @@ func Disclosure(label string, opts DisclosureOpts, children templ.Component) tem
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(opts.Hint)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/disclosure.templ`, Line: 41, Col: 46}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/disclosure.templ`, Line: 44, Col: 46}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -190,7 +196,7 @@ func Disclosure(label string, opts DisclosureOpts, children templ.Component) tem
 			var templ_7745c5c3_Var8 string
 			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(opts.Summary)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/disclosure.templ`, Line: 43, Col: 49}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/disclosure.templ`, Line: 46, Col: 49}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {
