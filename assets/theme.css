@@ -420,6 +420,8 @@ a.kpi-tile:hover { border-color: var(--oui-border-primary); box-shadow: var(--ou
 .ui-progress--success .ui-progress__fill { background: var(--oui-success-500); }
 .ui-progress--warning .ui-progress__fill { background: var(--oui-warning-500); }
 .ui-progress--danger .ui-progress__fill { background: var(--oui-error-500); }
+.ui-progress--info .ui-progress__fill { background: var(--oui-info-500); }
+.ui-progress--ai .ui-progress__fill { background: var(--oui-ai-500); }
 
 /* ───────────────────────── Checklist ───────────────────────── */
 .ui-checklist { display: grid; margin: 0; padding: 0; list-style: none; }
@@ -615,6 +617,8 @@ summary.ui-nav__heading:focus-visible .ui-nav__heading-chevron { opacity: 1; }
 .ui-nav__badge--warning { color: var(--oui-warning-700); background: var(--oui-warning-50); }
 .ui-nav__badge--danger { color: var(--oui-error-700); background: var(--oui-error-50); }
 .ui-nav__badge--info, .ui-nav__badge--brand { color: var(--oui-brand-700); background: var(--oui-brand-50); }
+.ui-nav__badge--success { color: var(--oui-success-700); background: var(--oui-success-50); }
+.ui-nav__badge--ai { color: var(--oui-ai-700); background: var(--oui-ai-50); }
 
 /* ───────────────────────── Breadcrumbs ───────────────────────── */
 .ui-breadcrumbs ol { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem; margin: 0; padding: 0; list-style: none; }
@@ -679,6 +683,7 @@ summary.ui-nav__heading:focus-visible .ui-nav__heading-chevron { opacity: 1; }
 .ui-record-header__icon--success { color: var(--oui-success-600); background: var(--oui-success-50); }
 .ui-record-header__icon--warning { color: var(--oui-warning-600); background: var(--oui-warning-50); }
 .ui-record-header__icon--danger { color: var(--oui-error-600); background: var(--oui-error-50); }
+.ui-record-header__icon--ai { color: var(--oui-ai-700); background: var(--oui-ai-50); }
 .ui-record-header__copy { display: grid; min-width: 0; flex: 1; gap: .125rem; }
 .ui-record-header__copy p { margin: 0; }
 .ui-record-header__eyebrow { color: var(--oui-text-quaternary); font-size: var(--oui-text-xs); font-weight: 500; }
@@ -761,6 +766,7 @@ ul.ui-rows--cards, nav.ui-rows--cards > .ui-rows__list { grid-template-columns: 
 
 /* ───────────────────────── Callout ───────────────────────── */
 .ui-callout { --oui-callout-ink: var(--oui-info-700); --oui-callout-bg: var(--oui-info-50); --oui-callout-line: var(--oui-info-200); padding: 1rem 1.25rem 1.25rem; background: var(--oui-callout-bg); border: 1px solid var(--oui-callout-line); border-radius: var(--oui-radius-xl); }
+.ui-callout--info { --oui-callout-ink: var(--oui-info-700); --oui-callout-bg: var(--oui-info-50); --oui-callout-line: var(--oui-info-200); }
 .ui-callout--success { --oui-callout-ink: var(--oui-success-700); --oui-callout-bg: var(--oui-success-25); --oui-callout-line: var(--oui-success-200); }
 .ui-callout--warning { --oui-callout-ink: var(--oui-warning-700); --oui-callout-bg: var(--oui-warning-25); --oui-callout-line: var(--oui-warning-200); }
 .ui-callout--danger { --oui-callout-ink: var(--oui-error-700); --oui-callout-bg: var(--oui-error-25); --oui-callout-line: var(--oui-error-200); }
