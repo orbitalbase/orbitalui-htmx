@@ -49,7 +49,7 @@ templ FieldError(message string) {
 templ FieldInput(o FieldInputOpts) {
 	<input
 		type={ fieldControlType(o.Type) }
-		class={ fieldControlClass(o) }
+		class={ mergeClass(fieldControlClass(o), o.Attrs) }
 		if o.Name != "" {
 			name={ o.Name }
 		}
@@ -82,6 +82,6 @@ templ FieldInput(o FieldInputOpts) {
 		if o.Pattern != "" {
 			pattern={ o.Pattern }
 		}
-		{ o.Attrs... }
+		{ attrsWithoutClass(o.Attrs)... }
 	/>
 }

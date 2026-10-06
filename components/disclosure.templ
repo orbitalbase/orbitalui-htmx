@@ -25,7 +25,7 @@ package components
 
 templ Disclosure(label string, opts DisclosureOpts, children templ.Component) {
 	<details
-		class={ disclosureClass(opts) }
+		class={ mergeClass(disclosureClass(opts), opts.Attrs) }
 		open?={ opts.Open }
 		if opts.ID != "" {
 			id={ opts.ID }
@@ -33,7 +33,7 @@ templ Disclosure(label string, opts DisclosureOpts, children templ.Component) {
 		if opts.Name != "" {
 			name={ opts.Name }
 		}
-		{ opts.Attrs... }
+		{ attrsWithoutClass(opts.Attrs)... }
 	>
 		<summary>
 			<span class="disclosure__chevron" aria-hidden="true">
@@ -47,7 +47,9 @@ templ Disclosure(label string, opts DisclosureOpts, children templ.Component) {
 			}
 		</summary>
 		<div class={ joinClass("disclosure__body", opts.BodyClass) }>
-			@children
+			if children != nil {
+				@children
+			}
 		</div>
 	</details>
 }

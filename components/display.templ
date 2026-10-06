@@ -182,6 +182,8 @@ templ FeedItem(opts FeedItemOpts) {
 // Feed wraps FeedItem rows in the list element they require.
 templ Feed(items templ.Component) {
 	<ul class="ui-feed">
-		@items
+		if items != nil {
+			@items
+		}
 	</ul>
 }

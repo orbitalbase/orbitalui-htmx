@@ -6,6 +6,7 @@
 package components
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/a-h/templ"
@@ -112,6 +113,36 @@ func joinClass(parts ...string) string {
 		}
 	}
 	return strings.Join(kept, " ")
+}
+
+// mergeClass folds a "class" entry of a caller's Attrs into the computed
+// class list, so an element that spreads Attrs after its own class never
+// emits two class attributes (browsers keep only the first, silently
+// dropping the caller's). Pair it with attrsWithoutClass at the spread.
+func mergeClass(computed string, attrs templ.Attributes) string {
+	switch extra := attrs["class"].(type) {
+	case nil:
+		return computed
+	case string:
+		return joinClass(computed, extra)
+	default:
+		return joinClass(computed, fmt.Sprint(extra))
+	}
+}
+
+// attrsWithoutClass returns attrs minus its "class" entry (see mergeClass).
+// It returns attrs itself when there is nothing to remove.
+func attrsWithoutClass(attrs templ.Attributes) templ.Attributes {
+	if _, ok := attrs["class"]; !ok {
+		return attrs
+	}
+	rest := make(templ.Attributes, len(attrs))
+	for k, v := range attrs {
+		if k != "class" {
+			rest[k] = v
+		}
+	}
+	return rest
 }
 
 func modifier(on bool, class string) string {

@@ -70,7 +70,7 @@ func Button(variant ButtonVariant, size ButtonSize, opts ButtonOpts) templ.Compo
 		}
 		ctx = templ.ClearChildren(ctx)
 		if opts.Href != "" {
-			var templ_7745c5c3_Var2 = []any{buttonClass(variant, size, opts.Class)}
+			var templ_7745c5c3_Var2 = []any{mergeClass(buttonClass(variant, size, opts.Class), opts.Attrs)}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var2...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -238,7 +238,7 @@ func Button(variant ButtonVariant, size ButtonSize, opts ButtonOpts) templ.Compo
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, opts.Attrs)
+			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, attrsWithoutClass(opts.Attrs))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -276,7 +276,7 @@ func Button(variant ButtonVariant, size ButtonSize, opts ButtonOpts) templ.Compo
 				return templ_7745c5c3_Err
 			}
 		} else {
-			var templ_7745c5c3_Var13 = []any{buttonClass(variant, size, opts.Class)}
+			var templ_7745c5c3_Var13 = []any{mergeClass(buttonClass(variant, size, opts.Class), opts.Attrs)}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var13...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -513,7 +513,7 @@ func Button(variant ButtonVariant, size ButtonSize, opts ButtonOpts) templ.Compo
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, opts.Attrs)
+			templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, attrsWithoutClass(opts.Attrs))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

@@ -24,7 +24,7 @@ templ Button(variant ButtonVariant, size ButtonSize, opts ButtonOpts) {
 	if opts.Href != "" {
 		<a
 			href={ opts.Href }
-			class={ buttonClass(variant, size, opts.Class) }
+			class={ mergeClass(buttonClass(variant, size, opts.Class), opts.Attrs) }
 			if opts.Target != "" {
 				target={ opts.Target }
 			}
@@ -46,7 +46,7 @@ templ Button(variant ButtonVariant, size ButtonSize, opts ButtonOpts) {
 			if opts.HXIndicator != "" {
 				hx-indicator={ opts.HXIndicator }
 			}
-			{ opts.Attrs... }
+			{ attrsWithoutClass(opts.Attrs)... }
 		>
 			if opts.Icon != "" {
 				@Icon(opts.Icon)
@@ -58,7 +58,7 @@ templ Button(variant ButtonVariant, size ButtonSize, opts ButtonOpts) {
 	} else {
 		<button
 			type={ buttonType(opts.Type) }
-			class={ buttonClass(variant, size, opts.Class) }
+			class={ mergeClass(buttonClass(variant, size, opts.Class), opts.Attrs) }
 			disabled?={ opts.Disabled || opts.Loading }
 			aria-busy?={ opts.Loading }
 			if opts.Name != "" {
@@ -91,7 +91,7 @@ templ Button(variant ButtonVariant, size ButtonSize, opts ButtonOpts) {
 			if opts.HXIndicator != "" {
 				hx-indicator={ opts.HXIndicator }
 			}
-			{ opts.Attrs... }
+			{ attrsWithoutClass(opts.Attrs)... }
 		>
 			if opts.Loading {
 				<span class="ui-button__progress" aria-hidden="true"></span>

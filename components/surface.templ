@@ -57,14 +57,14 @@ templ PageHeader(title string, opts PageHeaderOpts) {
 
 templ Card(opts CardOpts, body templ.Component) {
 	<section
-		class={ cardClass(opts) }
+		class={ mergeClass(cardClass(opts), opts.Attrs) }
 		if opts.ID != "" {
 			id={ opts.ID }
 		}
 		if opts.Title != "" && opts.ID != "" {
 			aria-labelledby={ cardHeadingID(opts) }
 		}
-		{ opts.Attrs... }
+		{ attrsWithoutClass(opts.Attrs)... }
 	>
 		if opts.Title != "" {
 			<header class="ui-card__header">
@@ -141,7 +141,9 @@ templ SettingsSection(opts SettingsSectionOpts, body templ.Component) {
 			}
 		</div>
 		<div class="ui-settings-section__content">
-			@body
+			if body != nil {
+				@body
+			}
 		</div>
 	</section>
 }

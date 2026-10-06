@@ -26,7 +26,9 @@ templ ActionList(opts ActionListOpts, rows templ.Component) {
 			}
 		>
 			<ul class="ui-rows__list" role="list">
-				@rows
+				if rows != nil {
+					@rows
+				}
 			</ul>
 		</nav>
 	} else {
@@ -37,7 +39,9 @@ templ ActionList(opts ActionListOpts, rows templ.Component) {
 				id={ opts.ID }
 			}
 		>
-			@rows
+			if rows != nil {
+				@rows
+			}
 		</ul>
 	}
 }
@@ -46,7 +50,7 @@ templ ActionRow(opts ActionRowOpts) {
 	<li class={ actionRowItemClass(opts) }>
 		if opts.Href != "" {
 			<a
-				class={ actionRowClass(opts) }
+				class={ mergeClass(actionRowClass(opts), opts.Attrs) }
 				href={ opts.Href }
 				if opts.ID != "" {
 					id={ opts.ID }
@@ -54,17 +58,17 @@ templ ActionRow(opts ActionRowOpts) {
 				if opts.Current {
 					aria-current="page"
 				}
-				{ opts.Attrs... }
+				{ attrsWithoutClass(opts.Attrs)... }
 			>
 				@actionRowInner(opts)
 			</a>
 		} else {
 			<div
-				class={ actionRowClass(opts) }
+				class={ mergeClass(actionRowClass(opts), opts.Attrs) }
 				if opts.ID != "" {
 					id={ opts.ID }
 				}
-				{ opts.Attrs... }
+				{ attrsWithoutClass(opts.Attrs)... }
 			>
 				@actionRowInner(opts)
 			</div>
@@ -166,7 +170,7 @@ templ ChoiceRow(opts ChoiceRowOpts) {
 			checked?={ opts.Checked }
 			required?={ opts.Required }
 			disabled?={ opts.Disabled }
-			{ opts.Attrs... }
+			{ attrsWithoutClass(opts.Attrs)... }
 		/>
 		<span class="ui-choice__copy">
 			<span class="ui-choice__label">{ opts.Label }</span>
@@ -200,6 +204,8 @@ templ ChoiceGroup(legend string, opts ChoiceGroupOpts, body templ.Component) {
 		} else {
 			<legend class="sr-only">{ legend }</legend>
 		}
-		@body
+		if body != nil {
+			@body
+		}
 	</fieldset>
 }

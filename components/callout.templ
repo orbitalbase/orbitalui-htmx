@@ -16,12 +16,12 @@ package components
 
 templ Callout(tone Tone, opts CalloutOpts, body templ.Component) {
 	<section
-		class={ calloutClass(tone, opts) }
+		class={ mergeClass(calloutClass(tone, opts), opts.Attrs) }
 		if opts.ID != "" {
 			id={ opts.ID }
 			aria-labelledby={ calloutHeadingID(opts) }
 		}
-		{ opts.Attrs... }
+		{ attrsWithoutClass(opts.Attrs)... }
 	>
 		<div class="ui-callout__head">
 			if opts.Icon != "" {
@@ -65,12 +65,12 @@ templ Callout(tone Tone, opts CalloutOpts, body templ.Component) {
 
 templ DecisionCard(opts DecisionCardOpts, body templ.Component) {
 	<article
-		class={ joinClass("ui-decision", opts.Class) }
+		class={ mergeClass(joinClass("ui-decision", opts.Class), opts.Attrs) }
 		if opts.ID != "" {
 			id={ opts.ID }
 			aria-labelledby={ decisionCardHeadingID(opts) }
 		}
-		{ opts.Attrs... }
+		{ attrsWithoutClass(opts.Attrs)... }
 	>
 		<div class="ui-decision__head">
 			if opts.HeadingLevel == 2 {

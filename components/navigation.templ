@@ -118,10 +118,14 @@ templ Menu(opts MenuOpts, trigger templ.Component, panel templ.Component) {
 				aria-label={ opts.Label }
 			}
 		>
-			@trigger
+			if trigger != nil {
+				@trigger
+			}
 		</summary>
 		<div class="ui-menu__panel">
-			@panel
+			if panel != nil {
+				@panel
+			}
 		</div>
 	</details>
 }
