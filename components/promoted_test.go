@@ -157,3 +157,13 @@ func TestFormatHelpers(t *testing.T) {
 		t.Errorf("Count(1) = %q", got)
 	}
 }
+
+func TestDisclosureHostHooksAndTextDanger(t *testing.T) {
+	out := renderC(t, Disclosure("Banking", DisclosureOpts{Name: "profile", BodyClass: "form-grid", Attrs: map[string]any{"data-section": "banking"}}, Text("x")))
+	want(t, out, `name="profile"`)
+	want(t, out, `data-section="banking"`)
+	want(t, out, `<div class="disclosure__body form-grid">`)
+
+	btn := renderC(t, Button(ButtonVariantTextDanger, "", ButtonOpts{Label: "Remove", Type: "submit"}))
+	want(t, btn, `class="ui-button ui-button--text ui-button--text-danger"`)
+}

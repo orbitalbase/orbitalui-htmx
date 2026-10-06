@@ -1,6 +1,8 @@
 // Disclosure types (disclosure.templ).
 package components
 
+import "github.com/a-h/templ"
+
 // DisclosureVariant selects the frame a disclosure wears. The shape is always
 // the same native <details>; only its weight changes, so one component covers
 // a text link, an editing surface and a danger zone.
@@ -32,13 +34,22 @@ const (
 //	    request", "4 fields").
 //	Summary — a muted hint shown only while collapsed, for a value the open
 //	    body repeats anyway ("created 3 Sep 2026").
+//	Name — the native <details name> grouping: disclosures sharing a name
+//	    behave as an exclusive accordion in browsers that support it.
+//	BodyClass — extra classes on the body wrapper (a form grid, a flush
+//	    table) so host layout does not need a second wrapper element.
+//	Attrs — extra attributes on the <details> (data-* hooks a host script
+//	    reads), spread last.
 type DisclosureOpts struct {
-	Open    bool
-	Variant DisclosureVariant
-	Hint    string
-	Summary string
-	ID      string
-	Class   string
+	Open      bool
+	Variant   DisclosureVariant
+	Hint      string
+	Summary   string
+	Name      string
+	BodyClass string
+	ID        string
+	Class     string
+	Attrs     templ.Attributes
 }
 
 func disclosureClass(o DisclosureOpts) string {

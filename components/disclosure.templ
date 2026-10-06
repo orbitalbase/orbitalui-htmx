@@ -27,6 +27,10 @@ templ Disclosure(label string, opts DisclosureOpts, children templ.Component) {
 		if opts.ID != "" {
 			id={ opts.ID }
 		}
+		if opts.Name != "" {
+			name={ opts.Name }
+		}
+		{ opts.Attrs... }
 	>
 		<summary>
 			<span class="disclosure__chevron" aria-hidden="true">
@@ -39,7 +43,7 @@ templ Disclosure(label string, opts DisclosureOpts, children templ.Component) {
 				<span class="disclosure__hint">{ opts.Summary }</span>
 			}
 		</summary>
-		<div class="disclosure__body">
+		<div class={ joinClass("disclosure__body", opts.BodyClass) }>
 			@children
 		</div>
 	</details>

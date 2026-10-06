@@ -25,6 +25,10 @@ const (
 	// "Resend", "Revoke") stays a real form submission without reading as a
 	// button and competing with the page's one primary action.
 	ButtonVariantText ButtonVariant = "text"
+	// ButtonVariantTextDanger is the text variant for a destructive per-row
+	// mutation ("Remove", "Revoke"): still a quiet link, but red on hover
+	// and focus so the consequence is legible before the click.
+	ButtonVariantTextDanger ButtonVariant = "text-danger"
 )
 
 // ButtonSize is a size preset; "" = md (the default height).
@@ -80,6 +84,8 @@ func buttonClass(variant ButtonVariant, size ButtonSize, extra string) string {
 		parts = append(parts, "ui-button--quiet")
 	case ButtonVariantText:
 		parts = append(parts, "ui-button--text")
+	case ButtonVariantTextDanger:
+		parts = append(parts, "ui-button--text", "ui-button--text-danger")
 	default:
 		parts = append(parts, "ui-button--secondary")
 	}
