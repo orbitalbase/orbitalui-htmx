@@ -17,10 +17,13 @@ import (
 // CountText renders an int64 count with thousands separators ("1,234") — the
 // tab-bar count chips and table summaries.
 func CountText(n int64) string {
-	if n < 0 {
-		return "-" + CountText(-n)
+	digits := strconv.FormatInt(n, 10)
+	if strings.HasPrefix(digits, "-") {
+		// Group the formatted digits rather than negating n: -n overflows
+		// for math.MinInt64.
+		return "-" + groupInt(digits[1:])
 	}
-	return groupInt(strconv.FormatInt(n, 10))
+	return groupInt(digits)
 }
 
 // IntText renders an int for markup (page numbers, aria values).
@@ -115,29 +118,60 @@ func RelativeDateText(raw string, now time.Time) string {
 }
 
 // calendarDaysBetween counts whole days from now's UTC calendar day to t's.
+// It differences civil day numbers instead of subtracting time.Time values,
+// because time.Duration saturates at about 292 years.
 func calendarDaysBetween(now, t time.Time) int {
-	from := now.UTC()
-	to := t.UTC()
-	start := time.Date(from.Year(), from.Month(), from.Day(), 0, 0, 0, 0, time.UTC)
-	end := time.Date(to.Year(), to.Month(), to.Day(), 0, 0, 0, 0, time.UTC)
-	return int(end.Sub(start) / (24 * time.Hour))
+	return int(civilDay(t) - civilDay(now))
+}
+
+// civilDay numbers t's UTC calendar day on the proleptic Gregorian calendar
+// (days since 1970-01-01), after Howard Hinnant's days_from_civil.
+func civilDay(t time.Time) int64 {
+	year, month, day := t.UTC().Date()
+	y := int64(year)
+	m := int64(month)
+	if m <= 2 {
+		y--
+	}
+	era := y / 400
+	if y < 0 && y%400 != 0 {
+		era--
+	}
+	yoe := y - era*400
+	mp := (m + 9) % 12
+	doy := (153*mp+2)/5 + int64(day) - 1
+	doe := yoe*365 + yoe/4 - yoe/100 + doy
+	return era*146097 + doe - 719468
 }
 
 // DayDuration spells a non-negative day count at the coarsest honest unit:
 // days under three weeks, then weeks, months and years.
+//
+// A negative count is spelled by its magnitude. The magnitude is held as a
+// uint64, so math.MinInt needs no special case.
 func DayDuration(days int) string {
-	switch {
-	case days < 0:
-		return DayDuration(-days)
-	case days < 21:
-		return Plural(days, "day")
-	case days < 60:
-		return Plural((days+3)/7, "week")
-	case days < 365:
-		return Plural((days+15)/30, "month")
-	default:
-		return Plural((days+182)/365, "year")
+	n := uint64(days)
+	if days < 0 {
+		n = -n // two's complement negation: the magnitude, even for MinInt
 	}
+	switch {
+	case n < 21:
+		return unitCount(n, "day")
+	case n < 60:
+		return unitCount((n+3)/7, "week")
+	case n < 365:
+		return unitCount((n+15)/30, "month")
+	default:
+		return unitCount((n+182)/365, "year")
+	}
+}
+
+func unitCount(n uint64, noun string) string {
+	text := strconv.FormatUint(n, 10) + " " + noun
+	if n == 1 {
+		return text
+	}
+	return text + "s"
 }
 
 // Plural renders a count with its noun, pluralised by appending "s": the
@@ -174,6 +208,10 @@ func Quantity(raw string) string {
 	whole, fraction, _ := strings.Cut(value, ".")
 	if whole == "" {
 		return strings.TrimSpace(raw)
+	}
+	// "0000123" reads as "123"; an all-zero integer part keeps one "0".
+	if whole = strings.TrimLeft(whole, "0"); whole == "" {
+		whole = "0"
 	}
 	for _, r := range whole {
 		if r < '0' || r > '9' {
@@ -212,14 +250,36 @@ func GroupedAmount(currency, raw string) string {
 }
 
 // Percent trims a stored percentage's trailing zeros and appends the sign:
-// "80.000" → "80%". An empty value yields "".
+// "80.000" → "80%". An empty value yields "". A value that already carries
+// its sign ("50%") or is not a plain decimal ("n/a") is returned trimmed and
+// otherwise unchanged.
 func Percent(raw string) string {
 	value := strings.TrimSpace(raw)
-	if value == "" {
-		return ""
+	if value == "" || strings.HasSuffix(value, "%") {
+		return value
 	}
-	if strings.Contains(value, ".") {
-		value = strings.TrimSuffix(strings.TrimRight(value, "0"), ".")
+	sign := ""
+	if value[0] == '-' || value[0] == '+' {
+		sign, value = value[:1], value[1:]
 	}
-	return value + "%"
+	whole, fraction, _ := strings.Cut(value, ".")
+	if whole == "" && fraction == "" || !isDigits(whole) || !isDigits(fraction) {
+		return strings.TrimSpace(raw)
+	}
+	if whole == "" {
+		whole = "0"
+	}
+	if fraction = strings.TrimRight(fraction, "0"); fraction != "" {
+		return sign + whole + "." + fraction + "%"
+	}
+	return sign + whole + "%"
+}
+
+func isDigits(s string) bool {
+	for _, r := range s {
+		if r < '0' || r > '9' {
+			return false
+		}
+	}
+	return true
 }
