@@ -1,21 +1,23 @@
-/* Structural inspector styles; host themes supply the semantic CSS tokens. */
+/* Inspector structure and look. Colours come from the Orbital UI semantic
+   tokens (tokens.css) with fallbacks to a host's own --ink/--line names, so
+   the panel themes itself in any host. Load after host composition CSS. */
 .ui-inspector-host { display: flex; min-width: 0; min-height: 0; flex: 1; align-items: stretch; overflow: clip; }
 .ui-inspector-host > [data-inspector-list] { min-width: 0; min-height: 0; flex: 1; }
-.ui-inspector { position: relative; display: flex; width: var(--ui-inspector-width, clamp(25rem, 34vw, 37.5rem)); max-width: calc(100% - 20rem); min-height: 0; flex: 0 0 auto; flex-direction: column; color: var(--ink, oklch(22% .01 275)); background: var(--surface, oklch(99% .003 275)); border-left: 1px solid var(--line, oklch(88% .01 275)); }
+.ui-inspector { position: relative; display: flex; width: var(--ui-inspector-width, clamp(25rem, 34vw, 37.5rem)); max-width: calc(100% - 20rem); min-height: 0; flex: 0 0 auto; flex-direction: column; color: var(--oui-text-primary, var(--ink, oklch(22% .01 275))); background: var(--oui-bg-primary, var(--surface, oklch(99% .003 275))); border-left: 1px solid var(--oui-border-secondary, var(--line, oklch(88% .01 275))); box-shadow: -12px 0 24px -16px rgb(16 24 40 / .12); }
 .ui-inspector[hidden] { display: none; }
-.ui-inspector__header { display: flex; flex: 0 0 auto; align-items: start; justify-content: space-between; gap: 1rem; padding: 1rem 1.25rem; border-bottom: 1px solid var(--line, oklch(88% .01 275)); }
+.ui-inspector__header { display: flex; flex: 0 0 auto; align-items: center; justify-content: space-between; gap: 1rem; min-height: 3.75rem; padding: .75rem 1rem .75rem 1.5rem; border-bottom: 1px solid var(--oui-border-secondary, var(--line, oklch(88% .01 275))); }
 .ui-inspector__heading { min-width: 0; }
-.ui-inspector__heading h2 { margin: 0; font-size: 1rem; font-weight: 600; line-height: 1.4; overflow-wrap: anywhere; }
+.ui-inspector__heading h2, .ui-inspector__title { margin: 0; color: var(--oui-text-primary, inherit); font-size: 1rem; font-weight: 600; line-height: 1.5; letter-spacing: 0; overflow-wrap: anywhere; }
 /* Programmatic focus announces the heading; it is not an actionable control. */
 .ui-inspector [data-inspector-title]:focus { outline: none; box-shadow: none; }
 .ui-inspector__heading p { margin: .25rem 0 0; color: var(--muted, oklch(48% .01 275)); font-size: .8125rem; }
 .ui-inspector__tools { display: flex; gap: .25rem; flex: 0 0 auto; }
-.ui-inspector__tool { display: inline-flex; width: 2.5rem; min-height: 2.5rem; align-items: center; justify-content: center; color: inherit; border-radius: .375rem; text-decoration: none; }
-.ui-inspector__tool:hover { background: var(--surface-subtle, oklch(96% .005 275)); }
+.ui-inspector__tool { display: inline-flex; width: 2.25rem; min-height: 2.25rem; align-items: center; justify-content: center; color: var(--oui-fg-quaternary, inherit); border-radius: var(--oui-radius-md, .375rem); text-decoration: none; }
+.ui-inspector__tool:hover { color: var(--oui-fg-tertiary, inherit); background: var(--oui-bg-primary-hover, var(--surface-subtle, oklch(96% .005 275))); }
 .ui-inspector__tool:focus { outline: none; }
 .ui-inspector__tool:focus-visible { outline: 2px solid var(--focus-ring, oklch(45% .15 278)); outline-offset: 2px; }
 .ui-inspector__tool svg { width: 1rem; height: 1rem; }
-.ui-inspector__body { min-height: 0; flex: 1; overflow: auto; overscroll-behavior: contain; padding: 1.25rem; }
+.ui-inspector__body { min-height: 0; flex: 1; overflow: auto; overscroll-behavior: contain; padding: 1.5rem; }
 .ui-inspector__resizer { position: absolute; z-index: 2; inset: 0 auto 0 -.375rem; width: .75rem; cursor: col-resize; touch-action: none; }
 .ui-inspector__resizer:hover, .ui-inspector__resizer:focus-visible { background: var(--accent-soft, oklch(93% .03 278)); }
 .ui-inspector--expanded { position: fixed; z-index: 80; inset: 0; width: 100%; max-width: none; height: 100dvh; border: 0; }
@@ -23,7 +25,7 @@
 .ui-inspector--expanded .ui-inspector__body { padding: clamp(1rem, 2vw, 2rem); }
 body.ui-inspector-overlay { overflow: hidden; }
 body.ui-inspector-resizing { cursor: col-resize; user-select: none; }
-[data-inspector-record].is-selected { background: var(--accent-soft, oklch(93% .03 278)); }
+[data-inspector-record].is-selected { background: var(--oui-bg-brand-faint, var(--accent-soft, oklch(93% .03 278))); }
 @media (max-width: 58rem) {
   .ui-inspector:not([hidden]) { position: fixed; z-index: 80; inset: 0; width: 100%; max-width: none; height: 100dvh; border: 0; }
   .ui-inspector__resizer { display: none; }
