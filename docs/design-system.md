@@ -69,12 +69,12 @@ application means aliasing its own names to the semantic layer
 | `SettingsSection(SettingsSectionOpts, body)` | Two-column settings row. |
 | `DescriptionList(items, opts)` | Record facts; inline, stacked or grid; visible placeholder for missing values. |
 | `Avatar(name, AvatarOpts)` / `Initials(name)` | Initials avatar with a stable derived hue; square for organisations. |
-| `ProgressBar(value, ProgressOpts)` | Accessible progress with label and value. |
+| `ProgressBar(value, ProgressOpts)` | Accessible progress with label and value. The bar is always named: `Label`, else `AriaLabel`, else "Progress". |
 | `Checklist(items)` | Onboarding steps; only open steps are actionable. |
 | `Steps(steps)` | Vertical timeline with done/current/upcoming/blocked states. |
 | `Feed(items)` / `FeedItem(opts)` | Notifications and activity rows with unread state. |
 | `SidebarNav(sections, opts)` | Sidebar navigation with optional collapsible sections and badges. |
-| `Breadcrumbs(crumbs)` | Compact trail; the last crumb is current. |
+| `Breadcrumbs(crumbs)` | Compact trail; only the last crumb is the current page (`aria-current`), earlier crumbs without an `Href` render as plain text. |
 | `Menu`, `MenuLink`, `MenuHeader`, `MenuSeparator` | Native `<details>` popover menus. |
 | `WorkspaceSwitcher(opts, panel)` | One-line scope identity that discloses details and switching. |
 | `CountBadge(n)` | Neutral count pill for titles. |
@@ -96,3 +96,14 @@ application means aliasing its own names to the semantic layer
 Shell layout classes (`.ui-icon-button`, `.ui-nav*`, `.ui-switcher*`,
 `.ui-breadcrumbs`) are styled in `theme.css`; the host owns the outer grid,
 responsive drawer behaviour and routes.
+
+## Slot and attribute conventions
+
+- **Nil slots render nothing.** Any `templ.Component` slot or body argument
+  (`Card`, `SettingsSection`, `ActionList`, `Feed`, `Menu` trigger and panel,
+  `Disclosure`, `ChoiceGroup`, `Inspector`, `AsyncRegion`) may be nil; the
+  wrapper still renders and the slot is empty.
+- **`Attrs` never produces a second `class`.** Components that take
+  `Attrs templ.Attributes` fold an `Attrs["class"]` value into their own class
+  list (after the computed classes) and spread the remaining attributes.
+  `Class` and `Attrs["class"]` can be used together.
