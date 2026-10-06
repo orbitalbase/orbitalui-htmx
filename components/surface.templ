@@ -1,0 +1,147 @@
+// PageHeader, Card and SettingsSection — see surface.go for options.
+//
+// Usage:
+//
+//	@components.PageHeader("Officers", components.PageHeaderOpts{
+//		Description: "Directors, secretaries and shareholders on record.",
+//		Actions:     addOfficerButton(),
+//	})
+//	@components.Card(components.CardOpts{Title: "Recent documents", Actions: viewAll()}, list())
+//	@components.SettingsSection(components.SettingsSectionOpts{
+//		Title: "Email alerts", Description: "Choose what reaches your inbox.",
+//	}, alertFields())
+package components
+
+import "strconv"
+
+templ PageHeader(title string, opts PageHeaderOpts) {
+	<header
+		class={ pageHeaderClass(opts) }
+		if opts.ID != "" {
+			id={ opts.ID }
+		}
+	>
+		<div class="ui-page-header__row">
+			<div class="ui-page-header__copy">
+				if opts.Eyebrow != "" {
+					<p class="ui-page-header__eyebrow">{ opts.Eyebrow }</p>
+				}
+				<h1 class="ui-page-header__title" tabindex="-1">{ title }</h1>
+				if opts.Description != "" {
+					<p class="ui-page-header__description">{ opts.Description }</p>
+				}
+				if opts.Meta != nil {
+					<div class="ui-page-header__meta">
+						@opts.Meta
+					</div>
+				}
+			</div>
+			if opts.Actions != nil {
+				<div class="ui-page-header__actions">
+					@opts.Actions
+				</div>
+			}
+		</div>
+		if opts.Tabs != nil {
+			<div class="ui-page-header__tabs">
+				@opts.Tabs
+			</div>
+		}
+	</header>
+}
+
+templ Card(opts CardOpts, body templ.Component) {
+	<section
+		class={ cardClass(opts) }
+		if opts.ID != "" {
+			id={ opts.ID }
+		}
+		if opts.Title != "" && opts.ID != "" {
+			aria-labelledby={ cardHeadingID(opts) }
+		}
+		{ opts.Attrs... }
+	>
+		if opts.Title != "" {
+			<header class="ui-card__header">
+				<div class="ui-card__heading">
+					if opts.Eyebrow != "" {
+						<p class="ui-card__eyebrow">{ opts.Eyebrow }</p>
+					}
+					<div class="ui-card__title-row">
+						if opts.HeadingLevel == 3 {
+							<h3
+								class="ui-card__title"
+								if opts.ID != "" {
+									id={ cardHeadingID(opts) }
+								}
+							>{ opts.Title }</h3>
+						} else {
+							<h2
+								class="ui-card__title"
+								if opts.ID != "" {
+									id={ cardHeadingID(opts) }
+								}
+							>{ opts.Title }</h2>
+						}
+						if opts.Badge != nil {
+							@opts.Badge
+						}
+					</div>
+					if opts.Description != "" {
+						<p class="ui-card__description">{ opts.Description }</p>
+					}
+				</div>
+				if opts.Actions != nil {
+					<div class="ui-card__actions">
+						@opts.Actions
+					</div>
+				}
+			</header>
+		}
+		if body != nil {
+			<div class="ui-card__body">
+				@body
+			</div>
+		}
+		if opts.Footer != nil {
+			<footer class="ui-card__footer">
+				@opts.Footer
+			</footer>
+		}
+	</section>
+}
+
+templ SettingsSection(opts SettingsSectionOpts, body templ.Component) {
+	<section
+		class={ settingsSectionClass(opts) }
+		if opts.ID != "" {
+			id={ opts.ID }
+			aria-labelledby={ opts.ID + "-title" }
+		}
+	>
+		<div class="ui-settings-section__label">
+			<h2
+				class="ui-settings-section__title"
+				if opts.ID != "" {
+					id={ opts.ID + "-title" }
+				}
+			>{ opts.Title }</h2>
+			if opts.Description != "" {
+				<p class="ui-settings-section__description">{ opts.Description }</p>
+			}
+			if opts.Aside != nil {
+				<div class="ui-settings-section__aside">
+					@opts.Aside
+				</div>
+			}
+		</div>
+		<div class="ui-settings-section__content">
+			@body
+		</div>
+	</section>
+}
+
+// CountBadge is the small neutral pill used beside titles and nav labels.
+templ CountBadge(n int) {
+	<span class="ui-count">{ strconv.Itoa(n) }</span>
+}

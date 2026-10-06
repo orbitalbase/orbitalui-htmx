@@ -84,6 +84,64 @@ var iconPaths = map[string]string{
 	// two body rows. Reads as "the catalog of values other records point
 	// at", distinct from the plain rule-list of "accounts".
 	"masterdata": "M4.5 5.25h15v13.5h-15zM4.5 9.75h15M4.5 14.25h15M10.5 9.75v9",
+
+	// ── workspace shell additions (same idiom) ─────────────────────────
+	// Selector — the up/down chevrons of a switcher or select.
+	"selector": "M8 9.5l4-4 4 4M8 14.5l4 4 4-4",
+	// Bell — notifications.
+	"bell": "M6.75 9.5a5.25 5.25 0 0 1 10.5 0c0 5 2.25 6.75 2.25 6.75h-15S6.75 14.5 6.75 9.5zM10.25 19.25a1.9 1.9 0 0 0 3.5 0",
+	// Home — the root of a breadcrumb trail.
+	"home": "M4.5 10.5 12 4.5l7.5 6V19.5h-5v-5h-5v5h-5z",
+	// User / users — one person, a team.
+	"user":  "M12 11.25a3.75 3.75 0 1 0 0-7.5 3.75 3.75 0 0 0 0 7.5zM5.25 20.25c0-3.73 3.02-6.75 6.75-6.75s6.75 3.02 6.75 6.75",
+	"users": "M9 11.25a3.25 3.25 0 1 0 0-6.5 3.25 3.25 0 0 0 0 6.5zM3.75 19.5c0-2.9 2.35-5.25 5.25-5.25s5.25 2.35 5.25 5.25M15.5 5.1a3.25 3.25 0 0 1 0 6.3M17 14.5a5.25 5.25 0 0 1 3.25 5",
+	// Logout — leaving the session.
+	"logout": "M9.75 19.5h-4.5v-15h4.5M15 16.5l4.5-4.5L15 7.5M19.5 12H9.75",
+	// Shield — compliance and protection.
+	"shield": "M12 3.75 19.5 6.5v5.25c0 4.5-3.25 7.75-7.5 8.75-4.25-1-7.5-4.25-7.5-8.75V6.5zM9 12l2.25 2.25L15.5 10",
+	// Mail — email preferences and invitations.
+	"mail": "M3.75 6h16.5v12H3.75zM4.25 6.5 12 12.75l7.75-6.25",
+	// Gift — partner offers and perks.
+	"gift": "M4.5 9.75h15v3h-15zM5.75 12.75v6.75h12.5v-6.75M12 9.75v9.75M12 9.75S10.5 4.5 8.25 5.25 8.5 9.75 12 9.75zM12 9.75s1.5-5.25 3.75-4.5-.25 4.5-3.75 4.5z",
+	// Trending — opportunities and growth.
+	"trending": "M3.75 16.5 9.75 10.5l3.75 3.75 6.75-6.75M15 7.5h5.25v5.25",
+	// Pie — shares and capitalisation.
+	"pie": "M12 3.75v8.25h8.25A8.25 8.25 0 1 1 12 3.75zM15 3.95A8.27 8.27 0 0 1 20.05 9H15z",
+	// Folder — document folders.
+	"folder": "M3.75 6.75a1.5 1.5 0 0 1 1.5-1.5h4.5l2 2.25h7a1.5 1.5 0 0 1 1.5 1.5v8.25a1.5 1.5 0 0 1-1.5 1.5H5.25a1.5 1.5 0 0 1-1.5-1.5z",
+	// Inbox — work queues.
+	"inbox": "M3.75 12.75 6 5.25h12l2.25 7.5v6H3.75zM3.75 12.75h4.5l1.5 2.25h4.5l1.5-2.25h4.5",
+	// Layers — templates and packages.
+	"layers": "M12 3.75 20.25 8.25 12 12.75 3.75 8.25zM3.75 12.25 12 16.75l8.25-4.5M3.75 16.25 12 20.75l8.25-4.5",
+	// More — an overflow menu.
+	"more": "M6 12h.01M12 12h.01M18 12h.01",
+	// Edit — a pencil.
+	"edit": "M15.75 4.5 19.5 8.25 8.25 19.5H4.5v-3.75zM13.5 6.75l3.75 3.75",
+	// Trash — permanent removal.
+	"trash": "M4.5 6.75h15M9.75 6.75V4.5h4.5v2.25M6.75 6.75l.75 12.75h9l.75-12.75M10.25 10.5v5.25M13.75 10.5v5.25",
+	// Archive — reversible removal from the active register.
+	"archive": "M3.75 4.5h16.5v3.75H3.75zM5.25 8.25v11.25h13.5V8.25M9.75 12h4.5",
+	// Lock — restricted or private.
+	"lock": "M6 10.5h12v9.75H6zM8.25 10.5V7.5a3.75 3.75 0 0 1 7.5 0v3",
+	// Globe — public network and jurisdictions.
+	"globe": "M12 3.75a8.25 8.25 0 1 0 0 16.5 8.25 8.25 0 0 0 0-16.5zM3.75 12h16.5M12 3.75c2.25 2.25 3.25 5 3.25 8.25s-1 6-3.25 8.25c-2.25-2.25-3.25-5-3.25-8.25s1-6 3.25-8.25z",
+	// Help — guidance.
+	"help": "M12 3.75a8.25 8.25 0 1 0 0 16.5 8.25 8.25 0 0 0 0-16.5zM9.75 9.5a2.25 2.25 0 1 1 3.4 1.95c-.7.4-1.15.95-1.15 1.8v.25M12 16.5h.01",
+	// Signature — a signing request.
+	"signature": "M3.75 17.25c2.25 0 3-6 4.5-6s.75 4.5 2.25 4.5 2.25-3 3.75-3 1.5 2.25 3 2.25M3.75 20.25h16.5",
+	// Filter — narrowing a register.
+	"filter": "M4.5 5.25h15l-6 7.5v6l-3-1.5v-4.5z",
+	// Download / upload.
+	"download": "M12 4.5v10.5M7.5 10.5 12 15l4.5-4.5M4.5 19.5h15",
+	"upload":   "M12 15V4.5M7.5 9 12 4.5 16.5 9M4.5 19.5h15",
+	// Eye — preview.
+	"eye": "M2.75 12S6 5.75 12 5.75 21.25 12 21.25 12 18 18.25 12 18.25 2.75 12 2.75 12zM12 14.75a2.75 2.75 0 1 0 0-5.5 2.75 2.75 0 0 0 0 5.5z",
+	// Link — a connection between records or organisations.
+	"link": "M10 14a3.5 3.5 0 0 0 5 0l3-3a3.5 3.5 0 0 0-5-5l-.75.75M14 10a3.5 3.5 0 0 0-5 0l-3 3a3.5 3.5 0 0 0 5 5l.75-.75",
+	// Workflow — a process with steps.
+	"workflow": "M4.5 4.5h6v4.5h-6zM13.5 15h6v4.5h-6zM7.5 9v3.75a2.25 2.25 0 0 0 2.25 2.25h3.75",
+	// Sidebar — the collapse toggle for the navigation panel.
+	"sidebar": "M3.75 4.5h16.5v15H3.75zM9.75 4.5v15",
 }
 
 // fallbackIcon is rendered for unknown icon names — a neutral circle so a

@@ -52,8 +52,8 @@ the assumption that it is a consumer.
 1. Move `window.LedgerUI` behaviors into a library-owned, documented runtime
    (or make those components runtime-agnostic) before advertising dialogs,
    drawers, and the picker as standalone.
-2. Ship or generate styles for the extracted semantic class set and provide a
-   Tailwind integration example for a real consuming app.
+2. ~~Ship or generate styles for the extracted semantic class set~~ — done:
+   `assets/tokens.css` and `assets/theme.css` (see `docs/design-system.md`).
 3. Expand input APIs where needed: `TextAreaControl` has no label/error
    wrapper, and `NumberInputControl` hardcodes `min="0"`, which is not valid
    for every numeric field.

@@ -1,0 +1,189 @@
+// DescriptionList, Avatar, ProgressBar, Checklist, Steps and FeedItem — see
+// display.go for options.
+//
+// Usage:
+//
+//	@components.DescriptionList([]components.DescriptionItem{
+//		{Term: "Jurisdiction", Value: "Malaysia"},
+//		{Term: "Status", Content: components.StatusBadge("Active", components.ToneSuccess, components.StatusBadgeOpts{})},
+//	}, components.DescriptionListOpts{})
+//	@components.Avatar("Adri Tan", components.AvatarOpts{Size: components.AvatarSM})
+//	@components.ProgressBar(40, components.ProgressOpts{Label: "Profile", ShowValue: true})
+package components
+
+import "strconv"
+
+templ DescriptionList(items []DescriptionItem, opts DescriptionListOpts) {
+	<dl class={ descriptionListClass(opts) }>
+		for _, item := range items {
+			<div
+				class={ joinClass("ui-dl__row", modifier(item.Wide, "ui-dl__row--wide")) }
+			>
+				<dt>{ item.Term }</dt>
+				<dd>
+					if item.Content != nil {
+						@item.Content
+					} else if item.Value != "" {
+						<span class="ui-dl__value">{ item.Value }</span>
+					} else {
+						<span class="ui-dl__empty">{ descriptionPlaceholder(opts) }</span>
+					}
+					if item.Hint != "" {
+						<span class="ui-dl__hint">{ item.Hint }</span>
+					}
+				</dd>
+			</div>
+		}
+	</dl>
+}
+
+templ Avatar(name string, opts AvatarOpts) {
+	<span
+		class={ avatarClass(name, opts) }
+		if opts.Label != "" {
+			role="img"
+			aria-label={ opts.Label }
+		} else {
+			aria-hidden="true"
+		}
+	>
+		<span class="ui-avatar__initials">{ Initials(name) }</span>
+		if opts.Status != "" {
+			<span class={ "ui-avatar__status ui-avatar__status--" + opts.Status }></span>
+		}
+	</span>
+}
+
+templ ProgressBar(value int, opts ProgressOpts) {
+	<div class={ progressClass(opts) }>
+		if opts.Label != "" || opts.ShowValue {
+			<div class="ui-progress__label">
+				if opts.Label != "" {
+					<span>{ opts.Label }</span>
+				}
+				if opts.ShowValue {
+					<span class="ui-progress__value">{ strconv.Itoa(clampPercent(value)) }%</span>
+				}
+			</div>
+		}
+		<div
+			class="ui-progress__track"
+			role="progressbar"
+			aria-valuemin="0"
+			aria-valuemax="100"
+			aria-valuenow={ strconv.Itoa(clampPercent(value)) }
+			if opts.Label != "" {
+				aria-label={ opts.Label }
+			}
+		>
+			<span class="ui-progress__fill" style={ progressStyle(value) }></span>
+		</div>
+	</div>
+}
+
+templ Checklist(items []ChecklistItem) {
+	<ol class="ui-checklist">
+		for _, item := range items {
+			<li class={ joinClass("ui-checklist__item", modifier(item.Done, "ui-checklist__item--done")) }>
+				<span class="ui-checklist__mark" aria-hidden="true">
+					if item.Done {
+						@Icon("check")
+					}
+				</span>
+				<div class="ui-checklist__copy">
+					<span class="ui-checklist__title">
+						{ item.Title }
+						if item.Done {
+							<span class="sr-only">(complete)</span>
+						}
+					</span>
+					if item.Description != "" {
+						<span class="ui-checklist__description">{ item.Description }</span>
+					}
+				</div>
+				if !item.Done && item.Href != "" {
+					<a class="ui-checklist__action" href={ item.Href }>
+						if item.ActionLabel != "" {
+							{ item.ActionLabel }
+						} else {
+							Start
+						}
+						@Icon("arrow-right")
+					</a>
+				}
+			</li>
+		}
+	</ol>
+}
+
+templ Steps(steps []Step) {
+	<ol class="ui-steps">
+		for i, step := range steps {
+			<li
+				class={ stepClass(step) }
+				if step.State == StepCurrent {
+					aria-current="step"
+				}
+			>
+				<span class="ui-steps__marker" aria-hidden="true">
+					if step.State == StepDone {
+						@Icon("check")
+					} else {
+						{ strconv.Itoa(i + 1) }
+					}
+				</span>
+				<div class="ui-steps__copy">
+					<span class="ui-steps__title">{ step.Title }</span>
+					<span class="ui-steps__meta">
+						<span class="sr-only">{ stepStateLabel(step.State) }. </span><span>{ step.Meta }</span>
+					</span>
+					if step.Content != nil {
+						<div class="ui-steps__content">
+							@step.Content
+						</div>
+					}
+				</div>
+			</li>
+		}
+	</ol>
+}
+
+templ FeedItem(opts FeedItemOpts) {
+	<li class={ feedItemClass(opts) }>
+		if opts.Icon != "" {
+			<span class={ feedIconClass(opts) } aria-hidden="true">
+				@Icon(opts.Icon)
+			</span>
+		}
+		<div class="ui-feed__copy">
+			<div class="ui-feed__head">
+				if opts.Href != "" {
+					<a class="ui-feed__title" href={ opts.Href }>{ opts.Title }</a>
+				} else {
+					<span class="ui-feed__title">{ opts.Title }</span>
+				}
+				if opts.Unread {
+					<span class="ui-feed__dot" title="Unread"><span class="sr-only">Unread</span></span>
+				}
+				if opts.Time != "" {
+					<span class="ui-feed__time">{ opts.Time }</span>
+				}
+			</div>
+			if opts.Body != "" {
+				<p class="ui-feed__body">{ opts.Body }</p>
+			}
+			if opts.Actions != nil {
+				<div class="ui-feed__actions">
+					@opts.Actions
+				</div>
+			}
+		</div>
+	</li>
+}
+
+// Feed wraps FeedItem rows in the list element they require.
+templ Feed(items templ.Component) {
+	<ul class="ui-feed">
+		@items
+	</ul>
+}
