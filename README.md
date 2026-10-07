@@ -68,6 +68,8 @@ Import the design system before the application's own CSS:
 
 ```css
 @import "<module>/assets/tokens.css";
+@import "<module>/assets/base.css";   /* optional: type scale, .ui-prose, .ui-eyebrow, .ui-link */
+@import "<module>/assets/motion.css"; /* optional: enter/press/shimmer, orb, ring and meter motion */
 @import "<module>/assets/controls.css";
 @import "<module>/assets/theme.css";
 @import "<module>/assets/inspector.css"; /* only with Inspector */
@@ -89,14 +91,30 @@ it with `hx-post`, so browser submission still works when HTMX is unavailable.
 The component leaves target, swap strategy, indicator, authorization, CSRF,
 validation, and response rendering to the application.
 
-The dialog, drawer, confirm and entity-picker components run on
-`assets/orbital-ui.js`. Serve it from `assets.Files` and load it before Alpine
-(`<script src="/static/orbital-ui.js" defer>` ahead of Alpine's own script).
-Their markup calls the `LedgerUI.*` names they were extracted with; the runtime
-installs those names (as `window.OrbitalUI`, aliased to `window.LedgerUI`) and
-stays inert when the host already ships its own `window.LedgerUI`. Other
-components use native HTML or HTMX attributes and need no library-specific
-JavaScript. `node scripts/browser-check.mjs` drives them in headless Chrome.
+The dialog, drawer, confirm, entity-picker and dismissible-alert components run
+on `assets/orbital-ui.js`. Serve it from `assets.Files`. **Load order:** a host
+runtime that defines `window.LedgerUI` (if any) first, then `orbital-ui.js`,
+then Alpine (`<script src="/static/orbital-ui.js" defer>` ahead of Alpine's own
+script). The markup is safe for Alpine's CSP build (`alpinejs-csp`, for
+`script-src 'self'`): it names `Alpine.data` factories (`ouiDialog`,
+`ouiDrawer`, `ouiPicker`, `ouiDismiss`) registered on `alpine:init` and uses
+argument-free handler references only. When the host already provides
+`window.LedgerUI`, `orbital-ui.js` still registers those factories, delegating
+to the host's `dialog()`, `drawer()` and `picker()`, and skips its own click
+delegation. `data-autogrow` textareas use CSS `field-sizing`, with a small
+fallback in the same file. Other components use native HTML or HTMX attributes
+and need no library-specific JavaScript. `node scripts/browser-check.mjs`
+drives them in headless Chrome against both the standard and the CSP Alpine
+builds, and in host-runtime mode.
+
+## Gallery
+
+`go run ./internal/gallery -out /tmp/oui-gallery` writes static pages that
+render every component and state with the shipped CSS (no Tailwind), in four
+token presets: `default`, `dark`, `kindred` and `kindred-dark`
+(`internal/gallery/presets/kindred.css` maps Kindred's brand, accent, AI,
+ink-action, radii and fonts onto `--oui-*`; pass `-kindred-fonts DIR` to copy
+its woff2 files, otherwise system fonts are used).
 
 ## Record inspectors
 
