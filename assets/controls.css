@@ -1,15 +1,16 @@
 /* Shared field focus treatment. Keep the signal inside the control, rather
-   than drawing a second box around it. Host themes supply the accent token. */
+   than drawing a second box around it. The accent comes from the host's
+   brand tokens; --control-focus-border remains as an explicit override. */
 :is(.field-control, .oui-control):focus {
   outline: none;
   outline-offset: 0;
-  border-color: var(--control-focus-border, var(--accent-dark, oklch(45% .15 278)));
+  border-color: var(--control-focus-border, var(--oui-fg-brand));
   box-shadow: none;
 }
 :is(.field-control, .oui-control):focus-visible {
-  box-shadow: inset 0 0 0 1px var(--control-focus-border, var(--accent-dark, oklch(45% .15 278)));
+  box-shadow: inset 0 0 0 1px var(--control-focus-border, var(--oui-fg-brand));
 }
 :is(.field-control, .oui-control):is([aria-invalid="true"], :user-invalid):focus {
-  border-color: var(--red-500, oklch(50% .18 25));
-  box-shadow: inset 0 0 0 1px var(--red-500, oklch(50% .18 25));
+  border-color: var(--oui-error-500);
+  box-shadow: inset 0 0 0 1px var(--oui-error-500);
 }

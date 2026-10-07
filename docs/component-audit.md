@@ -44,8 +44,9 @@ the assumption that it is a consumer.
   so Tailwind can detect them when those files are registered as sources.
   Tailwind 4 ignores many dependency directories by default, so consumer
   builds must explicitly include this module. The extracted semantic classes
-  still require a theme stylesheet; `styles/components.css` only styles the
-  original `oui-*` subset.
+  still require a theme stylesheet. `assets/theme.css` covers the full set,
+  including the original `oui-*` starter subset (`styles/components.css` is a
+  deprecated alias).
 
 ## Follow-up gaps
 
@@ -53,7 +54,8 @@ the assumption that it is a consumer.
    (or make those components runtime-agnostic) before advertising dialogs,
    drawers, and the picker as standalone.
 2. ~~Ship or generate styles for the extracted semantic class set~~ — done:
-   `assets/tokens.css` and `assets/theme.css` (see `docs/design-system.md`).
+   `assets/tokens.css` and `assets/theme.css` (see `docs/design-system.md`); every emitted class is now
+   covered, enforced by `TestThemeStylesEveryEmittedClass`.
 3. Expand input APIs where needed: `TextAreaControl` has no label/error
    wrapper, and `NumberInputControl` hardcodes `min="0"`, which is not valid
    for every numeric field.

@@ -1,0 +1,37 @@
+package components
+
+// PageFrame — the page's content frame: a centred column at one of four
+// measures with the shared vertical rhythm between its children (header,
+// cards, registers). Put one frame inside the host's shell main region.
+//
+//	@components.PageFrame(components.PageFrameOpts{Width: components.PageWidthNarrow}) {
+//		@components.PageHeader("Settings", components.PageHeaderOpts{})
+//		@components.Card(...)
+//	}
+templ PageFrame(opts PageFrameOpts) {
+	<div
+		if opts.ID != "" {
+			id={ opts.ID }
+		}
+		class={ pageFrameClass(opts) }
+	>
+		{ children... }
+	</div>
+}
+
+// FormGrid — the column grid for LabelledField children. Fields keep their
+// own label, help and error; FieldOpts.Wide spans every column.
+templ FormGrid(opts FormGridOpts) {
+	<div class={ formGridClass(opts) }>
+		{ children... }
+	</div>
+}
+
+// FormActions — the row of submit and cancel controls under a form. Place
+// the primary action first in source order; the row wraps on a phone, where
+// each action takes the full width.
+templ FormActions(opts FormActionsOpts) {
+	<div class={ formActionsClass(opts) }>
+		{ children... }
+	</div>
+}

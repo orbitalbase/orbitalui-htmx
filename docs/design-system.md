@@ -35,6 +35,16 @@ density and motion) and compose its own page and outer shell layouts. Prefer
 token overrides over redefining `.ui-*` component selectors so the same
 component markup behaves consistently in each app while retaining its own
 palette and personality. Keep domain-specific page composition in the app.
+[docs/adoption](adoption/README.md) spells out the split and has a
+migration checklist for each consuming application.
+
+## Completeness contract
+
+`theme.css` styles every class a component emits. `TestThemeStylesEveryEmittedClass`
+scans the `.templ` sources and class helpers and fails when a class has no
+rule in a shipped stylesheet, so a host never has to style library markup to
+make a component look finished. When you add a class to a component, add its
+rule here in the same change.
 
 ## Tokens
 
@@ -51,6 +61,12 @@ Three layers, all declared in `:where(:root)` so any host rule wins:
 3. **Shape, elevation, type, motion** — `--oui-radius-*`, `--oui-shadow-xs…xl`,
    `--oui-ring-brand`, `--oui-text-xs…display-sm` with matching
    `--oui-leading-*`, `--oui-duration*`, layout sizes.
+4. **Identity hooks** — `--oui-font-display` (every title: page, card,
+   dialog, drawer, record header, metric value), `--oui-heading-weight`,
+   `--oui-heading-tracking`, `--oui-font-numeric` (money and codes).
+5. **Layout** — `--oui-page-measure` / `-narrow` / `-wide`, `--oui-page-gap`,
+   `--oui-form-gap-x/y`. Below 42rem, controls (small ones included) grow to
+   the 44px touch target.
 
 **Rebranding** means re-pointing `--oui-brand-*`. **Bridging** an existing
 application means aliasing its own names to the semantic layer
@@ -101,6 +117,9 @@ application means aliasing its own names to the semantic layer
 | `Disclosure` variants | `DisclosurePanel` (editor surface), `DisclosureQuiet` (text-link evidence), `DisclosureDanger` (danger zone); `Hint` for a trailing count or consequence. |
 | `StatePanelOpts.Compact` | In-card empty state without a competing heading. |
 | `ButtonVariantText` | A link-styled submit for per-row mutations. |
+| `PageFrame(PageFrameOpts)` | The page's content column: `PageWidthNarrow` (forms, sign-in), standard, `PageWidthWide` (dense registers), `PageWidthFull`; shared vertical rhythm. |
+| `FormGrid(FormGridOpts)` | 1–3 column grid for `LabelledField`s; `FieldOpts.Wide` spans the row; one column on a phone. |
+| `FormActions(FormActionsOpts)` | Submit/cancel row; `End` aligns right, `Divided` closes a long form; full-width actions on a phone. |
 | Formatters (`format.go`) | `DateText`, `DateTimeText`, `RelativeDate(Text)`, `DayDuration`, `Count`, `Plural`, `Quantity`, `GroupedAmount`, `Percent` — total functions over stored strings (including PostgreSQL timestamptz text). |
 
 Shell layout classes (`.ui-icon-button`, `.ui-nav*`, `.ui-switcher*`,
@@ -130,7 +149,7 @@ responsive drawer behaviour and routes.
 | `Inspector` | Serve and load the external `assets/inspector.js` and `assets/inspector.css` | Does not require Alpine or inline scripts; host supplies CSP policy and asset URLs. |
 | `ModalShell`, `ConfirmButton`, `Drawer`, and `EntityPicker` | Alpine plus the source-compatible `window.LedgerUI` helpers referenced by component markup | Not standalone; host must supply matching helper/runtime versions. |
 | `BalanceTool` | None for server-rendered totals; Alpine plus the host lines editor for live recalculation | Server totals remain authoritative; the host owns live editor integration. |
-| Dismissible `Alert` and `SuggestionChip` | Alpine.js | Expressions are emitted in markup; CSP compatibility depends on the host's Alpine build and policy. |
+| Dismissible `Alert`, `SuggestionChip` and `EntityPicker` states | Alpine.js; `theme.css` hides `[x-cloak]` until Alpine starts | Expressions are emitted in markup; CSP compatibility depends on the host's Alpine build and policy. |
 
 The library does not set an application's CSP headers or serve assets
 automatically. Consumers should verify component interaction under their

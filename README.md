@@ -63,10 +63,26 @@ Tailwind 4 CSS can register a local checkout with `@source`:
 
 For module-cache or vendored builds, point `@source` at the resolved module
 directory or ship a generated stylesheet from the host application's build.
-The starter fields also have optional base styles in
-`styles/components.css`. The extracted core components use `ui-*`, `field-*`,
-`table-*`, and related semantic class names; import a matching theme stylesheet
-or define those classes in the host design system.
+
+Import the design system before the application's own CSS:
+
+```css
+@import "<module>/assets/tokens.css";
+@import "<module>/assets/controls.css";
+@import "<module>/assets/theme.css";
+@import "<module>/assets/inspector.css"; /* only with Inspector */
+```
+
+`theme.css` styles every class the components emit (a test enforces this), so
+an application restyles through tokens rather than component selectors. See
+[docs/design-system.md](docs/design-system.md) for the token layers and
+[docs/adoption](docs/adoption/README.md) for what belongs in the library versus
+an application. `styles/components.css` is a deprecated alias that imports the
+tokens and theme.
+
+Layout primitives: `PageFrame` fixes a page's width (narrow, standard, wide,
+full) and vertical rhythm; `FormGrid` and `FormActions` lay out
+`LabelledField`s and their submit row.
 
 `HTMXPostForm` renders a normal POST form (`method` and `action`) and upgrades
 it with `hx-post`, so browser submission still works when HTMX is unavailable.
