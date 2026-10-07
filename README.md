@@ -32,6 +32,21 @@ Components that accept `templ.Component` children let the application keep
 ownership of page content and endpoints. Components do not register routes or
 make application data assumptions.
 
+### Chat surfaces
+
+`ChatThread` supplies a labelled, polite live log. Compose it with `UserMessage`,
+`AssistantMessage`, and `AssistantAvatar`. For cited answers, task links or other
+server-rendered content, `AssistantMessageContent(templ.Component)` provides the
+same message chrome without converting application-owned content to plain text.
+All plain message text remains escaped by templ.
+
+`SuggestionSubmitChip(label, name, value)` submits a named value through its
+containing native form. Unlike the Alpine `SuggestionChip`, it needs no runtime
+expression and works without JavaScript under a strict CSP. `HTMXPostForm` can
+append reply fragments to the thread; the host owns endpoints, CSRF, authorization,
+conversation context, loading/error recovery, citations and any actual tool calls.
+These components provide a chat interface, not an agent backend.
+
 ## Use
 
 ```go
