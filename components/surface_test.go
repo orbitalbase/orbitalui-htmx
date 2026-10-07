@@ -168,7 +168,7 @@ func TestMenuAndSwitcher(t *testing.T) {
 
 	sw := renderC(t, WorkspaceSwitcher(WorkspaceSwitcherOpts{Name: "Acme", Subtitle: "Malaysia · Manager", Kind: "Company", StatusTone: ToneWarning}, MenuHeader("Acme", "Pending incorporation")))
 	want(t, sw, `class="ui-menu ui-menu--wide ui-switcher"`)
-	want(t, sw, `aria-label="Company: Acme. Open workspace menu"`)
+	want(t, sw, `aria-label="Company: Acme Malaysia · Manager. Open workspace menu"`)
 	want(t, sw, `ui-switcher__status--warning`)
 	want(t, sw, `<span class="ui-switcher__subtitle">Malaysia · Manager</span>`)
 	want(t, sw, `<span class="ui-menu__header-subtitle">Pending incorporation</span>`)
