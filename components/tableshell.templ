@@ -38,9 +38,13 @@ templ TableShell(columns []Column, opts TableOpts, rows templ.Component, footer 
 					for _, c := range columns {
 						<th
 							scope="col"
-							data-column-key={ c.Key }
+							if c.Key != "" {
+								data-column-key={ c.Key }
+							}
 							data-column-optional?={ c.Optional }
-							class={ thClass(c) }
+							if thClass(c) != "" {
+								class={ thClass(c) }
+							}
 							if c.Width != "" {
 								style={ tableColStyle(c) }
 							}
