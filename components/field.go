@@ -49,7 +49,12 @@ type FieldInputOpts struct {
 	InputMode       string
 	MaxLength       int
 	Pattern         string
-	Class           string // extra classes appended to .field-control
+	// Min, Max and Step bound number, date and time inputs ("" = unset), so
+	// a signed amount or a date range needs no Attrs escape hatch.
+	Min   string
+	Max   string
+	Step  string
+	Class string // extra classes appended to .field-control
 	// Attrs are extra attributes spread onto the <input> (data-* markers
 	// the client behaviours read, e.g. the create wizard's data-ftype on
 	// custom form-field controls).
@@ -86,4 +91,57 @@ func fieldMaxLengthAttr(o FieldInputOpts) (string, bool) {
 		return "", false
 	}
 	return strconv.Itoa(o.MaxLength), true
+}
+
+// FieldTextareaOpts shapes the shared multi-line control. Compose it inside
+// LabelledField for the label, help and error, exactly like FieldInput.
+type FieldTextareaOpts struct {
+	Name            string
+	ID              string
+	Value           string
+	Placeholder     string
+	Rows            int // 0 → 4
+	MaxLength       int
+	Required        bool
+	Disabled        bool
+	Invalid         bool
+	AriaDescribedBy string
+	Class           string
+	Attrs           templ.Attributes
+}
+
+func fieldTextareaClass(o FieldTextareaOpts) string {
+	return fieldControlClass(FieldInputOpts{Invalid: o.Invalid, Class: o.Class})
+}
+
+func fieldTextareaRows(o FieldTextareaOpts) string {
+	if o.Rows <= 0 {
+		return "4"
+	}
+	return strconv.Itoa(o.Rows)
+}
+
+func fieldTextareaMaxLength(o FieldTextareaOpts) (string, bool) {
+	return fieldMaxLengthAttr(FieldInputOpts{MaxLength: o.MaxLength})
+}
+
+// FieldSelectOpts shapes the shared native select. Options carry their own
+// Value/Label; Selected picks the option whose Value matches. Placeholder,
+// when set, renders a first empty option ("Choose an account…").
+type FieldSelectOpts struct {
+	Name            string
+	ID              string
+	Options         []SelectOption
+	Selected        string
+	Placeholder     string
+	Required        bool
+	Disabled        bool
+	Invalid         bool
+	AriaDescribedBy string
+	Class           string
+	Attrs           templ.Attributes
+}
+
+func fieldSelectClass(o FieldSelectOpts) string {
+	return fieldControlClass(FieldInputOpts{Invalid: o.Invalid, Class: o.Class})
 }

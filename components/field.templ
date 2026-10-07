@@ -84,6 +84,73 @@ templ FieldInput(o FieldInputOpts) {
 		if o.Pattern != "" {
 			pattern={ o.Pattern }
 		}
+		if o.Min != "" {
+			min={ o.Min }
+		}
+		if o.Max != "" {
+			max={ o.Max }
+		}
+		if o.Step != "" {
+			step={ o.Step }
+		}
 		{ attrsWithoutClass(o.Attrs)... }
 	/>
+}
+
+// FieldTextarea — the shared multi-line control; wrap in LabelledField.
+templ FieldTextarea(o FieldTextareaOpts) {
+	<textarea
+		class={ mergeClass(fieldTextareaClass(o), o.Attrs) }
+		rows={ fieldTextareaRows(o) }
+		if o.Name != "" {
+			name={ o.Name }
+		}
+		if o.ID != "" {
+			id={ o.ID }
+		}
+		if o.Placeholder != "" {
+			placeholder={ o.Placeholder }
+		}
+		if v, ok := fieldTextareaMaxLength(o); ok {
+			maxlength={ v }
+		}
+		required?={ o.Required }
+		disabled?={ o.Disabled }
+		if o.Invalid {
+			aria-invalid="true"
+		}
+		if o.AriaDescribedBy != "" {
+			aria-describedby={ o.AriaDescribedBy }
+		}
+		{ attrsWithoutClass(o.Attrs)... }
+	>{ o.Value }</textarea>
+}
+
+// FieldSelect — the shared native select; wrap in LabelledField.
+templ FieldSelect(o FieldSelectOpts) {
+	<select
+		class={ mergeClass(fieldSelectClass(o), o.Attrs) }
+		if o.Name != "" {
+			name={ o.Name }
+		}
+		if o.ID != "" {
+			id={ o.ID }
+		}
+		required?={ o.Required }
+		disabled?={ o.Disabled }
+		if o.Invalid {
+			aria-invalid="true"
+		}
+		if o.AriaDescribedBy != "" {
+			aria-describedby={ o.AriaDescribedBy }
+		}
+		{ attrsWithoutClass(o.Attrs)... }
+	>
+		if o.Placeholder != "" {
+			<option value="" selected?={ o.Selected == "" }>{ o.Placeholder }</option>
+		}
+		for _, opt := range o.Options {
+			<option value={ opt.Value } selected?={ opt.Value == o.Selected }>{ opt.Label }</option>
+		}
+	</select>
 }

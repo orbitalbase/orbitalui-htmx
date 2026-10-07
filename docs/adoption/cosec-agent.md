@@ -35,8 +35,12 @@ re-implements:
 
 - `table.templ` → `orbital.TableShell` + `MoneyCell`/`MonoCell`
 - `pager.templ` → `orbital.Pager`
-- `dialog.templ`, `register_dialog.templ` → `orbital.ModalShell` (needs the
-  dialog runtime; see the runtime note in `docs/design-system.md`)
+- `dialog.templ`, `register_dialog.templ` → `orbital.ModalShell`; load
+  `assets/orbital-ui.js` before Alpine (Cosec has no `window.LedgerUI`, so the
+  shared runtime installs it). The same script enables `Drawer`,
+  `ConfirmButton` and `EntityPicker`.
+- Hand-written `<select>` and `<textarea>` markup → `FieldSelect` /
+  `FieldTextarea` inside `LabelledField`
 - `form.templ` `FormGrid`/`FormActions` (`.form-grid` in `patterns.css:16`)
   → `orbital.FormGrid` / `orbital.FormActions` with `LabelledField`
 

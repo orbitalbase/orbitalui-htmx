@@ -147,9 +147,15 @@ responsive drawer behaviour and routes.
 |---|---|---|
 | Server-rendered primitives, fields, rows, navigation, tables and state surfaces | None beyond Go/templ; HTMX attributes only when used | Native HTML remains the fallback for links and forms. |
 | `Inspector` | Serve and load the external `assets/inspector.js` and `assets/inspector.css` | Does not require Alpine or inline scripts; host supplies CSP policy and asset URLs. |
-| `ModalShell`, `ConfirmButton`, `Drawer`, and `EntityPicker` | Alpine plus the source-compatible `window.LedgerUI` helpers referenced by component markup | Not standalone; host must supply matching helper/runtime versions. |
+| `ModalShell`, `ConfirmButton`, `Drawer`, and `EntityPicker` | Alpine plus `assets/orbital-ui.js`, loaded before Alpine | No inline scripts. The runtime installs `window.OrbitalUI` and the `window.LedgerUI` names the markup calls, and stays inert when a host already provides `window.LedgerUI`. Server-driven close: `HX-Trigger: closeDialog` / `drawerClose`; 422 responses swap inline errors. |
 | `BalanceTool` | None for server-rendered totals; Alpine plus the host lines editor for live recalculation | Server totals remain authoritative; the host owns live editor integration. |
 | Dismissible `Alert`, `SuggestionChip` and `EntityPicker` states | Alpine.js; `theme.css` hides `[x-cloak]` until Alpine starts | Expressions are emitted in markup; CSP compatibility depends on the host's Alpine build and policy. |
+
+`scripts/browser-check.mjs` drives the interactive set in headless Chrome
+with real pointer and keyboard input (modal focus, 422 swaps, server-driven
+close and focus return, Escape and backdrop dismissal, drawer lock and
+full-screen, picker search, keyboard pick and create, Alpine after htmx
+swaps). CI runs it on every push.
 
 The library does not set an application's CSP headers or serve assets
 automatically. Consumers should verify component interaction under their

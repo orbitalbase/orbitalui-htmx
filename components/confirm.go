@@ -1,7 +1,7 @@
 // Modal + Confirm types (modal.templ, confirm.templ) — the native <dialog>
 // pattern documented in docs/ui-components.md §3. Both shells use the
 // .ui-dialog classes; behaviour (open/close/focus/backdrop/Esc) lives in
-// assets/static/app.js under window.LedgerUI and is wired via data-*
+// assets/orbital-ui.js under window.LedgerUI and is wired via data-*
 // attributes — no modal framework, no JS in templates.
 package components
 
@@ -16,7 +16,7 @@ type ModalOpts struct {
 
 	// Open renders the dialog already open — a full-page 422 re-render of a
 	// form page (docs/ui-components.md §2a) keeps a modal's values and
-	// errors visible. app.js promotes the freshly parsed non-modal dialog
+	// errors visible. orbital-ui.js promotes the freshly parsed non-modal dialog
 	// to the real modal on load (promoteOpenDialog); JS-disabled renders
 	// still show the open form in the page flow.
 	Open bool

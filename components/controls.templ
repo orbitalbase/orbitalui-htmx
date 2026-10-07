@@ -40,6 +40,9 @@ templ CompactDropdown(id string, name string, model string, accessibleLabel stri
 	</label>
 }
 
+// NumberInputControl is the starter count input; it always sets min="0".
+// For signed values, bounds or steps use FieldInput with Type "number" and
+// Min/Max/Step inside LabelledField.
 templ NumberInputControl(id string, name string, model string, accessibleLabel string, placeholder string, controlClass string, iconName string) {
 	<div class="relative min-w-0">
 		<label for={ id } class="sr-only">{ accessibleLabel }</label>

@@ -83,7 +83,7 @@ type EntityPickerCreateOpts struct {
 	RequireBookScope bool
 }
 
-// pickerConfig is the JSON blob handed to the Alpine factory (app.js
+// pickerConfig is the JSON blob handed to the Alpine factory (orbital-ui.js
 // LedgerUI.picker). Kept as a struct so the wire is typed + marshalled once.
 type pickerConfig struct {
 	ID          string `json:"id"`

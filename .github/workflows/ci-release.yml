@@ -39,7 +39,7 @@ jobs:
 
       - name: Check Go formatting
         run: |
-          files="$(find components -type f -name '*.go' ! -name '*_templ.go' -print0 | xargs -0 gofmt -l)"
+          files="$(find components assets internal -type f -name '*.go' ! -name '*_templ.go' -print0 | xargs -0 gofmt -l)"
           if [ -n "$files" ]; then
             echo "These Go files need gofmt:" >&2
             echo "$files" >&2
@@ -72,6 +72,17 @@ jobs:
 
       - name: Test
         run: go test -race ./...
+
+      # Drives ModalShell, ConfirmButton, Drawer and EntityPicker through
+      # assets/orbital-ui.js, Alpine and htmx in headless Chrome (preinstalled
+      # on ubuntu-latest). Node 22+ provides the global WebSocket it uses.
+      - name: Set up Node for the browser check
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+
+      - name: Browser check
+        run: node scripts/browser-check.mjs
 
   release:
     name: Semantic version and GitHub release

@@ -89,11 +89,14 @@ it with `hx-post`, so browser submission still works when HTMX is unavailable.
 The component leaves target, swap strategy, indicator, authorization, CSRF,
 validation, and response rendering to the application.
 
-The dialog, drawer, and entity-picker components currently use the
-`window.LedgerUI` Alpine helper contract from the source application. The host
-must provide the matching runtime before using those components. Other
+The dialog, drawer, confirm and entity-picker components run on
+`assets/orbital-ui.js`. Serve it from `assets.Files` and load it before Alpine
+(`<script src="/static/orbital-ui.js" defer>` ahead of Alpine's own script).
+Their markup calls the `LedgerUI.*` names they were extracted with; the runtime
+installs those names (as `window.OrbitalUI`, aliased to `window.LedgerUI`) and
+stays inert when the host already ships its own `window.LedgerUI`. Other
 components use native HTML or HTMX attributes and need no library-specific
-JavaScript.
+JavaScript. `node scripts/browser-check.mjs` drives them in headless Chrome.
 
 ## Record inspectors
 

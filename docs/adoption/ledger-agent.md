@@ -66,6 +66,24 @@ pattern; keep identity there as token values.
 
 ## 5. Runtime
 
-`ModalShell`, `ConfirmButton`, `Drawer` and `EntityPicker` call the
-`window.LedgerUI` helpers in Ledger's `app.js`. Keep that contract until the
-library ships its own runtime.
+`ModalShell`, `ConfirmButton`, `Drawer` and `EntityPicker` now run on the
+library's `assets/orbital-ui.js`. Ledger does not load it today, so nothing
+changes until Ledger opts in. (If it is ever loaded *after* `app.js`, it sees
+the existing `window.LedgerUI` and stays inert.) Two ways forward:
+
+- **Adopt the shared runtime** for dialogs, confirms and drawers: delete
+  those sections of `app.js` (`openDialog` … `LedgerUI.drawer`) and load
+  `orbital-ui.js` before `app.js`. Keep `app.js`'s Ledger-only behaviour
+  (`LedgerUI.lines`, `LedgerUI.logTabs`, the picker's contact-review and
+  draft-recovery hooks) on the same namespace.
+- **Or port these fixes into `app.js`**, found by the library's browser check
+  and present in Ledger's copy:
+  - close on `htmx:afterSettle`, not `afterSwap`; otherwise htmx restores
+    focus into the closed dialog after a save and focus is lost;
+  - focus the dialog body's first field, not the header's × button;
+  - picker `onBlur` timer: return early when the input has focus again, or a
+    quick blur-and-return wipes the newly typed text;
+  - picker Enter while a search is pending: `preventDefault` so it neither
+    submits the form nor picks a stale row;
+  - `.drawer-overlay` is `pointer-events: none` while closed/fading, so the
+    first click after closing a drawer is not swallowed (theme.css).

@@ -176,3 +176,17 @@ func TestThemeStylesEveryEmittedClass(t *testing.T) {
 		t.Errorf("%s emits .%s but no shipped stylesheet styles it", file, class)
 	}
 }
+
+// The runtime rewrites the drawer's full-screen label after a toggle; it must
+// use the same two strings the server renders.
+func TestRuntimeFullscreenLabelsMatchServer(t *testing.T) {
+	raw, err := os.ReadFile("../assets/orbital-ui.js")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, full := range []bool{true, false} {
+		if !strings.Contains(string(raw), `"`+drawerFullscreenLabel(full)+`"`) {
+			t.Errorf("orbital-ui.js does not use the label %q", drawerFullscreenLabel(full))
+		}
+	}
+}

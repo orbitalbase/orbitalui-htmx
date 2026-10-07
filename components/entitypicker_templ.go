@@ -13,7 +13,7 @@
 
 // flip-up and the aria combobox/listbox wiring are implemented once in
 
-// assets/static/app.js (window.LedgerUI.picker) — this templ only mounts the
+// assets/orbital-ui.js (window.LedgerUI.picker) — this templ only mounts the
 
 // config. See docs/ui-components.md §3b for the endpoint wire contract and
 
@@ -21,7 +21,7 @@
 
 //
 
-// With opts.Create the picker grows a synthetic last row (app.js
+// With opts.Create the picker grows a synthetic last row (orbital-ui.js
 
 // createOption()) and Enter POSTs a new record — the mousedown target here
 
