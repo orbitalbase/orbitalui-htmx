@@ -26,6 +26,16 @@ module directory (see the README for `@source`):
 
 Or serve `assets.Files` and link the stylesheets directly.
 
+## Theme ownership across applications
+
+The library owns component structure, semantic component selectors and the
+default theme. A consuming app owns its product identity: it should override
+the primitive and semantic tokens (brand, neutral scale, surface, shape,
+density and motion) and compose its own page and outer shell layouts. Prefer
+token overrides over redefining `.ui-*` component selectors so the same
+component markup behaves consistently in each app while retaining its own
+palette and personality. Keep domain-specific page composition in the app.
+
 ## Tokens
 
 Three layers, all declared in `:where(:root)` so any host rule wins:
@@ -100,10 +110,35 @@ responsive drawer behaviour and routes.
 ## Slot and attribute conventions
 
 - **Nil slots render nothing.** Any `templ.Component` slot or body argument
-  (`Card`, `SettingsSection`, `ActionList`, `Feed`, `Menu` trigger and panel,
-  `Disclosure`, `ChoiceGroup`, `Inspector`, `AsyncRegion`) may be nil; the
-  wrapper still renders and the slot is empty.
+  (`Alert`, `Callout`, `DecisionCard`, `ConfirmButton`, `Card`,
+  `SettingsSection`, `LabelledField`, `ActionList`, `Feed`, `TableShell` rows
+  and footer, `Menu` trigger and panel, `WorkspaceSwitcher` panel,
+  `Disclosure`, `ChoiceGroup`, `Inspector`, `AsyncRegion`, `SelectionToolbar`,
+  `Drawer`, `ModalShell`, `HTMXPostForm`, `ChatThread`, `SummaryCard`, and
+  `AssistantMessageContent`) may be nil; the wrapper still renders and the
+  slot is empty.
 - **`Attrs` never produces a second `class`.** Components that take
   `Attrs templ.Attributes` fold an `Attrs["class"]` value into their own class
   list (after the computed classes) and spread the remaining attributes.
   `Class` and `Attrs["class"]` can be used together.
+
+## Runtime and CSP requirements
+
+| Component set | Runtime requirement | CSP/integration note |
+|---|---|---|
+| Server-rendered primitives, fields, rows, navigation, tables and state surfaces | None beyond Go/templ; HTMX attributes only when used | Native HTML remains the fallback for links and forms. |
+| `Inspector` | Serve and load the external `assets/inspector.js` and `assets/inspector.css` | Does not require Alpine or inline scripts; host supplies CSP policy and asset URLs. |
+| `ModalShell`, `ConfirmButton`, `Drawer`, and `EntityPicker` | Alpine plus the source-compatible `window.LedgerUI` helpers referenced by component markup | Not standalone; host must supply matching helper/runtime versions. |
+| `BalanceTool` | None for server-rendered totals; Alpine plus the host lines editor for live recalculation | Server totals remain authoritative; the host owns live editor integration. |
+| Dismissible `Alert` and `SuggestionChip` | Alpine.js | Expressions are emitted in markup; CSP compatibility depends on the host's Alpine build and policy. |
+
+The library does not set an application's CSP headers or serve assets
+automatically. Consumers should verify component interaction under their
+actual CSP and after HTMX swaps; successful templ rendering alone does not
+verify browser runtime behavior.
+
+For chat suggestions, prefer `SuggestionSubmitChip` inside a native form when
+the action should work without JavaScript. `SuggestionChip` requires Alpine
+to evaluate its action expression. `AssistantMessageContent` accepts
+application-rendered content such as cited links; the host owns its validation
+and escaping contract (plain text should use `AssistantMessage`).
