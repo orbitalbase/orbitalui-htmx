@@ -33,8 +33,8 @@ the assumption that it is a consumer.
 - **Alpine.js:** state is scoped to components and ordinary controls use
   `x-model`/`x-text`. Expression parameters such as model names and click
   actions are code configuration, not user data. Dialog, drawer, and entity
-  picker markup currently calls the source app's `window.LedgerUI` helpers;
-  this is an integration dependency the component package does not yet ship.
+  picker markup calls `window.LedgerUI` helpers, which the library now ships
+  in `assets/orbital-ui.js`.
 - **templ and Go:** generated files are refreshed from `.templ`; user-facing
   text is templ-escaped, URL attributes are sanitized, and exact amounts use
   `big.Rat` instead of floats. HTML ids, labels, and HTMX selectors remain the
@@ -44,25 +44,31 @@ the assumption that it is a consumer.
   so Tailwind can detect them when those files are registered as sources.
   Tailwind 4 ignores many dependency directories by default, so consumer
   builds must explicitly include this module. The extracted semantic classes
-  still require a theme stylesheet; `styles/components.css` only styles the
-  original `oui-*` subset.
+  still require a theme stylesheet. `assets/theme.css` covers the full set,
+  including the original `oui-*` starter subset (`styles/components.css` is a
+  deprecated alias).
 
 ## Follow-up gaps
 
-1. Move `window.LedgerUI` behaviors into a library-owned, documented runtime
-   (or make those components runtime-agnostic) before advertising dialogs,
-   drawers, and the picker as standalone.
+1. ~~Move `window.LedgerUI` behaviors into a library-owned runtime~~ — done:
+   `assets/orbital-ui.js` (dialog, confirm, drawer, picker), browser-tested.
+   Host-specific behaviours stay with the host: ledger-agent's journal lines
+   editor (`LedgerUI.lines`) and multi-record drawer tabs (`LedgerUI.logTabs`).
 2. ~~Ship or generate styles for the extracted semantic class set~~ — done:
-   `assets/tokens.css` and `assets/theme.css` (see `docs/design-system.md`).
-3. Expand input APIs where needed: `TextAreaControl` has no label/error
-   wrapper, and `NumberInputControl` hardcodes `min="0"`, which is not valid
-   for every numeric field.
-4. Add consumer-level rendering/browser coverage for native form fallback,
-   HTMX swaps, Alpine initialization after swaps, and keyboard interaction.
+   `assets/tokens.css` and `assets/theme.css`; every emitted class is covered,
+   enforced by `TestThemeStylesEveryEmittedClass`.
+3. ~~Expand input APIs~~ — done: `FieldTextarea` and `FieldSelect` compose with
+   `LabelledField`; `FieldInput` takes `Min`/`Max`/`Step`. The starter
+   `NumberInputControl` keeps `min="0"` and points to `FieldInput` for signed
+   or bounded values.
+4. ~~Add consumer-level browser coverage~~ — done: `scripts/browser-check.mjs`
+   (native form fallback, htmx swaps, Alpine after swaps, keyboard and focus).
 
 ## Verification
 
-`go tool templ generate`, `go test ./...`, and `go vet ./...` pass. The
+`go tool templ generate`, `go test ./...`, `go vet ./...` and
+`node scripts/browser-check.mjs` pass. The
 rendering and money/pager/icon tests were ported alongside the extracted
 components. This verifies Go/template compilation and server-rendered markup;
-it does not verify a browser integration or a consuming Tailwind build.
+the browser check covers runtime behaviour; a consuming Tailwind build is
+verified in each application.

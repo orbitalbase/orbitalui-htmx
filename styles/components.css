@@ -1,41 +1,10 @@
-/* Minimal theme contract for the reusable field components. Consumers can override these tokens. */
-:root {
-  --oui-paper: var(--color-paper, #fff);
-  --oui-ink: var(--color-ink, #262b31);
-  --oui-ink-soft: var(--color-ink-soft, #59616c);
-  --oui-ink-muted: var(--color-ink-muted, #747d88);
-  --oui-line: var(--color-line-strong, #cbd2da);
-  --oui-accent: var(--color-accent, #465a72);
-  --oui-focus-ring: var(--focus-ring, 0 0 0 3px rgb(70 90 114 / 20%));
-}
-
-.oui-field-control {
-  width: 100%;
-  min-height: 46px;
-  border: 1px solid var(--oui-line);
-  border-radius: 12px;
-  background: var(--oui-paper);
-  padding: 10px 13px;
-  color: var(--oui-ink);
-  transition: border-color 150ms ease-out, box-shadow 150ms ease-out, background-color 150ms ease-out;
-}
-
-.oui-field-control.has-leading-icon { padding-left: 2.5rem; }
-.oui-field-control.has-leading-icon-sm { padding-left: 2.25rem; }
-.oui-field-control:hover { border-color: color-mix(in oklab, var(--oui-line), var(--oui-ink) 16%); }
-.oui-field-control::placeholder { color: var(--oui-ink-muted); }
-.oui-field-control:focus { border-color: var(--oui-accent); box-shadow: var(--oui-focus-ring); outline: none; }
-
-.oui-field-label {
-  display: block;
-  margin-bottom: 7px;
-  color: var(--oui-ink-soft);
-  font-size: 0.75rem;
-  font-weight: 650;
-  letter-spacing: 0.015em;
-}
-
-.oui-assistant-avatar { background: var(--color-accent-soft, #edf1f5); color: var(--oui-accent); }
-.oui-user-message { border: 1px solid color-mix(in oklab, var(--oui-accent), white 88%); background: color-mix(in oklab, var(--oui-accent), white 95%); }
-.oui-suggestion-chip { min-height: 36px; border: 1px solid var(--oui-line); border-radius: 999px; background: var(--oui-paper); padding: 7px 11px; color: var(--oui-ink-soft); font-size: 0.75rem; line-height: 1.2; transition: border-color 150ms ease-out, background-color 150ms ease-out, color 150ms ease-out, transform 150ms ease-out; }
-.oui-suggestion-chip:hover { transform: translateY(-1px); border-color: color-mix(in oklab, var(--oui-accent), white 60%); background: color-mix(in oklab, var(--oui-accent), white 95%); }
+/* Deprecated entry point, kept so existing imports keep working.
+ *
+ * The starter field and chat styles now live in assets/theme.css and read the
+ * shared semantic tokens. Import the design system directly instead:
+ *
+ *   @import "<module>/assets/tokens.css";
+ *   @import "<module>/assets/theme.css";
+ */
+@import "../assets/tokens.css";
+@import "../assets/theme.css";

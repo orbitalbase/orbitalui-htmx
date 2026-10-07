@@ -5,9 +5,8 @@
 // GET/422 of the new-entry form from the exact Amounts — that render is the
 // authoritative verdict (the beam never shows client-rounded money).
 //
-// Live upgrade contract (journal phase): the journal new-entry form mounts
-// this component inside an Alpine lines-editor root (app.js
-// LedgerUI.lines) that recomputes the beam's numbers between submits at the
+// Live upgrade contract: a host lines editor (ledger-agent mounts it as the
+// Alpine root LedgerUI.lines; the library ships no lines runtime) recomputes the beam's numbers between submits at the
 // 2-decimal display scale only. The behaviour reads the beam's DOM
 // positions (.beam state class, .beam__side .amount x2, .beam__fill x2,
 // .beam__verdict) — keep this structure stable (docs/ui-components.md §3).

@@ -3,7 +3,7 @@
 // §3d). NOT a native <dialog>: a plain fixed overlay + panel so a partial-
 // height sheet with a transform transition behaves predictably (native
 // dialog cannot do that cleanly). Behaviour lives entirely in
-// assets/static/app.js (window.LedgerUI.drawer): openDrawer/closeDrawer,
+// assets/orbital-ui.js (window.LedgerUI.drawer): openDrawer/closeDrawer,
 // Esc + backdrop hit-test via the Alpine factory, focus restore, body scroll
 // lock — wired with data-* attributes, zero per-page JS.
 package components
@@ -30,14 +30,14 @@ type DrawerOpts struct {
 	// screen-reader-only, because each tab's own content carries its heading).
 	//
 	// Pages fill it with elements carrying data-log-url / data-log-key /
-	// data-log-title; app.js's LedgerUI.logTabs opens one tab per record, keeps
+	// data-log-title; a host tab runtime (ledger-agent's LedgerUI.logTabs) opens one tab per record, keeps
 	// the strip scrolled to the active tab, and closes it from the × (or the
 	// keyboard). See docs/ui-components.md §3d for the full contract.
 	Tabbed bool
 }
 
 // DrawerTabsID returns the id of a tabbed drawer's tab strip (ID + "-tabs") —
-// the element app.js renders the tabs into. It is server-rendered and empty on
+// the element the host tab runtime renders tabs into. It is server-rendered and empty on
 // purpose: tab state is per-reading-session client state (like the nav rail and
 // the drill width), while each tab's CONTENT stays server-rendered by the
 // drawer's own fragment endpoint.
@@ -55,7 +55,7 @@ func DrawerTitleID(id string) string { return id + "__title" }
 func DrawerContentID(id string) string { return id + "-content" }
 
 // drawerPanelClass joins the panel base class with the tabbed modifier, which
-// is what CSS and app.js key the strip layout off.
+// is what CSS and the runtime key the strip layout off.
 func drawerPanelClass(o DrawerOpts) string {
 	if o.Tabbed {
 		return "drawer-panel drawer-panel--tabbed"
@@ -80,7 +80,7 @@ func drawerCloseLabel(o DrawerOpts) string {
 }
 
 // drawerFullscreenLabel is the full-screen toggle's accessible name and tooltip
-// for a state. app.js reads the same two strings from this owner's behaviour, so
+// for a state. orbital-ui.js uses the same two strings from this owner's behaviour, so
 // the server-rendered label and the label after a toggle can never disagree —
 // the toggle is driven by the button's OWN state, and both icons ship in the
 // markup (CSS reveals one per state), so no JavaScript touches icon markup.

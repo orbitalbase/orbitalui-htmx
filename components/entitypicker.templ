@@ -4,11 +4,11 @@
 // enclosing <form> submits the id while the text field stays human-facing.
 // Keyboard model (↑/↓/Enter/Esc/Tab), debounced fetch, fixed dropdown with
 // flip-up and the aria combobox/listbox wiring are implemented once in
-// assets/static/app.js (window.LedgerUI.picker) — this templ only mounts the
+// assets/orbital-ui.js (window.LedgerUI.picker) — this templ only mounts the
 // config. See docs/ui-components.md §3b for the endpoint wire contract and
 // the per-phase registration pattern.
 //
-// With opts.Create the picker grows a synthetic last row (app.js
+// With opts.Create the picker grows a synthetic last row (orbital-ui.js
 // createOption()) and Enter POSTs a new record — the mousedown target here
 // stays `choose(item)`: that method is already the one place that routes an
 // activation to either a pick or a create (it keys off the row's `create`

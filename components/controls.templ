@@ -5,7 +5,7 @@ templ TextInputField(label string, id string, name string, model string, placeho
 		<label for={ id } class="oui-field-label">{ label }</label>
 		<div class="relative">
 			if iconName != "" {
-				<span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-ink-muted">@Icon(iconName, "h-4 w-4")</span>
+				<span class="pointer-events-none absolute inset-y-0 left-3 flex items-center oui-control-icon">@Icon(iconName, "h-4 w-4")</span>
 			}
 			<input id={ id } name={ name } type="text" class={ "oui-control " + controlClass } placeholder={ placeholder } x-model={ model } autocomplete={ autocomplete } maxlength={ maxLength } required?={ required } />
 		</div>
@@ -22,7 +22,7 @@ templ DropdownField(label string, id string, name string, model string, options 
 				}
 			</select>
 			if withChevron {
-				<span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-ink-muted">@Icon("chevron-down", "h-4 w-4")</span>
+				<span class="pointer-events-none absolute inset-y-0 right-3 flex items-center oui-control-icon">@Icon("chevron-down", "h-4 w-4")</span>
 			}
 		</div>
 	</div>
@@ -36,15 +36,18 @@ templ CompactDropdown(id string, name string, model string, accessibleLabel stri
 				<option value={ option.Value }>{ option.Label }</option>
 			}
 		</select>
-		<span class="pointer-events-none absolute right-1 text-ink-muted">@Icon("chevron-down", "h-3 w-3")</span>
+		<span class="pointer-events-none absolute right-1 oui-control-icon">@Icon("chevron-down", "h-3 w-3")</span>
 	</label>
 }
 
+// NumberInputControl is the starter count input; it always sets min="0".
+// For signed values, bounds or steps use FieldInput with Type "number" and
+// Min/Max/Step inside LabelledField.
 templ NumberInputControl(id string, name string, model string, accessibleLabel string, placeholder string, controlClass string, iconName string) {
 	<div class="relative min-w-0">
 		<label for={ id } class="sr-only">{ accessibleLabel }</label>
 		if iconName != "" {
-			<span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-ink-muted">@Icon(iconName, "h-4 w-4")</span>
+			<span class="pointer-events-none absolute inset-y-0 left-3 flex items-center oui-control-icon">@Icon(iconName, "h-4 w-4")</span>
 		}
 		<input id={ id } name={ name } type="number" inputmode="numeric" min="0" class={ "oui-control " + controlClass } placeholder={ placeholder } x-model={ model } />
 	</div>
@@ -55,5 +58,5 @@ templ TextAreaControl(id string, name string, model string, placeholder string, 
 }
 
 templ CharacterCount(expression string, maximum string) {
-	<span class="text-[10px] tabular-nums text-ink-muted"><span x-text={ expression }>0</span> / { maximum }</span>
+	<span class="oui-character-count"><span x-text={ expression }>0</span> / { maximum }</span>
 }

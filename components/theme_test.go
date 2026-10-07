@@ -2,6 +2,8 @@ package components
 
 import (
 	"os"
+	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 )
@@ -98,4 +100,93 @@ func TestDialogThemeOwnsResponsiveNativeDialogFrame(t *testing.T) {
 	assertRuleContains(".ui-dialog", "position: fixed", "inset: 0", "margin: auto", "width: min(var(--oui-dialog-width", "max-height: var(--oui-dialog-max-height", "overflow-y: auto", "var(--oui-radius-2xl)")
 	assertRuleContains(".ui-dialog__panel", "width: 100%", "min-width: 0")
 	assertRuleContains(".ui-dialog__close", "place-items: center", "var(--oui-control-height-sm)")
+}
+
+// Every class a component emits has a rule in the shipped stylesheets, so a
+// host that imports tokens.css and theme.css gets a finished component and
+// never has to style library markup itself. Classes styled only through a
+// parent selector are listed with the selector that owns them.
+func TestThemeStylesEveryEmittedClass(t *testing.T) {
+	styledVia := map[string]string{
+		"tab":                     ".tab-bar a",
+		"ui-row--link":            "a.ui-row",
+		"drawer-panel__tool-icon": ".drawer-panel__tool-icon--expand/--contract",
+		"oui-assistant-message":   "layout utilities on the element; body is .oui-assistant-message__body",
+	}
+	library := regexp.MustCompile(`^(ui-|oui-|field|form-|tab|kpi-|pager|table-|ledger-table|search-field|segmented|disclosure|selection-toolbar|beam|amount|mono|drawer|entity-picker|async-region|dependency-panel|record-state-summary|confirm-|th-sort)`)
+
+	emitted := map[string]string{}
+	collect := func(file, list string) {
+		for _, token := range strings.Fields(list) {
+			token = strings.Trim(token, "'")
+			if library.MatchString(token) && !strings.HasSuffix(token, "-") {
+				emitted[token] = file
+			}
+		}
+	}
+	templs, _ := filepath.Glob("*.templ")
+	classAttr := regexp.MustCompile(`class="([^"{}]+)"`)
+	for _, file := range templs {
+		raw, err := os.ReadFile(file)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, m := range classAttr.FindAllStringSubmatch(string(raw), -1) {
+			collect(file, m[1])
+		}
+	}
+	// Class helpers build names from string literals: "ui-card ui-card--flush".
+	sources, _ := filepath.Glob("*.go")
+	literal := regexp.MustCompile(`"([a-z][a-z0-9_ -]*)"`)
+	for _, file := range sources {
+		if strings.HasSuffix(file, "_test.go") || strings.HasSuffix(file, "_templ.go") {
+			continue
+		}
+		raw, err := os.ReadFile(file)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, m := range literal.FindAllStringSubmatch(string(raw), -1) {
+			if strings.ContainsAny(m[1], "_-") {
+				collect(file, m[1])
+			}
+		}
+	}
+
+	var css strings.Builder
+	sheets, _ := filepath.Glob("../assets/*.css")
+	for _, sheet := range sheets {
+		raw, err := os.ReadFile(sheet)
+		if err != nil {
+			t.Fatal(err)
+		}
+		css.Write(raw)
+	}
+	selectors := map[string]bool{}
+	for _, m := range regexp.MustCompile(`\.([a-z][a-z0-9_-]*)`).FindAllStringSubmatch(css.String(), -1) {
+		selectors[m[1]] = true
+	}
+	for class, file := range emitted {
+		if selectors[class] {
+			continue
+		}
+		if _, ok := styledVia[class]; ok {
+			continue
+		}
+		t.Errorf("%s emits .%s but no shipped stylesheet styles it", file, class)
+	}
+}
+
+// The runtime rewrites the drawer's full-screen label after a toggle; it must
+// use the same two strings the server renders.
+func TestRuntimeFullscreenLabelsMatchServer(t *testing.T) {
+	raw, err := os.ReadFile("../assets/orbital-ui.js")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, full := range []bool{true, false} {
+		if !strings.Contains(string(raw), `"`+drawerFullscreenLabel(full)+`"`) {
+			t.Errorf("orbital-ui.js does not use the label %q", drawerFullscreenLabel(full))
+		}
+	}
 }

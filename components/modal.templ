@@ -1,6 +1,6 @@
 // ModalShell — the native <dialog> shell behind every modal in the UI (v2
 // Modal semantics, docs/ui-v1-plan.md §6, docs/ui-components.md §3). Behaviour
-// is entirely in assets/static/app.js (window.LedgerUI): openDialog(id) /
+// is entirely in assets/orbital-ui.js (window.LedgerUI): openDialog(id) /
 // closeDialog(id) + Esc + backdrop-click close + focus restore. The dialog
 // element carries a tiny Alpine x-data only for the backdrop hit-test.
 //
@@ -21,7 +21,7 @@
 //
 //	Forms that must survive a full-page 422 (server-side validation errors
 //	re-render the whole page) set ModalOpts.Open — the dialog renders open
-//	and app.js promotes it to the real modal (window.LedgerUI.
+//	and orbital-ui.js promotes it to the real modal (window.LedgerUI.
 //	promoteOpenDialog).
 package components
 
