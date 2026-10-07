@@ -29,7 +29,7 @@ templ TableShell(columns []Column, opts TableOpts, rows templ.Component, footer 
 			id={ opts.ID }
 		}
 	>
-		<table class={ "ledger-table", opts.TableClass }>
+		<table class={ tableClass(opts) }>
 			if opts.Caption != "" {
 				<caption class="visually-hidden">{ opts.Caption }</caption>
 			}

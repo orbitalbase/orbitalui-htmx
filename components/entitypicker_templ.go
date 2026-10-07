@@ -13,9 +13,11 @@
 
 // flip-up and the aria combobox/listbox wiring are implemented once in
 
-// assets/orbital-ui.js (window.LedgerUI.picker) — this templ only mounts the
+// assets/orbital-ui.js (the ouiPicker factory) — this templ only mounts the
 
-// config. See docs/ui-components.md §3b for the endpoint wire contract and
+// config as a data-oui-picker JSON attribute. Every directive is a bare
+
+// property or method reference, so the markup runs under Alpine's CSP build. See docs/ui-components.md §3b for the endpoint wire contract and
 
 // the per-phase registration pattern.
 
@@ -23,13 +25,11 @@
 
 // With opts.Create the picker grows a synthetic last row (orbital-ui.js
 
-// createOption()) and Enter POSTs a new record — the mousedown target here
+// createOption()) and Enter POSTs a new record — a row activation (`pick`)
 
-// stays `choose(item)`: that method is already the one place that routes an
+// goes through choose(item), the one place that routes to either a pick or a
 
-// activation to either a pick or a create (it keys off the row's `create`
-
-// flag), so there is no second click path to keep in sync.
+// create, so there is no second click path to keep in sync.
 
 //
 
@@ -60,39 +60,12 @@ package components
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-// pickerRowKeyExpr is the x-for :key. Keys must be unique across the
 // pickerCreates reports whether the picker actually mints records. Both the Go
-// guard in pickerDataExpr and the markup key off this, not off a non-nil
-// pointer: a Create with no Endpoint would otherwise arm the row here while the
-// JSON dropped it, so Enter would activate a row whose POST goes nowhere. One
-// predicate, so config and markup cannot disagree.
+// guard in pickerConfigJSON and the runtime key off this, not off a non-nil
+// pointer: a Create with no Endpoint would otherwise arm the row while the
+// JSON dropped it, so Enter would activate a row whose POST goes nowhere.
 func pickerCreates(o EntityPickerOpts) bool {
 	return o.Create != nil && o.Create.Endpoint != ""
-}
-
-// pickerEmptyExpr is the "No matches" gate. An opted-in picker must NOT show it
-// while a create row is on screen — the row is the answer to "no matches", and
-// an empty-state stacked above an actionable option reads as a dead end. It
-// also keeps the string identical for non-create pickers.
-func pickerEmptyExpr(o EntityPickerOpts) string {
-	if !pickerCreates(o) {
-		return "!busy && !failed && open && items.length === 0"
-	}
-	return "!busy && !failed && !creating && open && options().length === 0"
-}
-
-// pickerOptionsExpr picks the iterable the option list renders from. The
-// nil-Create form is literally `items`, the pre-create expression: it keeps
-// the ~15 existing call sites' rendered markup — and therefore any test or
-// stylesheet keyed to it — untouched. An opted-in picker renders options(),
-// items plus the synthetic create row, so idx/optId/aria-activedescendant keep
-// ONE index space (a row that is visible but unreachable by the keyboard is an
-// a11y bug, not a shortcut).
-func pickerOptionsExpr(o EntityPickerOpts) string {
-	if !pickerCreates(o) {
-		return "items"
-	}
-	return "options()"
 }
 
 func EntityPicker(opts EntityPickerOpts) templ.Component {
@@ -134,20 +107,20 @@ func EntityPicker(opts EntityPickerOpts) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\" x-data=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\" x-data=\"ouiPicker\" data-oui-picker=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var4 string
-		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.ResolveAttributeValue(pickerDataExpr(opts))
+		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.ResolveAttributeValue(pickerConfigJSON(opts))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/entitypicker.templ`, Line: 65, Col: 63}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/entitypicker.templ`, Line: 38, Col: 93}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "\"><input type=\"hidden\" x-ref=\"hidden\" x-model=\"picked\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "\"><input type=\"hidden\" x-ref=\"hidden\" x-bind:value=\"picked\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -159,7 +132,7 @@ func EntityPicker(opts EntityPickerOpts) templ.Component {
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(opts.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/entitypicker.templ`, Line: 71, Col: 20}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/entitypicker.templ`, Line: 44, Col: 20}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 			if templ_7745c5c3_Err != nil {
@@ -175,20 +148,20 @@ func EntityPicker(opts EntityPickerOpts) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if opts.LabelName != "" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "    <input type=\"hidden\" name=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "   <input type=\"hidden\" name=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var6 string
 			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.ResolveAttributeValue(opts.LabelName)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/entitypicker.templ`, Line: 79, Col: 45}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/entitypicker.templ`, Line: 51, Col: 45}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var6)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "\" x-model=\"display\"> ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "\" x-bind:value=\"display\"> ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -200,7 +173,7 @@ func EntityPicker(opts EntityPickerOpts) templ.Component {
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.ResolveAttributeValue(opts.ID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/entitypicker.templ`, Line: 81, Col: 46}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/entitypicker.templ`, Line: 53, Col: 46}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
 		if templ_7745c5c3_Err != nil {
@@ -213,7 +186,7 @@ func EntityPicker(opts EntityPickerOpts) templ.Component {
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(opts.Label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/entitypicker.templ`, Line: 81, Col: 61}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/entitypicker.templ`, Line: 53, Col: 61}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
@@ -226,7 +199,7 @@ func EntityPicker(opts EntityPickerOpts) templ.Component {
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue(opts.ID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/entitypicker.templ`, Line: 87, Col: 16}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/entitypicker.templ`, Line: 59, Col: 16}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 		if templ_7745c5c3_Err != nil {
@@ -239,31 +212,44 @@ func EntityPicker(opts EntityPickerOpts) templ.Component {
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.ResolveAttributeValue(pickerListID(opts.ID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/entitypicker.templ`, Line: 90, Col: 41}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/entitypicker.templ`, Line: 62, Col: 41}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var10)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "\" x-bind:aria-expanded=\"open ? 'true' : 'false'\" x-bind:aria-activedescendant=\"activeId()\" aria-autocomplete=\"list\" autocomplete=\"off\" placeholder=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "\" x-bind:aria-expanded=\"expanded\" x-bind:aria-activedescendant=\"activeDescendant\" aria-autocomplete=\"list\" autocomplete=\"off\" placeholder=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.ResolveAttributeValue(pickerPlaceholder(opts))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/entitypicker.templ`, Line: 95, Col: 41}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/entitypicker.templ`, Line: 67, Col: 41}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var11)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "\" x-model=\"query\" x-on:input=\"typing()\" x-on:keydown=\"onKey($event)\" x-on:focus=\"ensureOpen()\" x-on:blur=\"onBlur()\"> ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "\" value=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var12 string
+		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.ResolveAttributeValue(opts.ValueLabel)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/entitypicker.templ`, Line: 68, Col: 27}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var12)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "\" x-bind:value=\"query\" x-on:input=\"onInput\" x-on:keydown=\"onKey\" x-on:focus=\"ensureOpen\" x-on:blur=\"onBlur\"> ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if opts.AllowClear {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<button type=\"button\" class=\"entity-picker__clear\" aria-label=\"Clear selection\" x-show=\"picked && !open\" x-on:mousedown.prevent=\"clearPicked()\" x-cloak>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<button type=\"button\" class=\"entity-picker__clear\" aria-label=\"Clear selection\" x-show=\"showClear\" x-on:mousedown.prevent=\"clearPicked\" x-cloak>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -271,58 +257,22 @@ func EntityPicker(opts EntityPickerOpts) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</button> ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "</button> ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<span class=\"entity-picker__caret\" aria-hidden=\"true\"></span></div><ul class=\"entity-picker__list\" x-ref=\"list\" x-show=\"open\" x-cloak x-on:mousedown.prevent x-bind:id=\"cfg.listId\" role=\"listbox\" x-bind:aria-label=\"cfg.label\"><template x-for=\"")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var12 string
-		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.ResolveAttributeValue("(item, i) in " + pickerOptionsExpr(opts))
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/entitypicker.templ`, Line: 126, Col: 62}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var12)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "\" :key=\"item.id\"><li x-bind:id=\"optId(i)\" role=\"option\" x-bind:aria-selected=\"picked === item.id\" x-bind:class=\"i === idx ? 'entity-picker__option entity-picker__option--active' : 'entity-picker__option'\"><button type=\"button\" tabindex=\"-1\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "<span class=\"entity-picker__caret\" aria-hidden=\"true\"></span></div><ul class=\"entity-picker__list\" x-ref=\"list\" x-show=\"open\" x-cloak x-on:mousedown.prevent x-bind:id=\"cfg.listId\" role=\"listbox\" x-bind:aria-label=\"listLabel\"><template x-for=\"item in rows\" :key=\"item.id\"><li x-bind:id=\"item.domId\" role=\"option\" x-bind:aria-selected=\"item.selected\" x-bind:class=\"item.cls\"><button type=\"button\" tabindex=\"-1\" x-bind:class=\"item.btnCls\" x-bind:data-index=\"item.index\" x-on:mousedown.prevent=\"pick\" x-on:mouseenter=\"hover\"><span class=\"entity-picker__label\" x-text=\"item.label\"></span> <span class=\"entity-picker__sublabel\" x-show=\"item.sublabel\" x-text=\"item.sublabel\"></span></button></li></template>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if pickerCreates(opts) {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, " x-bind:class=\"item.create ? 'entity-picker__option-btn--create-row' : ''\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<li class=\"entity-picker__state\" x-show=\"creating\" x-cloak><span class=\"ui-button__progress\" aria-hidden=\"true\"></span>Creating…</li><li class=\"entity-picker__state entity-picker__state--error\" x-show=\"createFailed\" x-cloak role=\"alert\">Couldn't create — check the name and try again.</li>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, " x-on:mousedown.prevent=\"choose(item)\" x-on:mouseenter=\"idx = i\"><span class=\"entity-picker__label\" x-text=\"item.label\"></span> <span class=\"entity-picker__sublabel\" x-show=\"item.sublabel\" x-text=\"item.sublabel\"></span></button></li></template>")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		if pickerCreates(opts) {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "<li class=\"entity-picker__state\" x-show=\"creating\" x-cloak><span class=\"ui-button__progress\" aria-hidden=\"true\"></span>Creating…</li><li class=\"entity-picker__state entity-picker__state--error\" x-show=\"createFailed\" x-cloak role=\"alert\">Couldn't create — check the name and try again.</li>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "<li class=\"entity-picker__state\" x-show=\"busy\" x-cloak><span class=\"ui-button__progress\" aria-hidden=\"true\"></span>Loading…</li><li class=\"entity-picker__state entity-picker__state--error\" x-show=\"failed\" x-cloak role=\"alert\">Couldn't load options — try again.</li><li class=\"entity-picker__state\" x-show=\"")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var13 string
-		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue(pickerEmptyExpr(opts))
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/entitypicker.templ`, Line: 161, Col: 66}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "\" x-cloak>No matches</li></ul></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "<li class=\"entity-picker__state\" x-show=\"busy\" x-cloak><span class=\"ui-button__progress\" aria-hidden=\"true\"></span>Loading…</li><li class=\"entity-picker__state entity-picker__state--error\" x-show=\"failed\" x-cloak role=\"alert\">Couldn't load options — try again.</li><li class=\"entity-picker__state\" x-show=\"showEmpty\" x-cloak>No matches</li></ul></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

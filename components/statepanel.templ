@@ -32,7 +32,9 @@ templ StatePanel(title string, opts StatePanelOpts, children templ.Component) {
 		if opts.Loading {
 			<div class="ui-state__skeleton" aria-hidden="true"></div>
 		}
-		if opts.Icon != "" {
+		if opts.Orb {
+			@Orb(OrbOpts{Size: 40, State: OrbIdle})
+		} else if opts.Icon != "" {
 			<span class="ui-state__icon" aria-hidden="true">@Icon(opts.Icon)
 </span>
 		}
@@ -44,6 +46,9 @@ templ StatePanel(title string, opts StatePanelOpts, children templ.Component) {
 		if children != nil {
 			<div class="ui-state__content">@children
 </div>
+		}
+		if opts.Actions != nil {
+			<div class="ui-state__actions">@opts.Actions</div>
 		}
 	</div>
 }

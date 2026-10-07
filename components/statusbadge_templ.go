@@ -62,7 +62,42 @@ func badgeClass(t Tone, o StatusBadgeOpts) string {
 	return c
 }
 
-func StatusBadge(label string, tone Tone, opts StatusBadgeOpts) templ.Component {
+// BadgeOpts tweaks a Badge.
+//
+//	Dot — show a leading dot in the tone colour.
+//	Hollow — show the leading dot as a ring (a pending or not-yet state); it
+//	    implies Dot.
+//	Muted — drop the tone tint for a quiet neutral label.
+//	Mono — set the label in the numeric face (codes, ids, counts).
+//	Icon — icon-set name drawn before the label.
+type BadgeOpts struct {
+	Dot    bool
+	Hollow bool
+	Muted  bool
+	Mono   bool
+	Icon   string
+	Class  string
+}
+
+// badgeBoxClass assembles the Badge classes: base, tone modifier (unless
+// muted) and the option modifiers.
+func badgeBoxClass(t Tone, o BadgeOpts) string {
+	tone := ""
+	if !o.Muted && t.Modifier() != string(ToneNeutral) {
+		tone = "ui-badge--" + t.Modifier()
+	}
+	return joinClass("ui-badge", tone, modifier(o.Muted, "ui-badge--muted"), modifier(o.Mono, "ui-badge--mono"), modifier(o.Hollow, "ui-badge--hollow"), o.Class)
+}
+
+// Badge is the generic label chip: a small rounded rectangle in a tone
+// (neutral, brand, accent, info, success, warning, danger or ai). Where
+// StatusBadge is the pill for a record's state, Badge labels what a thing is
+// (a plan, a side, a kind, a count). The label always carries the meaning;
+// the tone only supports it.
+//
+//	@components.Badge(components.ToneBrand, "Talent", components.BadgeOpts{Dot: true})
+//	@components.Badge(components.ToneNeutral, "INV-0042", components.BadgeOpts{Mono: true})
+func Badge(tone Tone, label string, opts BadgeOpts) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -83,7 +118,7 @@ func StatusBadge(label string, tone Tone, opts StatusBadgeOpts) templ.Component 
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var2 = []any{badgeClass(tone, opts)}
+		var templ_7745c5c3_Var2 = []any{badgeBoxClass(tone, opts)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var2...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -105,8 +140,14 @@ func StatusBadge(label string, tone Tone, opts StatusBadgeOpts) templ.Component 
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if showBadgeDot(opts) {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<span class=\"ui-status__mark\" aria-hidden=\"true\"></span> ")
+		if opts.Dot || opts.Hollow {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<span class=\"ui-badge__dot\" aria-hidden=\"true\"></span> ")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		if opts.Icon != "" {
+			templ_7745c5c3_Err = Icon(opts.Icon).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -114,13 +155,79 @@ func StatusBadge(label string, tone Tone, opts StatusBadgeOpts) templ.Component 
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/statusbadge.templ`, Line: 48, Col: 9}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/statusbadge.templ`, Line: 86, Col: 9}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</span>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
+func StatusBadge(label string, tone Tone, opts StatusBadgeOpts) templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var5 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var5 == nil {
+			templ_7745c5c3_Var5 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		var templ_7745c5c3_Var6 = []any{badgeClass(tone, opts)}
+		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var6...)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<span class=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var7 string
+		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.ResolveAttributeValue(templ.CSSClasses(templ_7745c5c3_Var6).String())
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/statusbadge.templ`, Line: 1, Col: 0}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		if showBadgeDot(opts) {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<span class=\"ui-status__mark\" aria-hidden=\"true\"></span> ")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		var templ_7745c5c3_Var8 string
+		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(label)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/statusbadge.templ`, Line: 95, Col: 9}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</span>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

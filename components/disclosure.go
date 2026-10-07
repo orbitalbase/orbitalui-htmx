@@ -43,6 +43,8 @@ const (
 //	    behave as an exclusive accordion in browsers that support it.
 //	BodyClass — extra classes on the body wrapper (a form grid, a flush
 //	    table) so host layout does not need a second wrapper element.
+//	SummaryID — an id on the <summary>, so a host can label a region by the
+//	    disclosure heading (aria-labelledby) or target the trigger in a script.
 //	Attrs — extra attributes on the <details> (data-* hooks a host script
 //	    reads), spread last.
 type DisclosureOpts struct {
@@ -52,6 +54,7 @@ type DisclosureOpts struct {
 	Summary   string
 	Name      string
 	BodyClass string
+	SummaryID string
 	ID        string
 	Class     string
 	Attrs     templ.Attributes

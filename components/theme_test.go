@@ -66,7 +66,12 @@ func TestHostBrandOverrideControlsFocusRing(t *testing.T) {
 			continue
 		}
 		end := strings.Index(css[start:], "}")
-		if end < 0 || !strings.Contains(css[start:start+end], "var(--oui-ring-brand)") {
+		rule := ""
+		if end >= 0 {
+			rule = css[start : start+end]
+		}
+		// The focus ring follows the action colour, which defaults to the brand.
+		if !strings.Contains(rule, "var(--oui-ring-brand)") && !strings.Contains(rule, "var(--oui-focus-ring)") {
 			t.Errorf("%s does not use the shared brand focus ring", selector)
 		}
 	}

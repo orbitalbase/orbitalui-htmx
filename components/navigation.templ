@@ -11,7 +11,7 @@
 package components
 
 templ SidebarNav(sections []NavSection, opts SidebarNavOpts) {
-	<nav class={ joinClass("ui-nav", opts.Class) } aria-label={ sidebarNavLabel(opts) }>
+	<nav class={ sidebarNavClass(opts) } aria-label={ sidebarNavLabel(opts) }>
 		for _, section := range sections {
 			if section.Label == "" {
 				<ul class="ui-nav__list" role="list">
@@ -19,7 +19,7 @@ templ SidebarNav(sections []NavSection, opts SidebarNavOpts) {
 						@navLink(link)
 					}
 				</ul>
-			} else if section.Collapsible {
+			} else if section.Collapsible && !opts.Rail {
 				<details
 					class="ui-nav__section"
 					open?={ navSectionOpen(section) }
@@ -80,8 +80,13 @@ templ navLink(link NavLink) {
 }
 
 templ Breadcrumbs(crumbs []Crumb) {
+	@BreadcrumbsWith(crumbs, BreadcrumbsOpts{})
+}
+
+// BreadcrumbsWith is Breadcrumbs with options (phone collapse, landmark label).
+templ BreadcrumbsWith(crumbs []Crumb, opts BreadcrumbsOpts) {
 	if len(crumbs) > 0 {
-		<nav class="ui-breadcrumbs" aria-label="Breadcrumb">
+		<nav class={ breadcrumbsClass(opts) } aria-label={ breadcrumbsLabel(opts) }>
 			<ol role="list">
 				for i, crumb := range crumbs {
 					<li>
@@ -108,6 +113,7 @@ templ Menu(opts MenuOpts, trigger templ.Component, panel templ.Component) {
 	<details
 		class={ menuClass(opts) }
 		data-ui-menu
+		open?={ opts.Open }
 		if opts.ID != "" {
 			id={ opts.ID }
 		}
@@ -145,7 +151,19 @@ templ MenuLink(label string, href templ.SafeURL, opts MenuItemOpts) {
 		if opts.Hint != "" {
 			<span class="ui-menu__hint">{ opts.Hint }</span>
 		}
+		if len(opts.Kbd) > 0 {
+			<span class="ui-menu__kbd ui-kbd-group" aria-hidden="true">
+				for _, key := range opts.Kbd {
+					<kbd class="ui-kbd">{ key }</kbd>
+				}
+			</span>
+		}
 	</a>
+}
+
+// MenuLabel is a small uppercase section label above a group of menu items.
+templ MenuLabel(text string) {
+	<div class="ui-menu__section" role="presentation">{ text }</div>
 }
 
 templ MenuSeparator() {
@@ -163,7 +181,7 @@ templ MenuHeader(title string, subtitle string) {
 }
 
 templ WorkspaceSwitcher(opts WorkspaceSwitcherOpts, panel templ.Component) {
-	@Menu(MenuOpts{Width: "wide", Class: joinClass("ui-switcher", opts.Class), TriggerClass: "ui-switcher__trigger"}, switcherTrigger(opts), panel)
+	@Menu(MenuOpts{Width: "wide", Class: joinClass("ui-switcher", modifier(opts.Compact, "ui-switcher--compact"), opts.Class), TriggerClass: "ui-switcher__trigger"}, switcherTrigger(opts), panel)
 }
 
 templ switcherTrigger(opts WorkspaceSwitcherOpts) {

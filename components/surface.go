@@ -53,20 +53,38 @@ const (
 // CardOpts configures Card.
 //
 //	Title/Description — the card header. Title "" renders a header-less card.
+//	Subtitle — a muted line directly under the title (a record's context);
+//	    Description follows it when both are set.
+//	Icon — icon-set name drawn in a small tile before the title.
 //	Eyebrow — a small label above the title.
 //	Badge — inline component beside the title (a count or status chip).
 //	Actions — header-right controls (a text link or a small button).
 //	Footer — a separated footer row (pagination, "View all", a save bar).
-//	Flush — remove body padding so a table or list can run edge to edge.
+//	Flush — remove body padding so a table, list or CardSections can run edge
+//	    to edge; the header then gets a hairline underneath.
+//	Interactive — the card lifts on hover and reads as pressable. Use it for
+//	    a card that is, or contains, the one way into a record.
+//	Href — make the whole card a link: the title becomes the link and its hit
+//	    area stretches over the card, so Actions stay valid, separate controls
+//	    (they sit above the stretched area). Implies Interactive. A card with
+//	    no Title needs LinkLabel as the link's accessible name.
+//	Edge — a 2px coloured edge on the left (brand, accent, info, success,
+//	    warning, danger or ai) that marks a side or a state without tinting.
 //	HeadingLevel — 2 (default) or 3, so nested cards keep a sound outline.
 type CardOpts struct {
 	Title        string
+	Subtitle     string
 	Description  string
+	Icon         string
 	Eyebrow      string
 	Badge        templ.Component
 	Actions      templ.Component
 	Footer       templ.Component
 	Flush        bool
+	Interactive  bool
+	Href         templ.SafeURL
+	LinkLabel    string
+	Edge         Tone
 	Tone         CardTone
 	HeadingLevel int
 	ID           string
@@ -79,7 +97,24 @@ func cardClass(o CardOpts) string {
 	if o.Tone != CardToneDefault {
 		tone = "ui-card--" + string(o.Tone)
 	}
-	return joinClass("ui-card", tone, modifier(o.Flush, "ui-card--flush"), o.Class)
+	edge := ""
+	if o.Edge != "" && o.Edge != ToneNeutral && o.Edge.Valid() {
+		edge = "ui-card--edge ui-card--edge-" + o.Edge.Modifier()
+	}
+	return joinClass("ui-card", tone, edge, modifier(o.Flush, "ui-card--flush"),
+		modifier(o.Interactive || o.Href != "", "ui-card--interactive"), modifier(o.Href != "", "ui-card--link"), o.Class)
+}
+
+// CardSectionOpts configures CardSection.
+//
+//	Divided — a hairline above the section, to separate stacked sections.
+type CardSectionOpts struct {
+	Divided bool
+	Class   string
+}
+
+func cardSectionClass(o CardSectionOpts) string {
+	return joinClass("ui-card__section", modifier(o.Divided, "ui-card__section--divided"), o.Class)
 }
 
 func cardHeadingID(o CardOpts) string {
@@ -98,10 +133,14 @@ type SettingsSectionOpts struct {
 	Aside       templ.Component // optional extra content under the description
 	ID          string
 	Class       string
+	// InCard gives the section its own gutter and divider, for a section
+	// placed directly in a flush Card (or any host container that supplies no
+	// padding). Sections inside a padded Card body divide edge to edge without it.
+	InCard bool
 }
 
 func settingsSectionClass(o SettingsSectionOpts) string {
-	return joinClass("ui-settings-section", o.Class)
+	return joinClass("ui-settings-section", modifier(o.InCard, "ui-settings-section--card"), o.Class)
 }
 
 // joinClass joins non-empty class names with single spaces.

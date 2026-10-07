@@ -4,10 +4,12 @@
 // max-height: calc(100% - 10vh) — the 10vh dimmed sliver of page above the
 // sheet is the dismiss affordance (backdrop hit-test). The sheet is NOT a
 // native <dialog>: role="dialog" aria-modal="true" on the panel, Esc +
-// backdrop + × close via assets/orbital-ui.js (window.LedgerUI), mirroring the dialog
-// conventions in modal.templ — the Alpine x-data on the overlay carries the
-// backdrop hit-test and the Esc keydown (focus lives inside the panel, so
-// keydown bubbles up to the overlay).
+// backdrop + × close via assets/orbital-ui.js, mirroring the dialog
+// conventions in modal.templ — the Alpine x-data (ouiDrawer) on the overlay
+// carries the backdrop hit-test and the Esc keydown (focus lives inside the
+// panel, so keydown bubbles up to the overlay). Directives are bare references
+// so the markup runs under Alpine's CSP build. Placement: a right slide-over
+// from 640px up, a bottom sheet below.
 //
 //	Params: opts DrawerOpts, children templ.Component (the sheet content —
 //	by convention an htmx fragment target, see DrawerContentID).
@@ -58,9 +60,9 @@ templ Drawer(opts DrawerOpts, children templ.Component) {
 	<div
 		id={ opts.ID }
 		class="drawer-overlay"
-		x-data="LedgerUI.drawer()"
-		x-on:click="backdrop($event)"
-		x-on:keydown.escape="LedgerUI.closeDrawer($el.id)"
+		x-data="ouiDrawer"
+		x-on:click="backdrop"
+		x-on:keydown.escape="escape"
 	>
 		<div
 			class={ drawerPanelClass(opts) }

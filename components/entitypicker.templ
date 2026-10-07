@@ -4,15 +4,15 @@
 // enclosing <form> submits the id while the text field stays human-facing.
 // Keyboard model (↑/↓/Enter/Esc/Tab), debounced fetch, fixed dropdown with
 // flip-up and the aria combobox/listbox wiring are implemented once in
-// assets/orbital-ui.js (window.LedgerUI.picker) — this templ only mounts the
-// config. See docs/ui-components.md §3b for the endpoint wire contract and
+// assets/orbital-ui.js (the ouiPicker factory) — this templ only mounts the
+// config as a data-oui-picker JSON attribute. Every directive is a bare
+// property or method reference, so the markup runs under Alpine's CSP build. See docs/ui-components.md §3b for the endpoint wire contract and
 // the per-phase registration pattern.
 //
 // With opts.Create the picker grows a synthetic last row (orbital-ui.js
-// createOption()) and Enter POSTs a new record — the mousedown target here
-// stays `choose(item)`: that method is already the one place that routes an
-// activation to either a pick or a create (it keys off the row's `create`
-// flag), so there is no second click path to keep in sync.
+// createOption()) and Enter POSTs a new record — a row activation (`pick`)
+// goes through choose(item), the one place that routes to either a pick or a
+// create, so there is no second click path to keep in sync.
 //
 //	Params: opts EntityPickerOpts.
 //
@@ -26,47 +26,20 @@
 //	})
 package components
 
-// pickerRowKeyExpr is the x-for :key. Keys must be unique across the
 // pickerCreates reports whether the picker actually mints records. Both the Go
-// guard in pickerDataExpr and the markup key off this, not off a non-nil
-// pointer: a Create with no Endpoint would otherwise arm the row here while the
-// JSON dropped it, so Enter would activate a row whose POST goes nowhere. One
-// predicate, so config and markup cannot disagree.
+// guard in pickerConfigJSON and the runtime key off this, not off a non-nil
+// pointer: a Create with no Endpoint would otherwise arm the row while the
+// JSON dropped it, so Enter would activate a row whose POST goes nowhere.
 func pickerCreates(o EntityPickerOpts) bool {
 	return o.Create != nil && o.Create.Endpoint != ""
 }
 
-// pickerEmptyExpr is the "No matches" gate. An opted-in picker must NOT show it
-// while a create row is on screen — the row is the answer to "no matches", and
-// an empty-state stacked above an actionable option reads as a dead end. It
-// also keeps the string identical for non-create pickers.
-func pickerEmptyExpr(o EntityPickerOpts) string {
-	if !pickerCreates(o) {
-		return "!busy && !failed && open && items.length === 0"
-	}
-	return "!busy && !failed && !creating && open && options().length === 0"
-}
-
-// pickerOptionsExpr picks the iterable the option list renders from. The
-// nil-Create form is literally `items`, the pre-create expression: it keeps
-// the ~15 existing call sites' rendered markup — and therefore any test or
-// stylesheet keyed to it — untouched. An opted-in picker renders options(),
-// items plus the synthetic create row, so idx/optId/aria-activedescendant keep
-// ONE index space (a row that is visible but unreachable by the keyboard is an
-// a11y bug, not a shortcut).
-func pickerOptionsExpr(o EntityPickerOpts) string {
-	if !pickerCreates(o) {
-		return "items"
-	}
-	return "options()"
-}
-
 templ EntityPicker(opts EntityPickerOpts) {
-	<div class={ pickerClass(opts) } x-data={ pickerDataExpr(opts) }>
+	<div class={ pickerClass(opts) } x-data="ouiPicker" data-oui-picker={ pickerConfigJSON(opts) }>
 		<input
 			type="hidden"
 			x-ref="hidden"
-			x-model="picked"
+			x-bind:value="picked"
 			if opts.Name != "" {
 				name={ opts.Name }
 			}
@@ -74,9 +47,8 @@ templ EntityPicker(opts EntityPickerOpts) {
 		if opts.LabelName != "" {
 			// A form that stores the label itself (the bank import wizard records
 			// the statement's account NUMBER) posts the displayed label here,
-			// read from the same state the input shows. x-model keeps it in step
-			// with choose()/clearPicked() without a second source of truth.
-			<input type="hidden" name={ opts.LabelName } x-model="display"/>
+			// read from the same state the input shows.
+			<input type="hidden" name={ opts.LabelName } x-bind:value="display"/>
 		}
 		<label class="visually-hidden" for={ opts.ID }>{ opts.Label }</label>
 		<div class="entity-picker__field">
@@ -88,24 +60,25 @@ templ EntityPicker(opts EntityPickerOpts) {
 				role="combobox"
 				aria-expanded="false"
 				aria-controls={ pickerListID(opts.ID) }
-				x-bind:aria-expanded="open ? 'true' : 'false'"
-				x-bind:aria-activedescendant="activeId()"
+				x-bind:aria-expanded="expanded"
+				x-bind:aria-activedescendant="activeDescendant"
 				aria-autocomplete="list"
 				autocomplete="off"
 				placeholder={ pickerPlaceholder(opts) }
-				x-model="query"
-				x-on:input="typing()"
-				x-on:keydown="onKey($event)"
-				x-on:focus="ensureOpen()"
-				x-on:blur="onBlur()"
+				value={ opts.ValueLabel }
+				x-bind:value="query"
+				x-on:input="onInput"
+				x-on:keydown="onKey"
+				x-on:focus="ensureOpen"
+				x-on:blur="onBlur"
 			/>
 			if opts.AllowClear {
 				<button
 					type="button"
 					class="entity-picker__clear"
 					aria-label="Clear selection"
-					x-show="picked && !open"
-					x-on:mousedown.prevent="clearPicked()"
+					x-show="showClear"
+					x-on:mousedown.prevent="clearPicked"
 					x-cloak
 				>
 					@Icon("close")
@@ -121,23 +94,22 @@ templ EntityPicker(opts EntityPickerOpts) {
 			x-on:mousedown.prevent
 			x-bind:id="cfg.listId"
 			role="listbox"
-			x-bind:aria-label="cfg.label"
+			x-bind:aria-label="listLabel"
 		>
-			<template x-for={ "(item, i) in " + pickerOptionsExpr(opts) } :key="item.id">
+			<template x-for="item in rows" :key="item.id">
 				<li
-					x-bind:id="optId(i)"
+					x-bind:id="item.domId"
 					role="option"
-					x-bind:aria-selected="picked === item.id"
-					x-bind:class="i === idx ? 'entity-picker__option entity-picker__option--active' : 'entity-picker__option'"
+					x-bind:aria-selected="item.selected"
+					x-bind:class="item.cls"
 				>
 					<button
 						type="button"
 						tabindex="-1"
-						if pickerCreates(opts) {
-							x-bind:class="item.create ? 'entity-picker__option-btn--create-row' : ''"
-						}
-						x-on:mousedown.prevent="choose(item)"
-						x-on:mouseenter="idx = i"
+						x-bind:class="item.btnCls"
+						x-bind:data-index="item.index"
+						x-on:mousedown.prevent="pick"
+						x-on:mouseenter="hover"
 					>
 						<span class="entity-picker__label" x-text="item.label"></span>
 						<span class="entity-picker__sublabel" x-show="item.sublabel" x-text="item.sublabel"></span>
@@ -158,7 +130,7 @@ templ EntityPicker(opts EntityPickerOpts) {
 			<li class="entity-picker__state entity-picker__state--error" x-show="failed" x-cloak role="alert">
 				Couldn't load options — try again.
 			</li>
-			<li class="entity-picker__state" x-show={ pickerEmptyExpr(opts) } x-cloak>
+			<li class="entity-picker__state" x-show="showEmpty" x-cloak>
 				No matches
 			</li>
 		</ul>

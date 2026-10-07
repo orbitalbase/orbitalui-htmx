@@ -1,0 +1,20 @@
+// Usage:
+//
+//	@components.EntityChip(components.EntityChipOpts{Name: "Adri Tan", Href: "/people/42"})
+//	@components.EntityChip(components.EntityChipOpts{Name: "Northwind", Organisation: true})
+package components
+
+// EntityChip renders an avatar and name; see EntityChipOpts.
+templ EntityChip(opts EntityChipOpts) {
+	if opts.Href != "" {
+		<a class={ entityChipClass(opts) } href={ opts.Href }>
+			@Avatar(opts.Name, entityChipAvatar(opts))
+			<span class="ui-entity-chip__name">{ opts.Name }</span>
+		</a>
+	} else {
+		<span class={ entityChipClass(opts) }>
+			@Avatar(opts.Name, entityChipAvatar(opts))
+			<span class="ui-entity-chip__name">{ opts.Name }</span>
+		</span>
+	}
+}
