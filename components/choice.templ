@@ -1,0 +1,83 @@
+package components
+
+// ChipGroup — selectable chips backed by native radio or checkbox inputs
+// (Kindred's chip group). The selected chip takes the action colour with a
+// short pop (reduced-motion safe); Suggested chips carry the AI tint until
+// chosen. The fieldset is the labelled group:
+//
+//	@components.ChipGroup([]components.ChipOption{
+//		{Value: "remote", Label: "Remote", Selected: true},
+//		{Value: "hybrid", Label: "Hybrid", Suggested: true},
+//		{Value: "onsite", Label: "On-site"},
+//	}, components.ChipGroupOpts{Name: "mode", Legend: "Work mode"})
+templ ChipGroup(options []ChipOption, opts ChipGroupOpts) {
+	<fieldset class={ chipGroupClass(opts) } disabled?={ opts.Disabled }>
+		if opts.Legend != "" {
+			if opts.HideLegend {
+				<legend class="visually-hidden">{ opts.Legend }</legend>
+			} else {
+				<legend class="ui-chip-group__legend">{ opts.Legend }</legend>
+			}
+		}
+		<div class="ui-chip-group__list">
+			for _, o := range options {
+				<label class={ choiceChipClass(o) }>
+					<input
+						class="ui-choice-chip__input"
+						type={ chipInputType(opts) }
+						name={ opts.Name }
+						value={ o.Value }
+						checked?={ o.Selected }
+						disabled?={ o.Disabled }
+					/>
+					<span class="ui-choice-chip__body">
+						if o.Suggested {
+							<span class="ui-choice-chip__spark" aria-hidden="true">@Icon("ai")</span>
+						}
+						if o.Icon != "" {
+							@Icon(o.Icon)
+						}
+						<span class="ui-choice-chip__label">{ o.Label }</span>
+						<span class="ui-choice-chip__tick" aria-hidden="true">@Icon("check")</span>
+					</span>
+				</label>
+			}
+		</div>
+	</fieldset>
+}
+
+// SegmentedChoice — a radio group styled as a segmented control; the raised
+// thumb follows the checked radio through :has(:checked), so it needs no
+// JavaScript and the arrow keys work natively. selected is the checked value.
+// Use SegmentedControl instead when each segment is a navigation link.
+//
+//	@components.SegmentedChoice([]components.SegChoice{
+//		{Value: "light", Label: "Light", Icon: "sun", IconOnly: true},
+//		{Value: "dark", Label: "Dark", Icon: "moon", IconOnly: true},
+//	}, "light", components.SegmentedChoiceOpts{Name: "theme", AriaLabel: "Theme"})
+templ SegmentedChoice(options []SegChoice, selected string, opts SegmentedChoiceOpts) {
+	<div class={ segChoiceClass(len(options), opts) } role="radiogroup" aria-label={ opts.AriaLabel }>
+		for _, o := range options {
+			<label class="ui-seg-choice__item">
+				<input
+					class="ui-seg-choice__input"
+					type="radio"
+					name={ opts.Name }
+					value={ o.Value }
+					checked?={ o.Value == selected }
+					disabled?={ o.Disabled }
+				/>
+				<span class="ui-seg-choice__label">
+					if o.Icon != "" {
+						@Icon(o.Icon)
+					}
+					if o.IconOnly {
+						<span class="visually-hidden">{ o.Label }</span>
+					} else {
+						{ o.Label }
+					}
+				</span>
+			</label>
+		}
+	</div>
+}

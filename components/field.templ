@@ -24,12 +24,24 @@ package components
 
 templ LabelledField(label string, htmlFor string, opts FieldOpts, children templ.Component) {
 	<div class={ fieldClass(opts) }>
-		<label class="field-label" for={ htmlFor }>
-			{ label }
-			if opts.Required {
-				<span class="field-label__req" aria-hidden="true">*</span>
-			}
-		</label>
+		if opts.Suggested {
+			<div class="field-head">
+				<label class="field-label" for={ htmlFor }>
+					{ label }
+					if opts.Required {
+						<span class="field-label__req" aria-hidden="true">*</span>
+					}
+				</label>
+				@SuggestedTag("")
+			</div>
+		} else {
+			<label class="field-label" for={ htmlFor }>
+				{ label }
+				if opts.Required {
+					<span class="field-label__req" aria-hidden="true">*</span>
+				}
+			</label>
+		}
 		if children != nil {
 			@children
 		}
@@ -48,7 +60,42 @@ templ FieldError(message string) {
 	<p class="field-error">{ message }</p>
 }
 
+// SuggestedTag is the small "Suggested" marker for a value an assistant
+// pre-filled (spark glyph on the AI tint). label "" renders "Suggested".
+templ SuggestedTag(label string) {
+	<span class="ui-suggested">
+		@Icon("ai", "ui-suggested__icon")
+		if label == "" {
+			Suggested
+		} else {
+			{ label }
+		}
+	</span>
+}
+
+// FieldInput is the shared single-line control. With Icon, Prefix or Suffix
+// set it renders inside a .field-input shell (leading icon, inline affixes);
+// otherwise it is the bare input.
 templ FieldInput(o FieldInputOpts) {
+	if fieldHasShell(o) {
+		<span class={ fieldShellClass(o) }>
+			if o.Icon != "" {
+				<span class="field-input__icon" aria-hidden="true">@Icon(o.Icon)</span>
+			}
+			if o.Prefix != "" {
+				<span class="field-input__affix">{ o.Prefix }</span>
+			}
+			@fieldInputElement(o)
+			if o.Suffix != "" {
+				<span class="field-input__affix field-input__affix--post">{ o.Suffix }</span>
+			}
+		</span>
+	} else {
+		@fieldInputElement(o)
+	}
+}
+
+templ fieldInputElement(o FieldInputOpts) {
 	<input
 		type={ fieldControlType(o.Type) }
 		class={ mergeClass(fieldControlClass(o), o.Attrs) }
@@ -122,12 +169,17 @@ templ FieldTextarea(o FieldTextareaOpts) {
 		if o.AriaDescribedBy != "" {
 			aria-describedby={ o.AriaDescribedBy }
 		}
+		if o.Autogrow {
+			data-autogrow
+		}
 		{ attrsWithoutClass(o.Attrs)... }
 	>{ o.Value }</textarea>
 }
 
-// FieldSelect — the shared native select; wrap in LabelledField.
+// FieldSelect — the shared native select; wrap in LabelledField. The select
+// sits in a .field-select wrapper that draws the chevron as an element.
 templ FieldSelect(o FieldSelectOpts) {
+	<span class={ fieldSelectShellClass(o) }>
 	<select
 		class={ mergeClass(fieldSelectClass(o), o.Attrs) }
 		if o.Name != "" {
@@ -153,4 +205,6 @@ templ FieldSelect(o FieldSelectOpts) {
 			<option value={ opt.Value } selected?={ opt.Value == o.Selected }>{ opt.Label }</option>
 		}
 	</select>
+	<span class="field-select__chevron" aria-hidden="true">@Icon("chevron-down")</span>
+	</span>
 }

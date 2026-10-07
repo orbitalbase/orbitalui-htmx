@@ -1,0 +1,19 @@
+// Usage:
+//
+//	@components.Orb(components.OrbOpts{Size: 40, State: components.OrbThinking, Label: "Assistant is thinking"})
+package components
+
+// Orb renders the AI presence sphere; see OrbOpts.
+templ Orb(opts OrbOpts) {
+	<span
+		class={ opts.class() }
+		if opts.Label != "" {
+			role="img"
+			aria-label={ opts.Label }
+		} else {
+			aria-hidden="true"
+		}
+	>
+		<span class="ui-orb__core"></span>
+	</span>
+}

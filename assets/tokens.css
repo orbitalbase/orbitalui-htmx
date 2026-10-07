@@ -1,16 +1,27 @@
 /* Orbital UI design tokens.
  *
  * Three layers, each overridable by the host:
- *   1. Primitive scales (--oui-gray-*, --oui-brand-*, semantic hues).
- *   2. Semantic roles (--oui-text-*, --oui-bg-*, --oui-border-*, --oui-fg-*).
+ *   1. Primitive scales (--oui-gray-*, --oui-brand-*, --oui-accent-*, semantic hues).
+ *   2. Semantic roles: surfaces (--oui-surface*), ink (--oui-ink*), lines
+ *      (--oui-line*), tone families (--oui-brand, -2, -soft, -ink, --oui-on-brand
+ *      and the same for accent, info, success, warning, danger, ai) and the
+ *      primary-action tokens (--oui-action-*). The older --oui-text-*,
+ *      --oui-bg-*, --oui-border-* and --oui-fg-* names are kept and resolve
+ *      onto these.
  *   3. Shape, elevation, type and motion.
  *
- * Every rule sits inside :where(:root) so a host stylesheet can re-point any
- * token (for example, the brand scale) without specificity fights. Components
- * in theme.css only ever read the semantic layer, so a host theme normally
- * re-points the brand scale and nothing else.
+ * Light declarations sit inside :where(:root) so a host stylesheet can
+ * re-point any token without specificity fights. Dark mode is a full flip of
+ * the primitives and base semantics under :root[data-theme="dark"] and, when
+ * the host has set no data-theme, under prefers-color-scheme. A host that
+ * overrides a token for light mode must also override it for dark mode (see
+ * docs/design-system.md, "Dark mode contract"). Components in theme.css read
+ * the semantic layer only, so a host theme normally re-points the brand scale
+ * and a handful of tone, action and font tokens.
  */
 :where(:root) {
+  color-scheme: light;
+
   /* ── Neutral: a cool gray that keeps records calm and crisp. ── */
   --oui-gray-25: #fcfcfd;
   --oui-gray-50: #f9fafb;
@@ -25,7 +36,7 @@
   --oui-gray-900: #101828;
   --oui-gray-950: #0c111d;
 
-  /* ── Brand: indigo. Hosts re-point this scale to rebrand. ── */
+  /* ── Brand: restrained indigo. Hosts re-point this scale to rebrand. ── */
   --oui-brand-25: #f5f8ff;
   --oui-brand-50: #eef4ff;
   --oui-brand-100: #e0eaff;
@@ -38,6 +49,14 @@
   --oui-brand-800: #2d31a6;
   --oui-brand-900: #2d3282;
   --oui-brand-950: #1f235b;
+
+  /* ── Accent: the second identity colour (warm by default). ── */
+  --oui-accent-50: #fff4ed;
+  --oui-accent-100: #ffe6d5;
+  --oui-accent-200: #fdc9a8;
+  --oui-accent-500: #f2661f;
+  --oui-accent-600: #d9500f;
+  --oui-accent-700: #aa3d0b;
 
   /* ── Semantic hues. Reserved for state, never decoration. ── */
   --oui-success-25: #f6fef9;
@@ -74,58 +93,154 @@
   --oui-ai-500: #7a5af8;
   --oui-ai-700: #5925dc;
 
-  /* ── Semantic roles. ── */
-  --oui-text-primary: var(--oui-gray-900);
-  --oui-text-secondary: var(--oui-gray-700);
-  --oui-text-tertiary: var(--oui-gray-600);
-  --oui-text-quaternary: var(--oui-gray-500);
-  --oui-text-placeholder: var(--oui-gray-400);
-  --oui-text-disabled: var(--oui-gray-400);
-  --oui-text-on-brand: #ffffff;
-  --oui-text-brand: var(--oui-brand-700);
-  --oui-text-brand-strong: var(--oui-brand-800);
+  /* ── Surfaces and ink. The two scales every neutral role resolves to. ── */
+  --oui-canvas: #f6f7f9;
+  --oui-surface: #ffffff;
+  --oui-surface-2: #f2f3f6;
+  --oui-surface-3: #e9ebf0;
+  --oui-surface-4: #dfe2e8;
+  /* An elevated element sitting on surface-2: segmented thumb, menu, popover. */
+  --oui-raised: #ffffff;
+  --oui-ink: #0d1017;
+  --oui-ink-2: #424854;
+  --oui-ink-3: #6a7180;
+  --oui-ink-4: #9aa0ac;
+  /* Text on an ink (inverted) surface. */
+  --oui-ink-on: #ffffff;
+  /* Lines are translucent so they read on any surface (rings, dividers). */
+  --oui-line: rgb(13 16 23 / 0.08);
+  --oui-line-2: rgb(13 16 23 / 0.14);
+  --oui-line-3: rgb(13 16 23 / 0.05);
 
-  --oui-bg-primary: #ffffff;
-  --oui-bg-primary-hover: var(--oui-gray-50);
-  --oui-bg-secondary: var(--oui-gray-50);
-  --oui-bg-tertiary: var(--oui-gray-100);
-  --oui-bg-quaternary: var(--oui-gray-200);
-  --oui-bg-canvas: var(--oui-gray-25);
-  --oui-bg-active: var(--oui-gray-50);
-  --oui-bg-brand: var(--oui-brand-600);
-  --oui-bg-brand-hover: var(--oui-brand-700);
-  --oui-bg-brand-subtle: var(--oui-brand-50);
+  /* ── Tone families: base, -2 (strong/hover), -soft (tint), -ink (text on
+        soft), --oui-on-* (text on the base colour). ── */
+  --oui-brand: var(--oui-brand-600);
+  --oui-brand-2: var(--oui-brand-700);
+  --oui-brand-soft: var(--oui-brand-50);
+  --oui-brand-ink: var(--oui-brand-700);
+  --oui-on-brand: #ffffff;
+  --oui-accent: var(--oui-accent-500);
+  --oui-accent-2: var(--oui-accent-600);
+  --oui-accent-soft: var(--oui-accent-50);
+  --oui-accent-ink: var(--oui-accent-700);
+  --oui-on-accent: #ffffff;
+  --oui-info: var(--oui-info-600);
+  --oui-info-2: var(--oui-info-700);
+  --oui-info-soft: var(--oui-info-50);
+  --oui-info-ink: var(--oui-info-700);
+  --oui-on-info: #ffffff;
+  --oui-success: var(--oui-success-600);
+  --oui-success-2: var(--oui-success-700);
+  --oui-success-soft: var(--oui-success-50);
+  --oui-success-ink: var(--oui-success-700);
+  --oui-on-success: #ffffff;
+  --oui-warning: var(--oui-warning-500);
+  --oui-warning-2: var(--oui-warning-600);
+  --oui-warning-soft: var(--oui-warning-50);
+  --oui-warning-ink: var(--oui-warning-700);
+  --oui-on-warning: #1c1300;
+  --oui-danger: var(--oui-error-600);
+  --oui-danger-2: var(--oui-error-700);
+  --oui-danger-soft: var(--oui-error-50);
+  --oui-danger-ink: var(--oui-error-700);
+  --oui-on-danger: #ffffff;
+  --oui-neutral: var(--oui-ink-3);
+  --oui-neutral-2: var(--oui-ink-2);
+  --oui-neutral-soft: var(--oui-surface-2);
+  --oui-neutral-ink: var(--oui-ink-2);
+  /* AI presence: a gradient from the brand through the AI hue to the accent. */
+  --oui-ai: var(--oui-ai-500);
+  --oui-ai-2: var(--oui-ai-700);
+  --oui-ai-soft: var(--oui-ai-50);
+  --oui-ai-ink: var(--oui-ai-700);
+  --oui-on-ai: #ffffff;
+  --oui-ai-gradient: linear-gradient(120deg, var(--oui-brand) 0%, var(--oui-ai) 52%, var(--oui-accent) 100%);
+  --oui-ai-gradient-soft: linear-gradient(120deg, var(--oui-brand-soft), var(--oui-ai-soft) 52%, var(--oui-accent-soft));
+  --oui-ai-glow: 0 0 0 1px rgb(122 90 248 / 0.35), 0 0 0 4px rgb(122 90 248 / 0.1), 0 8px 30px -6px rgb(122 90 248 / 0.35);
+
+  /* ── Primary action. Buttons, selected chips and segmented thumbs read
+        these; they default to the brand tone. An ink-led identity sets
+        them to --oui-ink / --oui-ink-on. ── */
+  --oui-action-bg: var(--oui-brand);
+  --oui-action-bg-hover: var(--oui-brand-2);
+  --oui-action-fg: var(--oui-on-brand);
+  --oui-action-ring: var(--oui-brand);
+  --oui-action-soft: var(--oui-brand-soft);
+  --oui-action-ink: var(--oui-brand-ink);
+
+  /* ── Semantic roles (older names, kept). ── */
+  --oui-text-primary: var(--oui-ink);
+  --oui-text-secondary: var(--oui-ink-2);
+  --oui-text-tertiary: var(--oui-text-mid);
+  --oui-text-quaternary: var(--oui-ink-3);
+  --oui-text-placeholder: var(--oui-ink-4);
+  --oui-text-disabled: var(--oui-ink-4);
+  --oui-text-mid: #565d6b;
+  --oui-text-on-brand: var(--oui-on-brand);
+  --oui-text-brand: var(--oui-brand-ink);
+  --oui-text-brand-strong: var(--oui-brand-2);
+
+  --oui-bg-primary: var(--oui-surface);
+  --oui-bg-primary-hover: var(--oui-surface-2);
+  --oui-bg-secondary: var(--oui-surface-2);
+  --oui-bg-tertiary: var(--oui-surface-3);
+  --oui-bg-quaternary: var(--oui-surface-4);
+  --oui-bg-canvas: var(--oui-canvas);
+  --oui-bg-active: var(--oui-surface-2);
+  --oui-bg-brand: var(--oui-brand);
+  --oui-bg-brand-hover: var(--oui-brand-2);
+  --oui-bg-brand-subtle: var(--oui-brand-soft);
   --oui-bg-brand-faint: var(--oui-brand-25);
-  --oui-bg-overlay: rgb(12 17 29 / 0.55);
+  --oui-bg-overlay: var(--oui-scrim);
 
-  --oui-border-primary: var(--oui-gray-300);
-  --oui-border-secondary: var(--oui-gray-200);
-  --oui-border-tertiary: var(--oui-gray-100);
+  --oui-border-primary: var(--oui-line-2);
+  --oui-border-secondary: var(--oui-line);
+  --oui-border-tertiary: var(--oui-line-3);
   --oui-border-brand: var(--oui-brand-300);
-  --oui-border-strong: var(--oui-gray-400);
+  --oui-border-strong: var(--oui-ink-4);
 
-  --oui-fg-primary: var(--oui-gray-900);
-  --oui-fg-secondary: var(--oui-gray-700);
-  --oui-fg-tertiary: var(--oui-gray-600);
-  --oui-fg-quaternary: var(--oui-gray-400);
-  --oui-fg-brand: var(--oui-brand-600);
+  --oui-fg-primary: var(--oui-ink);
+  --oui-fg-secondary: var(--oui-ink-2);
+  --oui-fg-tertiary: var(--oui-ink-3);
+  --oui-fg-quaternary: var(--oui-ink-4);
+  --oui-fg-brand: var(--oui-brand);
+
+  /* Sticky bars and backdrops. */
+  --oui-glass: rgb(255 255 255 / 0.8);
+  --oui-scrim: rgb(13 16 23 / 0.42);
 
   /* ── Shape. ── */
-  --oui-radius-xs: 4px;
-  --oui-radius-sm: 6px;
-  --oui-radius-md: 8px;
-  --oui-radius-lg: 10px;
-  --oui-radius-xl: 12px;
-  --oui-radius-2xl: 16px;
+  --oui-radius-xs: 6px;
+  --oui-radius-sm: 8px;
+  --oui-radius-md: 12px;
+  --oui-radius-lg: 16px;
+  --oui-radius-xl: 22px;
+  --oui-radius-2xl: 22px;
   --oui-radius-full: 9999px;
 
-  /* ── Elevation. Low-contrast, layered shadows read as paper, not glass. ── */
-  --oui-shadow-xs: 0 1px 2px rgb(16 24 40 / 0.05);
-  --oui-shadow-sm: 0 1px 3px rgb(16 24 40 / 0.1), 0 1px 2px rgb(16 24 40 / 0.06);
-  --oui-shadow-md: 0 4px 8px -2px rgb(16 24 40 / 0.1), 0 2px 4px -2px rgb(16 24 40 / 0.06);
-  --oui-shadow-lg: 0 12px 16px -4px rgb(16 24 40 / 0.08), 0 4px 6px -2px rgb(16 24 40 / 0.03);
-  --oui-shadow-xl: 0 20px 24px -4px rgb(16 24 40 / 0.08), 0 8px 8px -4px rgb(16 24 40 / 0.03);
-  --oui-shadow-skeuo: inset 0 0 0 1px rgb(16 24 40 / 0.18), inset 0 -2px 0 rgb(16 24 40 / 0.05);
+  /* ── Elevation. Borders are rings, combined with layered shadows. The
+        --oui-sh-* tints flip in dark mode. ── */
+  --oui-sh-1: rgb(13 16 23 / 0.04);
+  --oui-sh-2: rgb(13 16 23 / 0.08);
+  --oui-sh-3: rgb(13 16 23 / 0.18);
+  --oui-sh-3b: rgb(13 16 23 / 0.06);
+  --oui-shadow-1: 0 0 0 1px var(--oui-line), 0 1px 2px var(--oui-sh-1);
+  --oui-shadow-2: 0 0 0 1px var(--oui-line), 0 2px 4px var(--oui-sh-1), 0 8px 24px -6px var(--oui-sh-2);
+  --oui-shadow-3: 0 0 0 1px var(--oui-line-2), 0 12px 32px -8px var(--oui-sh-3), 0 2px 6px var(--oui-sh-3b);
+  --oui-shadow-inset: inset 0 1px 0 rgb(255 255 255 / 0.1);
+  /* Older scale, mapped onto the new one. */
+  --oui-shadow-xs: var(--oui-shadow-1);
+  --oui-shadow-sm: var(--oui-shadow-1);
+  --oui-shadow-md: var(--oui-shadow-2);
+  --oui-shadow-lg: var(--oui-shadow-2);
+  --oui-shadow-xl: var(--oui-shadow-3);
+  --oui-shadow-skeuo: var(--oui-shadow-inset);
+
+  /* Keyboard focus. The ring offsets from the canvas; the halo is the soft
+     3px glow around a focused input. Both follow the action colour. */
+  --oui-focus-ring: 0 0 0 2px var(--oui-canvas), 0 0 0 4px var(--oui-action-ring);
+  --oui-focus-halo-color: rgb(68 76 231 / 0.16);
+  --oui-focus-halo: 0 0 0 3px var(--oui-focus-halo-color);
   /* Keep keyboard focus aligned with the host's brand override. */
   --oui-ring-brand: 0 0 0 4px var(--oui-brand-100);
   --oui-ring-error: 0 0 0 4px rgb(240 68 56 / 0.18);
@@ -146,15 +261,25 @@
   --oui-heading-tracking: -0.02em;
   /* Money and codes: tabular figures in the mono face by default. */
   --oui-font-numeric: var(--oui-font-mono);
-  --oui-text-xs: 0.75rem;     --oui-leading-xs: 1.125rem;
-  --oui-text-sm: 0.875rem;    --oui-leading-sm: 1.25rem;
-  --oui-text-md: 1rem;        --oui-leading-md: 1.5rem;
-  --oui-text-lg: 1.125rem;    --oui-leading-lg: 1.75rem;
-  --oui-text-xl: 1.25rem;     --oui-leading-xl: 1.875rem;
-  --oui-display-xs: 1.5rem;   --oui-leading-display-xs: 2rem;
-  --oui-display-sm: 1.875rem; --oui-leading-display-sm: 2.375rem;
+  --oui-text-display-xl: 2.75rem;   --oui-leading-display-xl: 3rem;
+  --oui-text-display-l: 2rem;       --oui-leading-display-l: 2.375rem;
+  --oui-text-display-m: 1.5rem;     --oui-leading-display-m: 1.875rem;
+  --oui-text-title: 1.125rem;       --oui-leading-title: 1.625rem;
+  --oui-text-body-l: 0.9375rem;     --oui-leading-body-l: 1.5rem;
+  --oui-text-body: 0.875rem;        --oui-leading-body: 1.25rem;
+  --oui-text-label: 0.8125rem;      --oui-leading-label: 1.125rem;
+  --oui-text-caption: 0.75rem;      --oui-leading-caption: 1rem;
+  --oui-text-micro: 0.6875rem;      --oui-leading-micro: 0.875rem;
+  /* Older names, aliased onto the scale. */
+  --oui-text-xs: var(--oui-text-caption);   --oui-leading-xs: var(--oui-leading-caption);
+  --oui-text-sm: var(--oui-text-body);      --oui-leading-sm: var(--oui-leading-body);
+  --oui-text-md: var(--oui-text-body-l);    --oui-leading-md: var(--oui-leading-body-l);
+  --oui-text-lg: var(--oui-text-title);     --oui-leading-lg: var(--oui-leading-title);
+  --oui-text-xl: 1.25rem;                   --oui-leading-xl: 1.75rem;
+  --oui-display-xs: var(--oui-text-display-m);  --oui-leading-display-xs: var(--oui-leading-display-m);
+  --oui-display-sm: var(--oui-text-display-l);  --oui-leading-display-sm: var(--oui-leading-display-l);
 
-  /* ── Space (4px rhythm) and control sizes. ── */
+  /* ── Space (4px rhythm) and control sizes (30 / 36 / 44). ── */
   --oui-space-1: 0.25rem;
   --oui-space-2: 0.5rem;
   --oui-space-3: 0.75rem;
@@ -164,14 +289,20 @@
   --oui-space-8: 2rem;
   --oui-space-10: 2.5rem;
   --oui-space-12: 3rem;
-  --oui-control-height-sm: 2.25rem;
-  --oui-control-height: 2.5rem;
+  --oui-control-height-sm: 1.875rem;
+  --oui-control-height: 2.25rem;
   --oui-control-height-lg: 2.75rem;
 
   /* ── Motion. ── */
   --oui-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --oui-duration-fast: 120ms;
-  --oui-duration: 180ms;
+  --oui-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --oui-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --oui-dur-1: 120ms;
+  --oui-dur-2: 200ms;
+  --oui-dur-3: 320ms;
+  --oui-dur-4: 520ms;
+  --oui-duration-fast: var(--oui-dur-1);
+  --oui-duration: var(--oui-dur-2);
 
   /* ── Layout. ── */
   --oui-sidebar-width: 17rem;
@@ -200,6 +331,10 @@
 
 @media (prefers-reduced-motion: reduce) {
   :where(:root) {
+    --oui-dur-1: 0ms;
+    --oui-dur-2: 0ms;
+    --oui-dur-3: 0ms;
+    --oui-dur-4: 0ms;
     --oui-duration-fast: 0ms;
     --oui-duration: 0ms;
   }
@@ -209,5 +344,239 @@
 @supports (color: color-mix(in srgb, black, transparent)) {
   :where(:root) {
     --oui-ring-brand: 0 0 0 4px color-mix(in srgb, var(--oui-brand-600) 18%, transparent);
+    --oui-focus-halo-color: color-mix(in srgb, var(--oui-action-ring) 16%, transparent);
+    --oui-ai-glow: 0 0 0 1px color-mix(in srgb, var(--oui-ai) 35%, transparent), 0 0 0 4px color-mix(in srgb, var(--oui-ai) 10%, transparent), 0 8px 30px -6px color-mix(in srgb, var(--oui-ai) 35%, transparent);
+  }
+}
+
+/* ───────── Dark mode. A full flip of the primitives and base semantics. ───────── */
+:root[data-theme="light"] { color-scheme: light; }
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --oui-gray-25: #0b0c10;
+  --oui-gray-50: #111318;
+  --oui-gray-100: #171a20;
+  --oui-gray-200: #1f232b;
+  --oui-gray-300: #2c313b;
+  --oui-gray-400: #5d636f;
+  --oui-gray-500: #8a909c;
+  --oui-gray-600: #a9afba;
+  --oui-gray-700: #c5cad3;
+  --oui-gray-800: #dde0e6;
+  --oui-gray-900: #edeff3;
+  --oui-gray-950: #f6f7f9;
+
+  --oui-brand-25: #12143a;
+  --oui-brand-50: #181b4a;
+  --oui-brand-100: #20245f;
+  --oui-brand-200: #2c3180;
+  --oui-brand-300: #3f46b0;
+  --oui-brand-400: #6a73e8;
+  --oui-brand-500: #8089f5;
+  --oui-brand-600: #98a1ff;
+  --oui-brand-700: #b3baff;
+  --oui-brand-800: #c9ceff;
+  --oui-brand-900: #dde0ff;
+  --oui-brand-950: #eef0ff;
+
+  --oui-accent-50: #3a1c0e;
+  --oui-accent-100: #4d2512;
+  --oui-accent-200: #6d3418;
+  --oui-accent-500: #ff7442;
+  --oui-accent-600: #ff8f66;
+  --oui-accent-700: #ffb394;
+
+  --oui-success-25: #08150e;
+  --oui-success-50: #0d2519;
+  --oui-success-100: #11351f;
+  --oui-success-200: #1b5a3a;
+  --oui-success-500: #34d399;
+  --oui-success-600: #4ade9f;
+  --oui-success-700: #86efc4;
+  --oui-warning-25: #191106;
+  --oui-warning-50: #2a1d08;
+  --oui-warning-100: #3a2909;
+  --oui-warning-200: #5e4310;
+  --oui-warning-500: #fbbf24;
+  --oui-warning-600: #fcd34d;
+  --oui-warning-700: #fde68a;
+  --oui-error-25: #1a0b0b;
+  --oui-error-50: #2a1112;
+  --oui-error-100: #3a1618;
+  --oui-error-200: #5c2326;
+  --oui-error-300: #8a3a3d;
+  --oui-error-500: #f87171;
+  --oui-error-600: #fb8a8a;
+  --oui-error-700: #fca5a5;
+  --oui-info-50: #0f2036;
+  --oui-info-100: #142d4d;
+  --oui-info-200: #1d4272;
+  --oui-info-500: #5aa9ff;
+  --oui-info-600: #7dbcff;
+  --oui-info-700: #a8d1ff;
+  --oui-ai-50: #1c1740;
+  --oui-ai-100: #261f58;
+  --oui-ai-200: #3a3180;
+  --oui-ai-500: #a48bff;
+  --oui-ai-700: #c9baff;
+
+  --oui-canvas: #0a0b0f;
+  --oui-surface: #111318;
+  --oui-surface-2: #171a20;
+  --oui-surface-3: #1f232b;
+  --oui-surface-4: #2a2f39;
+  --oui-raised: #262b34;
+  --oui-ink: #edeff3;
+  --oui-ink-2: #b3b9c4;
+  --oui-ink-3: #8a909c;
+  --oui-ink-4: #5d636f;
+  --oui-ink-on: #0a0b0f;
+  --oui-line: rgb(255 255 255 / 0.07);
+  --oui-line-2: rgb(255 255 255 / 0.12);
+  --oui-line-3: rgb(255 255 255 / 0.04);
+  --oui-text-mid: #9ba2ae;
+
+  --oui-on-brand: #0a0b0f;
+  --oui-on-accent: #0a0b0f;
+  --oui-on-info: #0a0b0f;
+  --oui-on-success: #0a0b0f;
+  --oui-on-danger: #0a0b0f;
+  --oui-on-ai: #0a0b0f;
+
+  --oui-glass: rgb(10 11 15 / 0.78);
+  --oui-scrim: rgb(0 0 0 / 0.6);
+
+  --oui-sh-1: rgb(0 0 0 / 0.35);
+  --oui-sh-2: rgb(0 0 0 / 0.45);
+  --oui-sh-3: rgb(0 0 0 / 0.6);
+  --oui-sh-3b: rgb(0 0 0 / 0.4);
+  --oui-shadow-inset: inset 0 1px 0 rgb(255 255 255 / 0.5);
+  --oui-focus-halo-color: rgb(128 137 245 / 0.28);
+  --oui-ring-error: 0 0 0 4px rgb(248 113 113 / 0.22);
+  --oui-ai-glow: 0 0 0 1px rgb(164 139 255 / 0.45), 0 0 0 4px rgb(164 139 255 / 0.16), 0 8px 30px -6px rgb(164 139 255 / 0.45);
+}
+@supports (color: color-mix(in srgb, black, transparent)) {
+  :root[data-theme="dark"] {
+      --oui-focus-halo-color: color-mix(in srgb, var(--oui-action-ring) 28%, transparent);
+    --oui-ai-glow: 0 0 0 1px color-mix(in srgb, var(--oui-ai) 45%, transparent), 0 0 0 4px color-mix(in srgb, var(--oui-ai) 16%, transparent), 0 8px 30px -6px color-mix(in srgb, var(--oui-ai) 45%, transparent);
+  }
+}
+
+/* No data-theme yet (or none ever): follow the system preference. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+
+    --oui-gray-25: #0b0c10;
+    --oui-gray-50: #111318;
+    --oui-gray-100: #171a20;
+    --oui-gray-200: #1f232b;
+    --oui-gray-300: #2c313b;
+    --oui-gray-400: #5d636f;
+    --oui-gray-500: #8a909c;
+    --oui-gray-600: #a9afba;
+    --oui-gray-700: #c5cad3;
+    --oui-gray-800: #dde0e6;
+    --oui-gray-900: #edeff3;
+    --oui-gray-950: #f6f7f9;
+
+    --oui-brand-25: #12143a;
+    --oui-brand-50: #181b4a;
+    --oui-brand-100: #20245f;
+    --oui-brand-200: #2c3180;
+    --oui-brand-300: #3f46b0;
+    --oui-brand-400: #6a73e8;
+    --oui-brand-500: #8089f5;
+    --oui-brand-600: #98a1ff;
+    --oui-brand-700: #b3baff;
+    --oui-brand-800: #c9ceff;
+    --oui-brand-900: #dde0ff;
+    --oui-brand-950: #eef0ff;
+
+    --oui-accent-50: #3a1c0e;
+    --oui-accent-100: #4d2512;
+    --oui-accent-200: #6d3418;
+    --oui-accent-500: #ff7442;
+    --oui-accent-600: #ff8f66;
+    --oui-accent-700: #ffb394;
+
+    --oui-success-25: #08150e;
+    --oui-success-50: #0d2519;
+    --oui-success-100: #11351f;
+    --oui-success-200: #1b5a3a;
+    --oui-success-500: #34d399;
+    --oui-success-600: #4ade9f;
+    --oui-success-700: #86efc4;
+    --oui-warning-25: #191106;
+    --oui-warning-50: #2a1d08;
+    --oui-warning-100: #3a2909;
+    --oui-warning-200: #5e4310;
+    --oui-warning-500: #fbbf24;
+    --oui-warning-600: #fcd34d;
+    --oui-warning-700: #fde68a;
+    --oui-error-25: #1a0b0b;
+    --oui-error-50: #2a1112;
+    --oui-error-100: #3a1618;
+    --oui-error-200: #5c2326;
+    --oui-error-300: #8a3a3d;
+    --oui-error-500: #f87171;
+    --oui-error-600: #fb8a8a;
+    --oui-error-700: #fca5a5;
+    --oui-info-50: #0f2036;
+    --oui-info-100: #142d4d;
+    --oui-info-200: #1d4272;
+    --oui-info-500: #5aa9ff;
+    --oui-info-600: #7dbcff;
+    --oui-info-700: #a8d1ff;
+    --oui-ai-50: #1c1740;
+    --oui-ai-100: #261f58;
+    --oui-ai-200: #3a3180;
+    --oui-ai-500: #a48bff;
+    --oui-ai-700: #c9baff;
+
+    --oui-canvas: #0a0b0f;
+    --oui-surface: #111318;
+    --oui-surface-2: #171a20;
+    --oui-surface-3: #1f232b;
+    --oui-surface-4: #2a2f39;
+    --oui-raised: #262b34;
+    --oui-ink: #edeff3;
+    --oui-ink-2: #b3b9c4;
+    --oui-ink-3: #8a909c;
+    --oui-ink-4: #5d636f;
+    --oui-ink-on: #0a0b0f;
+    --oui-line: rgb(255 255 255 / 0.07);
+    --oui-line-2: rgb(255 255 255 / 0.12);
+    --oui-line-3: rgb(255 255 255 / 0.04);
+    --oui-text-mid: #9ba2ae;
+
+    --oui-on-brand: #0a0b0f;
+    --oui-on-accent: #0a0b0f;
+    --oui-on-info: #0a0b0f;
+    --oui-on-success: #0a0b0f;
+    --oui-on-danger: #0a0b0f;
+    --oui-on-ai: #0a0b0f;
+
+    --oui-glass: rgb(10 11 15 / 0.78);
+    --oui-scrim: rgb(0 0 0 / 0.6);
+
+    --oui-sh-1: rgb(0 0 0 / 0.35);
+    --oui-sh-2: rgb(0 0 0 / 0.45);
+    --oui-sh-3: rgb(0 0 0 / 0.6);
+    --oui-sh-3b: rgb(0 0 0 / 0.4);
+    --oui-shadow-inset: inset 0 1px 0 rgb(255 255 255 / 0.5);
+    --oui-focus-halo-color: rgb(128 137 245 / 0.28);
+    --oui-ring-error: 0 0 0 4px rgb(248 113 113 / 0.22);
+    --oui-ai-glow: 0 0 0 1px rgb(164 139 255 / 0.45), 0 0 0 4px rgb(164 139 255 / 0.16), 0 8px 30px -6px rgb(164 139 255 / 0.45);
+  }
+}
+@media (prefers-color-scheme: dark) {
+  @supports (color: color-mix(in srgb, black, transparent)) {
+    :root:not([data-theme]) {
+      --oui-focus-halo-color: color-mix(in srgb, var(--oui-action-ring) 28%, transparent);
+    --oui-ai-glow: 0 0 0 1px color-mix(in srgb, var(--oui-ai) 45%, transparent), 0 0 0 4px color-mix(in srgb, var(--oui-ai) 16%, transparent), 0 8px 30px -6px color-mix(in srgb, var(--oui-ai) 45%, transparent);
+    }
   }
 }

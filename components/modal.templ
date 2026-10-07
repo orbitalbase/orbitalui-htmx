@@ -1,8 +1,9 @@
 // ModalShell — the native <dialog> shell behind every modal in the UI (v2
 // Modal semantics, docs/ui-v1-plan.md §6, docs/ui-components.md §3). Behaviour
-// is entirely in assets/orbital-ui.js (window.LedgerUI): openDialog(id) /
-// closeDialog(id) + Esc + backdrop-click close + focus restore. The dialog
-// element carries a tiny Alpine x-data only for the backdrop hit-test.
+// is entirely in assets/orbital-ui.js: openDialog(id) / closeDialog(id) + Esc
+// + backdrop-click close + focus restore. The dialog element carries a tiny
+// Alpine x-data (the ouiDialog factory) only for the backdrop hit-test; its
+// directives are bare references, so the markup runs under Alpine's CSP build.
 //
 //	Params: opts ModalOpts, children templ.Component (the modal content —
 //	forms post normally inside; htmx forms target the dialog and close via
@@ -31,9 +32,9 @@ templ ModalShell(opts ModalOpts, children templ.Component) {
 		class={ dialogClass(opts) }
 		aria-labelledby={ ModalTitleID(opts.ID) }
 		open?={ opts.Open }
-		x-data="LedgerUI.dialog()"
-		x-on:click="backdrop($event)"
-		x-on:cancel.prevent="LedgerUI.closeDialog($el.id)"
+		x-data="ouiDialog"
+		x-on:click="backdrop"
+		x-on:cancel.prevent="cancel"
 	>
 		<div class="ui-dialog__panel">
 			<header class="ui-dialog__header">

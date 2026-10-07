@@ -1,0 +1,44 @@
+// Usage:
+//
+//	@components.RingMeter(components.RingMeterOpts{Value: 82, Size: 64, Tone: components.ToneAI, Name: "Match score"})
+package components
+
+import "strconv"
+
+// RingMeter renders a role="img" score ring; see RingMeterOpts. The arc draws
+// in with the motion.css animation (reduced-motion safe).
+templ RingMeter(opts RingMeterOpts) {
+	<span class={ opts.class() } role="img" aria-label={ opts.aria() }>
+		<svg viewBox={ opts.viewBox() } width={ strconv.Itoa(opts.size()) } height={ strconv.Itoa(opts.size()) } aria-hidden="true" focusable="false">
+			if opts.ai() {
+				<defs>
+					<linearGradient id={ opts.gradientID() } x1="0" y1="1" x2="1" y2="0">
+						<stop class="ui-ring__stop ui-ring__stop--1" offset="0"></stop>
+						<stop class="ui-ring__stop ui-ring__stop--2" offset="0.52"></stop>
+						<stop class="ui-ring__stop ui-ring__stop--3" offset="1"></stop>
+					</linearGradient>
+				</defs>
+			}
+			<circle class="ui-ring__track" cx={ opts.centreXY() } cy={ opts.centreXY() } r={ opts.r() } fill="none" stroke-width={ opts.strokeWidth() }></circle>
+			if opts.percent() > 0 {
+				<circle
+					class="ui-ring__arc"
+					cx={ opts.centreXY() }
+					cy={ opts.centreXY() }
+					r={ opts.r() }
+					fill="none"
+					if opts.ai() {
+						stroke={ "url(#" + opts.gradientID() + ")" }
+					}
+					stroke-width={ opts.strokeWidth() }
+					stroke-linecap="round"
+					pathLength="100"
+					stroke-dasharray="100"
+					stroke-dashoffset={ opts.dashOffset() }
+					transform={ opts.rotate() }
+				></circle>
+			}
+		</svg>
+		<span class="ui-ring__value">{ opts.centre() }</span>
+	</span>
+}

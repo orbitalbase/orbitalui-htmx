@@ -1,0 +1,43 @@
+// Usage:
+//
+//	@components.Timeline() {
+//		@components.TimelineItem(components.TimelineItemOpts{Title: "v3", Meta: "Today", Current: true, Mono: true}) {
+//			Raised the salary band.
+//		}
+//		@components.TimelineItem(components.TimelineItemOpts{Title: "v2", Meta: "Mon", Tone: components.ToneSuccess}) {
+//			Published.
+//		}
+//	}
+package components
+
+// Timeline wraps TimelineItem children in the list element they require.
+templ Timeline() {
+	<ol class="ui-timeline">
+		{ children... }
+	</ol>
+}
+
+// TimelineItem is one event; its children are the body text.
+templ TimelineItem(opts TimelineItemOpts) {
+	<li
+		class={ timelineItemClass(opts) }
+		if opts.Current {
+			aria-current="step"
+		}
+	>
+		<span class="ui-timeline__dot" aria-hidden="true"></span>
+		<div class="ui-timeline__row">
+			if opts.Href != "" {
+				<a href={ opts.Href } class={ timelineTitleClass(opts) }>{ opts.Title }</a>
+			} else {
+				<span class={ timelineTitleClass(opts) }>{ opts.Title }</span>
+			}
+			if opts.Meta != "" {
+				<span class="ui-timeline__meta">{ opts.Meta }</span>
+			}
+		</div>
+		<div class="ui-timeline__body">
+			{ children... }
+		</div>
+	</li>
+}

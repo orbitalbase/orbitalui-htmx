@@ -9,7 +9,7 @@ templ ChatThread(id string, label string, className string, children templ.Compo
 }
 
 templ SummaryCard(title string, iconName string, className string, fields templ.Component) {
-	<article class={ className } aria-label={ title }>
+	<article class={ "oui-summary-card " + className } aria-label={ title }>
 		<div class="oui-summary-card__head mb-3 flex items-center gap-2">
 			<span class="oui-summary-card__icon grid h-6 w-6 place-items-center rounded-lg">@Icon(iconName, "h-3.5 w-3.5")</span>
 			{ title }
@@ -59,7 +59,7 @@ templ assistantMessageText(text string) {
 }
 
 templ UserMessage(text string) {
-	<article class="message-enter flex justify-end" aria-label="User message">
+	<article class="oui-user-message-row message-enter flex justify-end" aria-label="User message">
 		<div class="oui-user-message max-w-[85%] rounded-2xl rounded-tr-md px-4 py-3"><p>{ text }</p></div>
 	</article>
 }

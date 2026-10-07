@@ -46,9 +46,9 @@ templ ConfirmButton(submitLabel string, confirmLabel string, subject string, con
 		id={ opts.ID }
 		class="ui-dialog ui-dialog--confirm"
 		aria-labelledby={ ModalTitleID(opts.ID) }
-		x-data="LedgerUI.dialog()"
-		x-on:click="backdrop($event)"
-		x-on:cancel.prevent="LedgerUI.closeDialog($el.id)"
+		x-data="ouiDialog"
+		x-on:click="backdrop"
+		x-on:cancel.prevent="cancel"
 	>
 		<div class="ui-dialog__panel">
 			<header class="ui-dialog__header">

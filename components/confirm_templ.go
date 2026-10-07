@@ -284,7 +284,7 @@ func ConfirmButton(submitLabel string, confirmLabel string, subject string, cons
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "\" x-data=\"LedgerUI.dialog()\" x-on:click=\"backdrop($event)\" x-on:cancel.prevent=\"LedgerUI.closeDialog($el.id)\"><div class=\"ui-dialog__panel\"><header class=\"ui-dialog__header\"><h2 id=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "\" x-data=\"ouiDialog\" x-on:click=\"backdrop\" x-on:cancel.prevent=\"cancel\"><div class=\"ui-dialog__panel\"><header class=\"ui-dialog__header\"><h2 id=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

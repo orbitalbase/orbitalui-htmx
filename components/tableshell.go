@@ -119,6 +119,42 @@ type TableOpts struct {
 	EmptyContent     templ.Component // optional host empty state; defaults to built-in state
 
 	Sort *SortState // optional generated GET sorting; direct column links take precedence
+
+	// Flush renders the region edge to edge — no outer ring, radius or
+	// background — so the table sits directly in a card body, a split view or
+	// the page. Pair it with a Card that has Flush set, or let the page's own
+	// container supply the frame.
+	Flush bool
+	// HeaderStyle picks the header look: TableHeaderCaps renders uppercase,
+	// tracked column headers (the register look). The look is token-driven
+	// (--oui-table-head-*), so a host can also set the tokens directly.
+	HeaderStyle TableHeaderStyle
+	// Compact tightens cell padding for dense registers.
+	Compact bool
+}
+
+// TableHeaderStyle selects how column headers are set.
+type TableHeaderStyle string
+
+const (
+	// TableHeaderDefault is the quiet sentence-case header.
+	TableHeaderDefault TableHeaderStyle = ""
+	// TableHeaderCaps is the uppercase, tracked register header.
+	TableHeaderCaps TableHeaderStyle = "caps"
+)
+
+// tableClass builds the <table> classes: the base, header style and density
+// modifiers, then the host's TableClass.
+func tableClass(o TableOpts) string {
+	caps := ""
+	if o.HeaderStyle == TableHeaderCaps {
+		caps = "ledger-table--caps"
+	}
+	compact := ""
+	if o.Compact {
+		compact = "ledger-table--compact"
+	}
+	return joinClass("ledger-table", caps, compact, o.TableClass)
 }
 
 // thClass builds the header-cell classes for a column.
@@ -150,10 +186,11 @@ func tableColStyle(c Column) string {
 
 // tableRegionClass joins the region base class + extras.
 func tableRegionClass(o TableOpts) string {
-	if o.Class == "" {
-		return "table-region"
+	flush := ""
+	if o.Flush {
+		flush = "table-region--flush"
 	}
-	return "table-region " + o.Class
+	return joinClass("table-region", flush, o.Class)
 }
 
 // tdClass joins the base cell classes + optional extras.

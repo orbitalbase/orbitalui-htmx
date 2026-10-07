@@ -15,12 +15,17 @@ const (
 	ToneDanger  Tone = "danger"
 	ToneSuccess Tone = "success" // accounting-positive states only
 	ToneAI      Tone = "ai"      // iris — reserved for AI provenance
+	// ToneBrand and ToneAccent are the two identity colours. They tint
+	// badges, alerts and card edges when a label belongs to the product
+	// (a side, a plan, a highlight) rather than to a status.
+	ToneBrand  Tone = "brand"
+	ToneAccent Tone = "accent"
 )
 
 // Valid reports whether t is one of the known enum values.
 func (t Tone) Valid() bool {
 	switch t {
-	case ToneNeutral, ToneInfo, ToneWarning, ToneDanger, ToneSuccess, ToneAI:
+	case ToneNeutral, ToneInfo, ToneWarning, ToneDanger, ToneSuccess, ToneAI, ToneBrand, ToneAccent:
 		return true
 	}
 	return false

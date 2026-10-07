@@ -35,7 +35,11 @@ templ Disclosure(label string, opts DisclosureOpts, children templ.Component) {
 		}
 		{ attrsWithoutClass(opts.Attrs)... }
 	>
-		<summary>
+		<summary
+			if opts.SummaryID != "" {
+				id={ opts.SummaryID }
+			}
+		>
 			<span class="disclosure__chevron" aria-hidden="true">
 				@Icon("chevron-right")
 			</span>

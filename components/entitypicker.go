@@ -84,7 +84,7 @@ type EntityPickerCreateOpts struct {
 }
 
 // pickerConfig is the JSON blob handed to the Alpine factory (orbital-ui.js
-// LedgerUI.picker). Kept as a struct so the wire is typed + marshalled once.
+// ouiPicker, which calls picker(cfg)). Kept as a struct so the wire is typed + marshalled once.
 type pickerConfig struct {
 	ID          string `json:"id"`
 	Label       string `json:"label"`
@@ -114,10 +114,10 @@ type pickerCreateConfig struct {
 	RequireBookScope bool   `json:"requireBookScope,omitempty"`
 }
 
-// pickerDataExpr renders the Alpine x-data expression for opts:
-// "LedgerUI.picker({...})". The JSON is HTML-escaped by templ in the
-// attribute, so quotes inside labels are safe.
-func pickerDataExpr(o EntityPickerOpts) string {
+// pickerConfigJSON renders the data-oui-picker attribute value: the JSON the
+// ouiPicker factory (orbital-ui.js) reads from its element. templ escapes it
+// in the attribute, so quotes inside labels are safe.
+func pickerConfigJSON(o EntityPickerOpts) string {
 	cfg := pickerConfig{
 		ID:          o.ID,
 		Label:       o.Label,
@@ -145,9 +145,9 @@ func pickerDataExpr(o EntityPickerOpts) string {
 	b, err := json.Marshal(cfg)
 	if err != nil {
 		// Cannot happen for a plain struct; degrade to an empty picker.
-		return "LedgerUI.picker({})"
+		return "{}"
 	}
-	return "LedgerUI.picker(" + string(b) + ")"
+	return string(b)
 }
 
 // pickerClass joins the wrapper base class + extras.

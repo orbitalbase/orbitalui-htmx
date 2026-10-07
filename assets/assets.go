@@ -2,7 +2,9 @@
 // some components opt into. Serve Files under your application's static
 // handler, or import the CSS into your own build:
 //
-//	tokens.css    — primitive and semantic design tokens (import first)
+//	tokens.css    — primitive and semantic design tokens, light and dark (import first)
+//	base.css      — optional type scale, prose and small utilities
+//	motion.css    — optional motion language (enter, press, shimmer, orb, ring)
 //	theme.css     — the default look for every class the components emit
 //	controls.css  — field focus treatment shared with host-native controls
 //	inspector.css — structural styles for the docked record inspector
@@ -13,5 +15,5 @@ package assets
 
 import "embed"
 
-//go:embed tokens.css theme.css inspector.js inspector.css controls.css menu.js orbital-ui.js
+//go:embed tokens.css base.css motion.css theme.css inspector.js inspector.css controls.css menu.js orbital-ui.js
 var Files embed.FS

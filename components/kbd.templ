@@ -1,0 +1,29 @@
+// Kbd and KbdGroup — keyboard key caps for shortcut hints (menu items, the
+// search trigger, empty-state tips).
+//
+// Usage:
+//
+//	@components.Kbd("Esc")
+//	@components.KbdGroup("⌘", "K")
+//
+// Kbd with several keys wraps them in a group, so a combination reads as one
+// unit; KbdGroup always wraps. Keys are escaped text.
+package components
+
+// Kbd renders one key cap, or a grouped combination when given several.
+templ Kbd(keys ...string) {
+	if len(keys) == 1 {
+		<kbd class="ui-kbd">{ keys[0] }</kbd>
+	} else {
+		@KbdGroup(keys...)
+	}
+}
+
+// KbdGroup renders key caps as one inline group.
+templ KbdGroup(keys ...string) {
+	<span class="ui-kbd-group">
+		for _, k := range keys {
+			<kbd class="ui-kbd">{ k }</kbd>
+		}
+	</span>
+}

@@ -66,35 +66,52 @@ templ Card(opts CardOpts, body templ.Component) {
 		}
 		{ attrsWithoutClass(opts.Attrs)... }
 	>
+		if opts.Href != "" && opts.Title == "" {
+			<a class="ui-card__link" href={ opts.Href } aria-label={ opts.LinkLabel }></a>
+		}
 		if opts.Title != "" {
 			<header class="ui-card__header">
 				<div class="ui-card__heading">
-					if opts.Eyebrow != "" {
-						<p class="ui-card__eyebrow">{ opts.Eyebrow }</p>
+					if opts.Icon != "" {
+						<span class="ui-card__icon" aria-hidden="true">
+							@Icon(opts.Icon)
+						</span>
 					}
-					<div class="ui-card__title-row">
-						if opts.HeadingLevel == 3 {
-							<h3
-								class="ui-card__title"
-								if opts.ID != "" {
-									id={ cardHeadingID(opts) }
-								}
-							>{ opts.Title }</h3>
-						} else {
-							<h2
-								class="ui-card__title"
-								if opts.ID != "" {
-									id={ cardHeadingID(opts) }
-								}
-							>{ opts.Title }</h2>
+					<div class="ui-card__titles">
+						if opts.Eyebrow != "" {
+							<p class="ui-card__eyebrow">{ opts.Eyebrow }</p>
 						}
-						if opts.Badge != nil {
-							@opts.Badge
+						<div class="ui-card__title-row">
+							if opts.HeadingLevel == 3 {
+								<h3
+									class="ui-card__title"
+									if opts.ID != "" {
+										id={ cardHeadingID(opts) }
+									}
+								>
+									@cardTitleText(opts)
+								</h3>
+							} else {
+								<h2
+									class="ui-card__title"
+									if opts.ID != "" {
+										id={ cardHeadingID(opts) }
+									}
+								>
+									@cardTitleText(opts)
+								</h2>
+							}
+							if opts.Badge != nil {
+								@opts.Badge
+							}
+						</div>
+						if opts.Subtitle != "" {
+							<p class="ui-card__subtitle">{ opts.Subtitle }</p>
+						}
+						if opts.Description != "" {
+							<p class="ui-card__description">{ opts.Description }</p>
 						}
 					</div>
-					if opts.Description != "" {
-						<p class="ui-card__description">{ opts.Description }</p>
-					}
 				</div>
 				if opts.Actions != nil {
 					<div class="ui-card__actions">
@@ -114,6 +131,29 @@ templ Card(opts CardOpts, body templ.Component) {
 			</footer>
 		}
 	</section>
+}
+
+// cardTitleText renders the title, as the stretched link when Href is set.
+templ cardTitleText(opts CardOpts) {
+	if opts.Href != "" {
+		<a class="ui-card__link" href={ opts.Href }>{ opts.Title }</a>
+	} else {
+		{ opts.Title }
+	}
+}
+
+// CardSection is a padded block inside a Card. Give the Card Flush and stack
+// sections (optionally Divided) for a card whose parts have their own rhythm.
+//
+//	@components.Card(components.CardOpts{Title: "Profile", Flush: true},
+//		sections(components.CardSection(components.CardSectionOpts{}, intro),
+//			components.CardSection(components.CardSectionOpts{Divided: true}, details)))
+templ CardSection(opts CardSectionOpts, body templ.Component) {
+	<div class={ cardSectionClass(opts) }>
+		if body != nil {
+			@body
+		}
+	</div>
 }
 
 templ SettingsSection(opts SettingsSectionOpts, body templ.Component) {

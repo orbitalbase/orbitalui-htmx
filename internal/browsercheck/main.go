@@ -94,11 +94,28 @@ func nameForm(errMsg string) templ.Component {
 	)
 }
 
+// page serves the component page in three variants selected by query:
+//
+//	/            standard Alpine build
+//	/?csp=1      Alpine's CSP build under Content-Security-Policy: script-src
+//	             'self' (no unsafe-eval, no inline scripts), so any expression
+//	             the CSP build cannot evaluate, and any eval, fails for real
+//	/?host=1     standard Alpine with a stand-in host runtime (window.LedgerUI)
+//	             loaded before orbital-ui.js
 func page(w http.ResponseWriter, r *http.Request) {
+	alpine := "/vendor/alpine.min.js"
+	hostScript := ""
+	if r.URL.Query().Get("csp") == "1" {
+		alpine = "/vendor/alpine-csp.min.js"
+		w.Header().Set("Content-Security-Policy", "script-src 'self'")
+	}
+	if r.URL.Query().Get("host") == "1" {
+		hostScript = `<script src="/vendor/host-runtime.js" defer></script>`
+	}
 	render(w, r,
 		raw(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Orbital UI browser check</title>
 <link rel="stylesheet" href="/static/tokens.css"><link rel="stylesheet" href="/static/controls.css"><link rel="stylesheet" href="/static/theme.css">
-<script src="/vendor/htmx.min.js" defer></script><script src="/static/orbital-ui.js" defer></script><script src="/vendor/alpine.min.js" defer></script>
+<script src="/vendor/htmx.min.js" defer></script>`+hostScript+`<script src="/static/orbital-ui.js" defer></script><script src="`+alpine+`" defer></script>
 </head><body><main>`),
 		c.PageHeader("Browser check", c.PageHeaderOpts{}),
 		c.Button(c.ButtonVariantPrimary, "", c.ButtonOpts{Label: "Open dialog", Attrs: templ.Attributes{"id": "open-dialog", "data-open-dialog": "dlg"}}),
@@ -110,6 +127,7 @@ func page(w http.ResponseWriter, r *http.Request) {
 			"id": "open-drawer", "data-open-drawer": "drw", "hx-get": "/drawer", "hx-target": "#" + c.DrawerContentID("drw"), "hx-swap": "innerHTML",
 		}}),
 		c.Drawer(c.DrawerOpts{ID: "drw", Title: "Edit template", Fullscreen: true}, nil),
+		c.Alert(c.ToneInfo, "Heads up", c.AlertOpts{Dismissible: true}, c.Text("Dismiss me.")),
 		raw(`<form id="picker-form">`), picker("customer"), raw(`</form>`),
 		raw(`<button type="button" id="load-swap" hx-get="/swap" hx-target="#swap-target" hx-swap="innerHTML">Load more</button><div id="swap-target"></div>`),
 		raw(`</main></body></html>`),

@@ -1,0 +1,22 @@
+// Usage:
+//
+//	@components.Meter(components.MeterOpts{Value: 72, Tone: components.ToneSuccess, Label: "Profile strength"})
+package components
+
+import "strconv"
+
+// Meter renders a role="meter" bar; see MeterOpts.
+templ Meter(opts MeterOpts) {
+	<div
+		class={ meterClass(opts) }
+		role="meter"
+		aria-valuemin="0"
+		aria-valuemax="100"
+		aria-valuenow={ strconv.Itoa(clampPercent(opts.Value)) }
+		if opts.Label != "" {
+			aria-label={ opts.Label }
+		}
+	>
+		<span class={ meterFillClass(opts.Value) }></span>
+	</div>
+}

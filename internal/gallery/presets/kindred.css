@@ -1,0 +1,120 @@
+/* Kindred preset: maps Kindred's token values onto --oui-* so the shared
+ * components can be compared side by side with Kindred's own kit.
+ * brand = iris, accent = ember, ai = spark, action = ink, Kindred radii and
+ * fonts. Fonts load from fonts/ next to this file when the gallery was run
+ * with -kindred-fonts; otherwise the stacks fall back to system fonts.
+ * Loaded after the shipped CSS, so it follows the host contract: every
+ * override has a dark counterpart.
+ */
+@font-face { font-family: "Geist Variable"; font-style: normal; font-display: swap; font-weight: 100 900; src: url("fonts/geist-latin-wght-normal.woff2") format("woff2-variations"); }
+@font-face { font-family: "Geist Mono Variable"; font-style: normal; font-display: swap; font-weight: 100 900; src: url("fonts/geist-mono-latin-wght-normal.woff2") format("woff2-variations"); }
+@font-face { font-family: "Bricolage Grotesque Variable"; font-style: normal; font-display: swap; font-weight: 200 800; font-stretch: 75% 100%; src: url("fonts/bricolage-grotesque-latin-opsz-normal.woff2") format("woff2-variations"); }
+
+:root {
+  --oui-font-sans: "Geist Variable", Geist, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --oui-font-mono: "Geist Mono Variable", "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --oui-font-display: "Bricolage Grotesque Variable", "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  --oui-heading-weight: 640;
+  --oui-heading-tracking: -0.028em;
+
+  --oui-radius-xs: 6px;
+  --oui-radius-sm: 8px;
+  --oui-radius-md: 12px;
+  --oui-radius-lg: 16px;
+  --oui-radius-xl: 22px;
+
+  /* iris */
+  --oui-brand-25: #f7f6ff;
+  --oui-brand-50: #eeedff;
+  --oui-brand-100: #e3e1ff;
+  --oui-brand-200: #cfccff;
+  --oui-brand-300: #aea8ff;
+  --oui-brand-400: #8c83fb;
+  --oui-brand-500: #6a5ef8;
+  --oui-brand-600: #4b3ff5;
+  --oui-brand-700: #3b2fe0;
+  --oui-brand-800: #3326c9;
+  --oui-brand-900: #281f9e;
+  --oui-brand-950: #1b1570;
+  --oui-brand-ink: #3326c9;
+  /* ember */
+  --oui-accent-50: #ffefe7;
+  --oui-accent-100: #ffdcca;
+  --oui-accent-200: #ffbf9f;
+  --oui-accent-500: #f2551f;
+  --oui-accent-600: #d9440f;
+  --oui-accent-700: #b53a0c;
+  /* spark */
+  --oui-ai: #b24bf3;
+  --oui-ai-2: #9a35db;
+  --oui-ai-soft: #f6ecfe;
+  --oui-ai-ink: #8a2fc2;
+  --oui-ai-gradient: linear-gradient(120deg, #4b3ff5 0%, #b24bf3 52%, #f2551f 100%);
+  --oui-ai-gradient-soft: linear-gradient(120deg, rgb(75 63 245 / 0.1), rgb(178 75 243 / 0.1) 52%, rgb(242 85 31 / 0.1));
+  --oui-ai-glow: 0 0 0 1px rgb(178 75 243 / 0.35), 0 0 0 4px rgb(75 63 245 / 0.1), 0 8px 30px -6px rgb(178 75 243 / 0.35);
+  /* state hues */
+  --oui-success: #0f9d6b;
+  --oui-success-2: #0a7a53;
+  --oui-success-soft: #e6f6ef;
+  --oui-success-ink: #0a7a53;
+  --oui-warning: #c77700;
+  --oui-warning-2: #8f5400;
+  --oui-warning-soft: #fff4e0;
+  --oui-warning-ink: #8f5400;
+  --oui-on-warning: #ffffff;
+  --oui-danger: #e0383e;
+  --oui-danger-2: #b42328;
+  --oui-danger-soft: #fdecec;
+  --oui-danger-ink: #b42328;
+  /* The primary action is ink; focus stays iris. */
+  --oui-action-bg: var(--oui-ink);
+  --oui-action-bg-hover: color-mix(in srgb, var(--oui-ink), var(--oui-ink-2) 24%);
+  --oui-action-fg: var(--oui-ink-on);
+  --oui-action-ring: var(--oui-brand);
+  --oui-action-soft: var(--oui-surface-2);
+  --oui-action-ink: var(--oui-ink);
+}
+
+:root[data-theme="dark"] {
+  --oui-brand-25: #14123a;
+  --oui-brand-50: #1b1850;
+  --oui-brand-100: #25226a;
+  --oui-brand-200: #35318f;
+  --oui-brand-300: #524bc4;
+  --oui-brand-400: #7d74ff;
+  --oui-brand-500: #7d74ff;
+  --oui-brand-600: #7d74ff;
+  --oui-brand-700: #9a93ff;
+  --oui-brand-800: #b9b4ff;
+  --oui-brand-900: #d3d0ff;
+  --oui-brand-950: #ebeaff;
+  --oui-brand-ink: #b9b4ff;
+  --oui-on-brand: #0a0b0f;
+  --oui-accent-50: #3a1c0e;
+  --oui-accent-100: #4d2512;
+  --oui-accent-200: #6d3418;
+  --oui-accent-500: #ff7442;
+  --oui-accent-600: #ff8f66;
+  --oui-accent-700: #ffb394;
+  --oui-ai: #c77bff;
+  --oui-ai-2: #d9a3ff;
+  --oui-ai-soft: rgb(199 123 255 / 0.14);
+  --oui-ai-ink: #dcb0ff;
+  --oui-ai-gradient: linear-gradient(120deg, #7d74ff 0%, #c77bff 52%, #ff7442 100%);
+  --oui-ai-gradient-soft: linear-gradient(120deg, rgb(125 116 255 / 0.16), rgb(199 123 255 / 0.14) 52%, rgb(255 116 66 / 0.16));
+  --oui-ai-glow: 0 0 0 1px rgb(199 123 255 / 0.45), 0 0 0 4px rgb(125 116 255 / 0.16), 0 8px 30px -6px rgb(199 123 255 / 0.45);
+  --oui-success: #34d399;
+  --oui-success-2: #5eead4;
+  --oui-success-soft: rgb(52 211 153 / 0.14);
+  --oui-success-ink: #5eead4;
+  --oui-warning: #fbbf24;
+  --oui-warning-2: #fcd34d;
+  --oui-warning-soft: rgb(251 191 36 / 0.14);
+  --oui-warning-ink: #fcd34d;
+  --oui-on-warning: #0a0b0f;
+  --oui-danger: #f87171;
+  --oui-danger-2: #fca5a5;
+  --oui-danger-soft: rgb(248 113 113 / 0.14);
+  --oui-danger-ink: #fca5a5;
+  --oui-focus-halo-color: rgb(125 116 255 / 0.28);
+}

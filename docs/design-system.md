@@ -10,7 +10,9 @@ paper-like elevation and dense-but-readable 14px controls.
 
 | File | Purpose |
 |---|---|
-| `assets/tokens.css` | Primitive scales and semantic roles. Import first. |
+| `assets/tokens.css` | Primitive scales, semantic roles and the full dark mode. Import first. |
+| `assets/base.css` | Optional: type scale (`.t-*`), `.ui-eyebrow`, `.ui-link`, `.ui-divider`, `.ui-kbd`, `.ui-prose`, skip link, selection. Class-scoped; no element resets. |
+| `assets/motion.css` | Optional: `.ui-enter-up`, `.ui-stagger`, `.ui-press`, `.ui-shimmer`, `.ui-magic-fill`, `.ui-caret`, `.ui-typing`, orb states, ring and meter draw-in, view-transition helpers. Reduced-motion safe. |
 | `assets/theme.css` | Default styles for every `ui-*`, `field-*`, `tab-*`, `kpi-*`, `pager__*` and table class. |
 | `assets/controls.css` | Inside-the-control focus treatment for library and host fields. |
 | `assets/inspector.css`, `inspector.js` | The docked record inspector. |
@@ -71,6 +73,71 @@ Three layers, all declared in `:where(:root)` so any host rule wins:
 **Rebranding** means re-pointing `--oui-brand-*`. **Bridging** an existing
 application means aliasing its own names to the semantic layer
 (`--ink: var(--oui-text-primary)`), so old and new rules share one source.
+
+## v2 foundation: tone families, action tokens, dark mode
+
+- **Tone families.** Each of `brand`, `accent` (second identity colour),
+  `info`, `success`, `warning`, `danger`, `neutral` and `ai` has `--oui-{tone}`,
+  `-2` (strong or hover), `-soft` (tint), `-ink` (text on the tint) and
+  `--oui-on-{tone}` (text on the solid colour). `ai` also has
+  `--oui-ai-gradient`, `--oui-ai-gradient-soft` and `--oui-ai-glow`.
+  Components read these, never hex.
+- **Primary action.** `--oui-action-bg`, `-bg-hover`, `-fg`, `-ring`, `-soft`
+  and `-ink` default to the brand tone. Buttons, selected chips, segmented
+  and tab selection, meters and checklists read them. An ink-led identity sets
+  `--oui-action-bg: var(--oui-ink)` and `--oui-action-fg: var(--oui-ink-on)`
+  and keeps `--oui-action-ring` on its focus colour.
+- **Surfaces, ink, lines.** `--oui-canvas`, `--oui-surface`, `-2`, `-3`, `-4`,
+  `--oui-raised`; `--oui-ink`, `-2`, `-3`, `-4`, `--oui-ink-on`; translucent
+  `--oui-line`, `-2`, `-3`. The older `--oui-bg-*`, `--oui-text-*`,
+  `--oui-border-*` and `--oui-fg-*` names resolve onto these.
+- **Elevation.** `--oui-shadow-1/2/3` are ring plus layered shadow;
+  `--oui-shadow-inset` is the highlight. `--oui-shadow-xs..xl` are aliases.
+  Focus: `--oui-focus-ring` (canvas gap plus action ring) and
+  `--oui-focus-halo` for inputs. Also `--oui-glass` and `--oui-scrim`.
+- **Radius** xs 6, sm 8, md 12, lg 16, xl 22 (`2xl` = 22). **Type scale**
+  `--oui-text-display-xl|display-l|display-m|title|body-l|body|label|caption|micro`
+  with `--oui-leading-*`; `--oui-text-xs..xl` are aliases. **Controls** are
+  30 / 36 / 44px (44px for all on phones). **Motion** `--oui-ease-out`,
+  `-in-out`, `-spring` and `--oui-dur-1..4` (120/200/320/520ms, all `0ms` under
+  `prefers-reduced-motion`); `--oui-duration(-fast)` are aliases.
+- **Tables.** `--oui-table-head-bg|color|size|weight|tracking|transform` and
+  `--oui-table-pad-x|y` restyle every table; `TableOpts.Flush` and
+  `HeaderStyle: TableHeaderCaps` cover the full-bleed register look.
+
+### Dark mode contract
+
+`tokens.css` flips the primitives and base semantics under
+`:root[data-theme="dark"]` and, while no `data-theme` is set, under
+`@media (prefers-color-scheme: dark)`; `data-theme="light"` pins light. Dark
+selectors outrank `:where(:root)`, so **an app that overrides tokens for light
+mode must also provide the dark values**, in `:root[data-theme="dark"]` (and
+the media-query block if it supports system dark before a theme script runs).
+An override only in `:root {}` is replaced by the library's dark value in dark
+mode. Derived tokens (`--oui-bg-primary` etc.) follow automatically, so
+override base values (`--oui-surface`, `--oui-brand-600`, tone tokens) rather
+than every alias. `internal/gallery/presets/kindred.css` is a worked example.
+
+### Runtime and CSP
+
+See the README for the `orbital-ui.js` load order and CSP-safe factories. Host
+markup that adds its own Alpine directives must stay within the CSP build's
+grammar (property or method references, no inline expressions) when the page is
+served under `script-src 'self'`; `x-model` writes cannot run there.
+
+### New components (v2)
+
+`Button` variant `ai`, `ButtonSizeLG`, `IconOnly`, `Block`, `IconRight`;
+`Badge(tone, label, BadgeOpts)` (Hollow, Muted, Mono); `Card` Interactive,
+Href, Edge, header Icon and Subtitle, `CardSection`; field Icon, Prefix,
+Suffix, Suggested and `SuggestedTag`, `FieldSelect` chevron element,
+`FieldTextarea` Autogrow; `ChipGroup`; `SegmentedChoice`; `Meter`,
+`RingMeter`, `Timeline`/`TimelineItem`, `Kbd`, `Orb`, `EntityChip`; `Avatar`
+sizes 16..72 and Anonymous; `ChecklistWith` compact; `BreadcrumbsWith`
+(phone collapse); `SidebarNavOpts.Rail`; `WorkspaceSwitcherOpts.Compact`;
+`TableOpts.Flush|HeaderStyle|Compact`; `DisclosureOpts.SummaryID`;
+`SettingsSectionOpts.InCard`; `MenuLabel` and menu `Kbd` hints. Each is shown
+in the gallery.
 
 ## Principles
 

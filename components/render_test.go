@@ -151,7 +151,7 @@ func TestAlertRenders(t *testing.T) {
 	// Info default role is status; dismissible adds Alpine + close.
 	out = renderC(t, Alert(ToneInfo, "Note", AlertOpts{Dismissible: true}, nil))
 	want(t, out, `role="status"`)
-	want(t, out, `x-data="{ hidden: false }"`)
+	want(t, out, `x-data="ouiDismiss"`)
 	want(t, out, `class="ui-alert ui-alert--info ui-alert--dismissible"`)
 	want(t, out, `aria-label="Dismiss"`)
 }
@@ -331,13 +331,14 @@ func TestModalShellRenders(t *testing.T) {
 	)
 	want(t, out, `<dialog id="dlg-party"`)
 	want(t, out, `aria-labelledby="dlg-party__title"`)
-	// The dialog x-data calls the LedgerUI.dialog FACTORY: Alpine defines its
-	// $magic properties (non-configurable $nextTick) on the value x-data
-	// evaluates to, so a shared singleton would throw "Cannot redefine
-	// property: $nextTick" on the second dialog of a page.
-	want(t, out, `x-data="LedgerUI.dialog()"`)
-	if strings.Contains(out, `x-data="LedgerUI.dialog"`) {
-		t.Error(`dialog x-data must invoke the factory (LedgerUI.dialog()) — a shared object breaks multi-dialog pages`)
+	// The dialog x-data names the ouiDialog FACTORY (Alpine.data): each dialog
+	// gets its own scope object, and every directive is a bare reference so the
+	// markup runs under Alpine's CSP build.
+	want(t, out, `x-data="ouiDialog"`)
+	want(t, out, `x-on:click="backdrop"`)
+	want(t, out, `x-on:cancel.prevent="cancel"`)
+	if strings.Contains(out, `LedgerUI.`) || strings.Contains(out, `($event)`) {
+		t.Error(`dialog markup must not call LedgerUI.* or pass arguments (CSP-unsafe)`)
 	}
 	want(t, out, `>New party</h2>`)
 	want(t, out, `data-close-dialog`)
@@ -361,12 +362,8 @@ func TestConfirmButtonRenders(t *testing.T) {
 	want(t, out, `<dialog id="void-12" class="ui-dialog ui-dialog--confirm"`)
 	want(t, out, `>Void entry #12?</h2>`)
 	want(t, out, `shows as voided.`)
-	// Factory-call x-data (see TestModalShellRenders for the why): each
-	// dialog instance must get its own Alpine scope object.
-	want(t, out, `x-data="LedgerUI.dialog()"`)
-	if strings.Contains(out, `x-data="LedgerUI.dialog"`) {
-		t.Error(`dialog x-data must invoke the factory (LedgerUI.dialog()) — a shared object breaks multi-dialog pages`)
-	}
+	// Same CSP-safe factory reference as ModalShell (see TestModalShellRenders).
+	want(t, out, `x-data="ouiDialog"`)
 	want(t, out, `<button type="button" class="ui-button ui-button--secondary" data-close-dialog>`)
 	want(t, out, `<button type="submit" form="void-12-form" class="ui-button ui-button--danger">`)
 	want(t, out, `<span class="confirm-label">Void entry</span>`)
@@ -393,11 +390,13 @@ func TestDrawerRenders(t *testing.T) {
 		),
 	)
 	want(t, out, `<div id="drw-tpl" class="drawer-overlay"`)
-	// The overlay x-data calls the LedgerUI.drawer FACTORY (fresh Alpine scope
-	// per instance — see TestModalShellRenders for the why).
-	want(t, out, `x-data="LedgerUI.drawer()"`)
-	if strings.Contains(out, `x-data="LedgerUI.drawer"`) {
-		t.Error(`drawer x-data must invoke the factory (LedgerUI.drawer()) — a shared object breaks multi-drawer pages`)
+	// The overlay x-data names the ouiDrawer factory; directives are bare
+	// references (CSP-safe).
+	want(t, out, `x-data="ouiDrawer"`)
+	want(t, out, `x-on:click="backdrop"`)
+	want(t, out, `x-on:keydown.escape="escape"`)
+	if strings.Contains(out, `LedgerUI.`) || strings.Contains(out, `($event)`) {
+		t.Error(`drawer markup must not call LedgerUI.* or pass arguments (CSP-unsafe)`)
 	}
 	want(t, out, `class="drawer-panel"`)
 	want(t, out, `role="dialog"`)
@@ -539,7 +538,8 @@ func TestEntityPickerRenders(t *testing.T) {
 		),
 	)
 	want(t, out, `class="entity-picker"`)
-	want(t, out, `x-data="LedgerUI.picker(`)
+	want(t, out, `x-data="ouiPicker"`)
+	want(t, out, `data-oui-picker="{`)
 	want(t, out, `type="hidden"`)
 	want(t, out, `name="account_id"`)
 	want(t, out, `role="combobox"`)
@@ -553,14 +553,13 @@ func TestEntityPickerRenders(t *testing.T) {
 	// Create is opt-in and MUST stay invisible until a call site asks for it:
 	// the config key is omitted from the JSON (omitempty on the pointer, so the
 	// substring cannot appear anywhere), the option list iterates the pre-create
-	// `items`, and none of the create-only rows exist. This is the guarantee the
+	// rows, and none of the create-only rows exist. This is the guarantee the
 	// ~15 untouched call sites depend on.
 	if strings.Contains(out, `create`) {
 		t.Errorf("a picker without Create must not render any create config:\n%s", out)
 	}
 	for _, absent := range []string{
-		`options()`, `x-show="creating"`, `x-show="createFailed"`,
-		`create-row`, `Creating`,
+		`x-show="creating"`, `x-show="createFailed"`, `Creating`,
 	} {
 		if strings.Contains(out, absent) {
 			t.Errorf("a picker without Create must not render %q:\n%s", absent, out)
@@ -591,15 +590,17 @@ func TestEntityPickerCreateOptIn(t *testing.T) {
 	want(t, out, `create`)
 	want(t, out, `&#34;field&#34;:&#34;name&#34;`)
 	want(t, out, `&#34;noun&#34;:&#34;bank account&#34;`)
-	want(t, out, `create-row`)
-	want(t, out, `options()`)
 	want(t, out, `x-show="creating"`)
 	want(t, out, `x-show="createFailed"`)
-	// The empty state must key off the SAME iterable as the rows, or "No
-	// matches" would sit above a live create row.
-	want(t, out, `options().length === 0`)
-	// aria-activedescendant must keep addressing the visible list, not `items`.
-	want(t, out, `x-bind:aria-activedescendant="activeId()"`)
+	// The rows, the empty state and aria-activedescendant all read members the
+	// runtime derives from options() (items plus the create row), so they share
+	// one index space; the markup itself carries only bare references.
+	want(t, out, `x-for="item in rows"`)
+	want(t, out, `x-show="showEmpty"`)
+	want(t, out, `x-bind:aria-activedescendant="activeDescendant"`)
+	if strings.Contains(out, `activeId()`) || strings.Contains(out, `options()`) {
+		t.Error(`picker markup must not call methods (CSP-unsafe)`)
+	}
 }
 
 // A Create with no endpoint is a config error, not a dead button: the row would
@@ -614,7 +615,7 @@ func TestEntityPickerCreateWithoutEndpointIsDropped(t *testing.T) {
 			},
 		),
 	)
-	if strings.Contains(out, `create-row`) || strings.Contains(out, `Creating`) {
+	if strings.Contains(out, `&#34;create&#34;`) || strings.Contains(out, `Creating`) {
 		t.Errorf("Create without an endpoint must not arm the row:\n%s", out)
 	}
 }

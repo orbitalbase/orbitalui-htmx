@@ -20,11 +20,15 @@ templ DescriptionList(items []DescriptionItem, opts DescriptionListOpts) {
 				class={ joinClass("ui-dl__row", modifier(item.Wide, "ui-dl__row--wide")) }
 			>
 				<dt>{ item.Term }</dt>
-				<dd>
+				<dd
+					if item.Field != "" {
+						data-field={ item.Field }
+					}
+				>
 					if item.Content != nil {
 						@item.Content
 					} else if item.Value != "" {
-						<span class="ui-dl__value">{ item.Value }</span>
+						<span class={ descriptionValueClass(item) }>{ item.Value }</span>
 					} else {
 						<span class="ui-dl__empty">{ descriptionPlaceholder(opts) }</span>
 					}
@@ -40,14 +44,20 @@ templ DescriptionList(items []DescriptionItem, opts DescriptionListOpts) {
 templ Avatar(name string, opts AvatarOpts) {
 	<span
 		class={ avatarClass(name, opts) }
-		if opts.Label != "" {
+		if avatarLabel(opts) != "" {
 			role="img"
-			aria-label={ opts.Label }
+			aria-label={ avatarLabel(opts) }
 		} else {
 			aria-hidden="true"
 		}
 	>
-		<span class="ui-avatar__initials">{ Initials(name) }</span>
+		if opts.Anonymous {
+			<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><circle cx="12" cy="8.5" r="4.25"></circle><path d="M3.75 21c0-4.07 3.7-6.75 8.25-6.75s8.25 2.68 8.25 6.75z"></path></svg>
+		} else if opts.Src != "" {
+			<img class="ui-avatar__img" src={ string(opts.Src) } alt="" loading="lazy"/>
+		} else {
+			<span class="ui-avatar__initials">{ Initials(name) }</span>
+		}
 		if opts.Status != "" {
 			<span class={ "ui-avatar__status ui-avatar__status--" + opts.Status }></span>
 		}
@@ -80,7 +90,12 @@ templ ProgressBar(value int, opts ProgressOpts) {
 }
 
 templ Checklist(items []ChecklistItem) {
-	<ol class="ui-checklist">
+	@ChecklistWith(items, ChecklistOpts{})
+}
+
+// ChecklistWith is Checklist with options (Compact variant).
+templ ChecklistWith(items []ChecklistItem, opts ChecklistOpts) {
+	<ol class={ checklistClass(opts) }>
 		for _, item := range items {
 			<li class={ joinClass("ui-checklist__item", modifier(item.Done, "ui-checklist__item--done")) }>
 				<span class="ui-checklist__mark" aria-hidden="true">

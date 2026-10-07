@@ -1,16 +1,30 @@
 /* Orbital UI runtime: the behaviour behind ModalShell, ConfirmButton, Drawer
  * and EntityPicker.
  *
- * Load it once, before Alpine starts:
+ * Load order (the script must run before Alpine starts, and after any host
+ * runtime that defines window.LedgerUI):
  *
+ *   <script src="/static/app.js" defer></script>          <!-- host runtime, if any -->
  *   <script src="/static/orbital-ui.js" defer></script>
- *   <script src="/static/alpine.min.js" defer></script>
+ *   <script src="/static/alpine.min.js" defer></script>   <!-- or alpinejs-csp -->
  *
- * Component markup calls the LedgerUI.* names it was extracted with
- * (x-data="LedgerUI.dialog()", LedgerUI.picker({...}) …). This file installs
- * them under window.OrbitalUI and aliases window.LedgerUI to the same object.
- * When a host already ships its own window.LedgerUI runtime (ledger-agent's
- * app.js), this file stays inert so the two never double-handle a click.
+ * Component markup is CSP-safe: x-data="ouiDialog" | "ouiDrawer" | "ouiPicker"
+ * name factories registered here with Alpine.data() on `alpine:init`, and every
+ * directive is a bare property or method reference (x-on:click="backdrop",
+ * x-show="open", x-bind:class="row.cls"), which is all Alpine's CSP build
+ * evaluates. The picker reads its config from the data-oui-picker JSON
+ * attribute. Both the standard and the CSP Alpine build run the same markup.
+ *
+ * The factories also work for the older markup that called window.LedgerUI.*
+ * (x-data="LedgerUI.dialog()"): this file installs those names under
+ * window.OrbitalUI and aliases window.LedgerUI to the same object.
+ *
+ * Host runtime. When the host already ships window.LedgerUI (ledger-agent's
+ * app.js), this file does NOT install its own functions or click delegation,
+ * so the two never double-handle a click. It still registers ouiDialog /
+ * ouiDrawer / ouiPicker, delegating to the host's LedgerUI.dialog() /
+ * drawer() / picker(cfg) factories, so the new markup runs on the host's
+ * behaviour.
  *
  * Contract:
  *   [data-open-dialog="id"]   opens <dialog id> modally, focus moves inside
@@ -29,7 +43,85 @@
     var existing = window.LedgerUI;
     if (existing && typeof existing.openDialog === "function") {
         window.OrbitalUI = window.OrbitalUI || existing;
+        registerAlpine(existing);
         return;
+    }
+
+    // The CSP build of Alpine evaluates only bare property or method
+    // references: no calls with arguments, negation, ternaries, assignments
+    // or x-model. The picker markup therefore reads these precomputed members,
+    // and they are added to whichever picker implementation is active (this
+    // file's or the host's), so both run the same markup.
+    function pickerView() {
+        return {
+            get rows() {
+                var self = this;
+                return this.options().map(function (o, i) {
+                    return {
+                        id: o.id,
+                        label: o.label,
+                        sublabel: o.sublabel || "",
+                        index: i,
+                        domId: self.optId(i),
+                        selected: self.picked === o.id,
+                        cls: "entity-picker__option" + (i === self.idx ? " entity-picker__option--active" : ""),
+                        btnCls: o.create ? "entity-picker__option-btn--create-row" : "",
+                    };
+                });
+            },
+            get expanded() { return this.open ? "true" : "false"; },
+            get activeDescendant() { return this.activeId(); },
+            get listLabel() { return this.cfg.label; },
+            get showClear() { return !!this.picked && !this.open; },
+            get showEmpty() { return !this.busy && !this.failed && !this.creating && this.open && this.options().length === 0; },
+            onInput: function (e) {
+                this.query = e.target.value;
+                this.typing();
+            },
+            pick: function (e) {
+                this.choose(this.options()[parseInt(e.currentTarget.getAttribute("data-index"), 10)]);
+            },
+            hover: function (e) {
+                this.idx = parseInt(e.currentTarget.getAttribute("data-index"), 10);
+            },
+        };
+    }
+
+    function pickerConfig(el) {
+        try {
+            return JSON.parse(el.getAttribute("data-oui-picker") || "{}") || {};
+        } catch (err) {
+            return {};
+        }
+    }
+
+    // Registers the factories the markup names. The data callbacks run with
+    // Alpine's magics on `this`, so $el reaches the element that asked.
+    function registerAlpine(api) {
+        function add() {
+            var A = window.Alpine;
+            A.data("ouiDialog", function () {
+                var d = (api.dialog && api.dialog()) || {};
+                if (!d.cancel) d.cancel = function (e) { api.closeDialog(e.currentTarget.id); };
+                return d;
+            });
+            A.data("ouiDrawer", function () {
+                var d = (api.drawer && api.drawer()) || {};
+                if (!d.escape) d.escape = function (e) { api.closeDrawer(e.currentTarget.id); };
+                return d;
+            });
+            // A dismissible Alert: argument-free references keep it CSP-safe.
+            A.data("ouiDismiss", function () {
+                return { visible: true, dismiss: function () { this.visible = false; } };
+            });
+            A.data("ouiPicker", function () {
+                var p = api.picker(pickerConfig(this.$el));
+                Object.defineProperties(p, Object.getOwnPropertyDescriptors(pickerView()));
+                return p;
+            });
+        }
+        if (window.Alpine && typeof window.Alpine.data === "function") add();
+        else document.addEventListener("alpine:init", add);
     }
 
     var UI = window.OrbitalUI = window.OrbitalUI || {};
@@ -471,6 +563,9 @@
         });
     }
 
+    // ── Alpine registration (CSP-safe markup) ───────────────────────────────
+    registerAlpine(UI);
+
     // ── delegation ──────────────────────────────────────────────────────────
     document.addEventListener("click", function (e) {
         var t = e.target;
@@ -561,6 +656,24 @@
             }
         }
     });
+
+    // Autogrow textareas (data-autogrow): CSS field-sizing does the work where
+    // supported; this fallback sizes the box to its content elsewhere.
+    if (!(window.CSS && CSS.supports && CSS.supports("field-sizing", "content"))) {
+        var grow = function (el) {
+            el.style.height = "auto";
+            el.style.height = el.scrollHeight + "px";
+        };
+        document.addEventListener("input", function (e) {
+            if (e.target && e.target.matches && e.target.matches("textarea[data-autogrow]")) grow(e.target);
+        });
+        var growAll = function (root) {
+            (root || document).querySelectorAll("textarea[data-autogrow]").forEach(grow);
+        };
+        document.addEventListener("htmx:afterSwap", function (e) { growAll(e.target); });
+        if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { growAll(); });
+        else growAll();
+    }
 
     // htmx swaps validation errors (422) into the form so dialogs and drawers
     // stay open with inline errors; other 4xx/5xx keep htmx's default.

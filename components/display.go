@@ -21,6 +21,11 @@ type DescriptionItem struct {
 	Content templ.Component
 	Hint    string // optional muted line under the value
 	Wide    bool   // span both columns in the grid layout
+	// Field becomes data-field on the value element, the hook an app's
+	// script uses to highlight a value an agent just changed.
+	Field string
+	// Mono renders Value in the numeric (mono, tabular) face.
+	Mono bool
 }
 
 // DescriptionLayout selects how terms and values are arranged.
@@ -35,9 +40,13 @@ const (
 	DescriptionGrid DescriptionLayout = "grid"
 )
 
+// DescriptionListOpts configures DescriptionList. Columns (1-3) lays stacked
+// term/value pairs out in that many equal columns (the Kindred DataList) and
+// overrides Layout; it collapses to one column on phones.
 type DescriptionListOpts struct {
 	Layout      DescriptionLayout
 	Placeholder string
+	Columns     int
 	Class       string
 }
 
@@ -46,7 +55,15 @@ func descriptionListClass(o DescriptionListOpts) string {
 	if o.Layout != DescriptionInline {
 		layout = "ui-dl--" + string(o.Layout)
 	}
+	if o.Columns >= 1 {
+		layout = "ui-dl--stacked ui-dl--cols-" + strconv.Itoa(min(o.Columns, 3))
+	}
 	return joinClass("ui-dl", layout, o.Class)
+}
+
+// descriptionValueClass is the class of a plain-text value.
+func descriptionValueClass(item DescriptionItem) string {
+	return joinClass("ui-dl__value", modifier(item.Mono, "ui-dl__value--mono"))
 }
 
 func descriptionPlaceholder(o DescriptionListOpts) string {
@@ -70,13 +87,34 @@ const (
 // AvatarOpts configures Avatar. Square renders a rounded tile, used for
 // organisations (companies, firms) so they read differently from people.
 // Tone "" derives a stable hue from the name so lists stay scannable.
+//
+//	Px — an explicit size from the 16/20/24/32/40/56/72 scale; it wins over
+//	    Size. Other values fall back to Size.
+//	Anonymous — a neutral silhouette instead of initials (identity hidden);
+//	    its accessible name defaults to "Anonymous".
+//	Src — optional image URL; initials stay the fallback when empty.
 type AvatarOpts struct {
-	Size   AvatarSize
-	Square bool
-	Tone   string // "", "brand", "gray"
-	Status string // "", "online", "away" — a small presence dot
-	Label  string // accessible name; "" keeps the avatar decorative
-	Class  string
+	Size      AvatarSize
+	Px        int
+	Square    bool
+	Tone      string // "", "brand", "accent", "gray"
+	Status    string // "", "online", "away" — a small presence dot
+	Label     string // accessible name; "" keeps the avatar decorative
+	Anonymous bool
+	Src       templ.SafeURL
+	Class     string
+}
+
+// avatarLabel is the accessible name: Label, else "Anonymous" for the
+// silhouette, else "" (decorative).
+func avatarLabel(o AvatarOpts) string {
+	if o.Label != "" {
+		return o.Label
+	}
+	if o.Anonymous {
+		return "Anonymous"
+	}
+	return ""
 }
 
 // avatarHues are the derived tones; each pairs with a .ui-avatar--hue-N rule.
@@ -84,12 +122,19 @@ const avatarHues = 6
 
 func avatarClass(name string, o AvatarOpts) string {
 	size := ""
-	if o.Size != AvatarMD {
-		size = "ui-avatar--" + string(o.Size)
+	switch o.Px {
+	case 16, 20, 24, 32, 40, 56, 72:
+		size = "ui-avatar--" + strconv.Itoa(o.Px)
+	default:
+		if o.Size != AvatarMD {
+			size = "ui-avatar--" + string(o.Size)
+		}
 	}
 	tone := ""
-	switch o.Tone {
-	case "brand", "gray":
+	switch {
+	case o.Anonymous:
+		tone = "ui-avatar--anon"
+	case o.Tone == "brand" || o.Tone == "accent" || o.Tone == "gray":
 		tone = "ui-avatar--" + o.Tone
 	default:
 		tone = "ui-avatar--hue-" + strconv.Itoa(nameHue(name))
@@ -142,8 +187,8 @@ type ProgressOpts struct {
 
 func progressClass(o ProgressOpts) string {
 	tone := ""
-	if o.Tone != "" && o.Tone != ToneNeutral {
-		tone = "ui-progress--" + o.Tone.Modifier()
+	if m := visualTone(o.Tone); m != "" {
+		tone = "ui-progress--" + m
 	}
 	return joinClass("ui-progress", tone, o.Class)
 }
@@ -186,6 +231,17 @@ type ChecklistItem struct {
 	Done        bool
 	Href        templ.SafeURL
 	ActionLabel string
+}
+
+// ChecklistOpts configures ChecklistWith. Compact tightens the rows, shrinks
+// the marks and hides descriptions (sidebars, popovers, dense cards).
+type ChecklistOpts struct {
+	Compact bool
+	Class   string
+}
+
+func checklistClass(o ChecklistOpts) string {
+	return joinClass("ui-checklist", modifier(o.Compact, "ui-checklist--compact"), o.Class)
 }
 
 // StepState is the state of one timeline step.
@@ -247,8 +303,8 @@ func feedItemClass(o FeedItemOpts) string {
 
 func feedIconClass(o FeedItemOpts) string {
 	tone := ""
-	if o.Tone != "" && o.Tone != ToneNeutral {
-		tone = "ui-feed__icon--" + o.Tone.Modifier()
+	if m := visualTone(o.Tone); m != "" {
+		tone = "ui-feed__icon--" + m
 	}
 	return joinClass("ui-feed__icon", tone)
 }

@@ -22,8 +22,8 @@ templ Alert(tone Tone, title string, opts AlertOpts, body templ.Component) {
 		class={ alertClass(tone, opts) }
 		role={ roleFor(tone) }
 		if opts.Dismissible {
-			x-data="{ hidden: false }"
-			x-show="!hidden"
+			x-data="ouiDismiss"
+			x-show="visible"
 		}
 	>
 		if title != "" {
@@ -34,7 +34,7 @@ templ Alert(tone Tone, title string, opts AlertOpts, body templ.Component) {
 </div>
 		}
 		if opts.Dismissible {
-			<button type="button" class="ui-alert__close" aria-label={ alertDismissLabel(opts) } x-on:click="hidden = true">
+			<button type="button" class="ui-alert__close" aria-label={ alertDismissLabel(opts) } x-on:click="dismiss">
 				@Icon("close")
 			</button>
 		}
