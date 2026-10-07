@@ -69,3 +69,33 @@ func TestHostBrandOverrideControlsFocusRing(t *testing.T) {
 		}
 	}
 }
+
+func TestDialogThemeOwnsResponsiveNativeDialogFrame(t *testing.T) {
+	raw, err := os.ReadFile("../assets/theme.css")
+	if err != nil {
+		t.Fatal(err)
+	}
+	css := string(raw)
+	assertRuleContains := func(selector string, declarations ...string) {
+		t.Helper()
+		start := strings.Index(css, selector+" {")
+		if start < 0 {
+			t.Errorf("theme.css is missing %s", selector)
+			return
+		}
+		end := strings.Index(css[start:], "}")
+		if end < 0 {
+			t.Errorf("theme.css has unterminated %s rule", selector)
+			return
+		}
+		rule := css[start : start+end]
+		for _, declaration := range declarations {
+			if !strings.Contains(rule, declaration) {
+				t.Errorf("%s is missing %q", selector, declaration)
+			}
+		}
+	}
+	assertRuleContains(".ui-dialog", "position: fixed", "inset: 0", "margin: auto", "width: min(var(--oui-dialog-width", "max-height: var(--oui-dialog-max-height", "overflow-y: auto", "var(--oui-radius-2xl)")
+	assertRuleContains(".ui-dialog__panel", "width: 100%", "min-width: 0")
+	assertRuleContains(".ui-dialog__close", "place-items: center", "var(--oui-control-height-sm)")
+}
