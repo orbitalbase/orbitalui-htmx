@@ -1,0 +1,148 @@
+/* Orbital UI motion language (optional, import after tokens.css).
+ *
+ * Enters use --oui-ease-out; presses release with --oui-ease-spring.
+ * Keyframes are prefixed oui-. Every animation has a prefers-reduced-motion
+ * fallback at the bottom of this file. Component structure for the orb,
+ * meter and ring lives in theme.css; this file owns their motion.
+ */
+
+@keyframes oui-enter-up { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes oui-enter-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes oui-pop-in { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: none; } }
+@keyframes oui-pop-out { to { opacity: 0; transform: scale(0.96) translateY(4px); } }
+@keyframes oui-shimmer-sweep { from { background-position: 160% 0; } to { background-position: -60% 0; } }
+@keyframes oui-spin-turn { to { transform: rotate(360deg); } }
+@keyframes oui-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.045); } }
+@keyframes oui-glow-idle { 0%, 100% { opacity: 0.34; transform: scale(1.08); } 50% { opacity: 0.5; transform: scale(1.18); } }
+@keyframes oui-glow-think { 0%, 100% { opacity: 0.45; transform: scale(1.12); } 50% { opacity: 0.8; transform: scale(1.34); } }
+@keyframes oui-speak { 0%, 100% { transform: scale(0.97); } 40% { transform: scale(1.07); } 70% { transform: scale(1.01); } }
+@keyframes oui-caret { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+@keyframes oui-dot-wave { 0%, 60%, 100% { transform: translateY(0); opacity: 0.55; } 30% { transform: translateY(-3px); opacity: 1; } }
+@keyframes oui-ring-draw { from { stroke-dashoffset: 100; } }
+@keyframes oui-meter-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes oui-chip-pop { 0% { transform: scale(0.9); } 60% { transform: scale(1.04); } 100% { transform: scale(1); } }
+@keyframes oui-tick-in { from { opacity: 0; transform: scale(0.4) rotate(-20deg); } to { opacity: 1; transform: none; } }
+@keyframes oui-underline-in { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes oui-magic-sweep {
+  0% { clip-path: inset(0 100% 0 0); opacity: 1; }
+  45% { clip-path: inset(0 0 0 0); opacity: 1; }
+  100% { clip-path: inset(0 0 0 0); opacity: 0; }
+}
+@keyframes oui-magic-fade { from { opacity: 1; } to { opacity: 0; } }
+@keyframes oui-magic-glyph {
+  0% { opacity: 0; transform: scale(0.2) rotate(-40deg); }
+  22% { opacity: 1; transform: scale(1.25) rotate(0); }
+  38% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: translateY(-3px) scale(1); }
+}
+
+.ui-enter-up { animation: oui-enter-up var(--oui-dur-3) var(--oui-ease-out) both; }
+.ui-enter-fade { animation: oui-enter-fade var(--oui-dur-2) var(--oui-ease-out) both; }
+.ui-pop-in { animation: oui-pop-in var(--oui-dur-2) var(--oui-ease-out) both; }
+
+/* Stagger: children enter in sequence, 40ms apart (first 12). Set
+   --stagger-base to offset the whole group. */
+.ui-stagger > * { animation: oui-enter-up var(--oui-dur-3) var(--oui-ease-out) both; animation-delay: calc(var(--stagger-base, 0ms) + var(--i, 0) * 40ms); }
+.ui-stagger > :nth-child(1) { --i: 0; }
+.ui-stagger > :nth-child(2) { --i: 1; }
+.ui-stagger > :nth-child(3) { --i: 2; }
+.ui-stagger > :nth-child(4) { --i: 3; }
+.ui-stagger > :nth-child(5) { --i: 4; }
+.ui-stagger > :nth-child(6) { --i: 5; }
+.ui-stagger > :nth-child(7) { --i: 6; }
+.ui-stagger > :nth-child(8) { --i: 7; }
+.ui-stagger > :nth-child(9) { --i: 8; }
+.ui-stagger > :nth-child(10) { --i: 9; }
+.ui-stagger > :nth-child(11) { --i: 10; }
+.ui-stagger > :nth-child(12) { --i: 11; }
+.ui-stagger > :nth-child(n + 13) { --i: 12; }
+
+.ui-press { transition: transform var(--oui-dur-2) var(--oui-ease-spring); }
+.ui-press:active { transform: scale(0.98); transition-duration: 60ms; transition-timing-function: var(--oui-ease-out); }
+
+.ui-shimmer {
+  background-color: var(--oui-surface-2);
+  background-image: linear-gradient(100deg, transparent 20%, color-mix(in srgb, var(--oui-surface) 70%, transparent) 50%, transparent 80%);
+  background-size: 60% 100%;
+  background-repeat: no-repeat;
+  animation: oui-shimmer-sweep 1.5s var(--oui-ease-in-out) infinite;
+}
+
+/* Add to a [data-field] element after an agent turn changed its value: a
+   one-shot sweep, underline and sparkle in the AI gradient. */
+.ui-magic-fill { position: relative; isolation: isolate; border-radius: var(--oui-radius-xs); }
+.ui-magic-fill::before {
+  position: absolute;
+  z-index: -1;
+  inset: -2px -6px;
+  background: var(--oui-ai-gradient) left bottom / 100% 2px no-repeat, var(--oui-ai-gradient-soft);
+  border-radius: inherit;
+  pointer-events: none;
+  animation: oui-magic-sweep 1.6s var(--oui-ease-out) both;
+  content: "";
+}
+.ui-magic-fill::after {
+  position: absolute;
+  top: -7px;
+  right: -8px;
+  color: var(--oui-ai);
+  font-size: var(--oui-text-micro);
+  line-height: 1;
+  pointer-events: none;
+  transform-origin: center;
+  animation: oui-magic-glyph 1.8s var(--oui-ease-out) both;
+  content: "\2726";
+}
+
+/* Streaming caret. */
+.ui-caret { display: inline-block; width: 2px; height: 1em; margin-left: 2px; vertical-align: -0.14em; background: var(--oui-ai-gradient); border-radius: 1px; animation: oui-caret 1s steps(1, end) infinite; }
+
+/* Typing indicator: three dots in a wave. */
+.ui-typing { display: inline-flex; align-items: center; gap: 4px; height: 1.25rem; }
+.ui-typing > span { width: 6px; height: 6px; border-radius: 50%; animation: oui-dot-wave 1.2s var(--oui-ease-in-out) infinite; }
+.ui-typing > span:nth-child(1) { background: var(--oui-brand); }
+.ui-typing > span:nth-child(2) { background: var(--oui-ai); animation-delay: 120ms; }
+.ui-typing > span:nth-child(3) { background: var(--oui-accent); animation-delay: 240ms; }
+
+/* Orb states (structure is in theme.css). */
+.ui-orb.is-idle { animation: oui-breathe 5s var(--oui-ease-in-out) infinite; }
+.ui-orb.is-idle::before { animation: oui-glow-idle 5s var(--oui-ease-in-out) infinite; }
+.ui-orb.is-idle .ui-orb__core::before { animation: oui-spin-turn 12s linear infinite; }
+.ui-orb.is-thinking::before { animation: oui-glow-think 1.6s var(--oui-ease-in-out) infinite; }
+.ui-orb.is-thinking .ui-orb__core::before { animation: oui-spin-turn 2.4s linear infinite; }
+.ui-orb.is-speaking { animation: oui-speak 1s var(--oui-ease-in-out) infinite; }
+.ui-orb.is-speaking::before { animation: oui-glow-think 1s var(--oui-ease-in-out) infinite; }
+.ui-orb.is-speaking .ui-orb__core::before { animation: oui-spin-turn 6s linear infinite; }
+
+/* Score ring: the arc draws in. The component sets pathLength="100" plus
+   stroke-dasharray / stroke-dashoffset as SVG attributes (CSP safe), so the
+   keyframe only names the start; the end is the attribute value. */
+.ui-ring__arc { animation: oui-ring-draw 900ms var(--oui-ease-out) both; }
+/* Meter fill grows from the left edge. */
+.ui-meter__fill { transform-origin: left center; animation: oui-meter-grow 700ms var(--oui-ease-out) both; }
+
+/* View transitions: opt in with `@view-transition { navigation: auto; }` at
+   the top level of the host stylesheet, then mark the persistent chrome. */
+.ui-vt-main { view-transition-name: main; }
+.ui-vt-sidebar { view-transition-name: sidebar; }
+::view-transition-group(sidebar) { animation: none; }
+::view-transition-old(sidebar) { display: none; }
+::view-transition-new(sidebar) { animation: none; }
+::view-transition-old(main) { animation: oui-enter-fade 90ms var(--oui-ease-in-out) reverse both; }
+::view-transition-new(main) { animation: oui-enter-up 220ms var(--oui-ease-out) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; }
+  .ui-enter-up, .ui-stagger > *, .ui-pop-in { animation: oui-enter-fade 120ms linear both; animation-delay: 0ms; }
+  .ui-press, .ui-press:active { transform: none; transition: none; }
+  .ui-shimmer { animation: none; background-image: none; }
+  .ui-magic-fill::before { animation: oui-magic-fade 1.4s linear both; }
+  .ui-magic-fill::after { animation: none; opacity: 0; }
+  .ui-caret { animation: none; }
+  .ui-typing > span { animation: none; opacity: 0.8; }
+  .ui-orb.is-idle, .ui-orb.is-thinking, .ui-orb.is-speaking,
+  .ui-orb.is-idle::before, .ui-orb.is-thinking::before, .ui-orb.is-speaking::before,
+  .ui-orb.is-idle .ui-orb__core::before, .ui-orb.is-thinking .ui-orb__core::before, .ui-orb.is-speaking .ui-orb__core::before { animation: none; }
+  .ui-ring__arc, .ui-meter__fill { animation: none; }
+  ::view-transition-old(main), ::view-transition-new(main) { animation: oui-enter-fade 90ms linear both; }
+}

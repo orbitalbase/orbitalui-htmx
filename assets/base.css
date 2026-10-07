@@ -1,0 +1,127 @@
+/* Orbital UI base layer (optional, import after tokens.css).
+ *
+ * Class-scoped typography and small utilities that pages and components can
+ * share. Nothing here resets elements: the only element-level rules are the
+ * selection colour and scrollbar tint, both of which read tokens. Rules sit in
+ * :where() or a single class so a host rule of any weight wins.
+ */
+
+:where(:root) { scrollbar-color: var(--oui-line-2) transparent; scrollbar-width: thin; }
+::selection { background: color-mix(in srgb, var(--oui-action-ring, var(--oui-brand)) 24%, transparent); }
+
+/* ───────────────────────── Type scale ───────────────────────── */
+.t-display-xl,
+.t-display-l,
+.t-display-m {
+  color: var(--oui-text-primary);
+  font-family: var(--oui-font-display);
+  font-optical-sizing: auto;
+  letter-spacing: -0.03em;
+}
+.t-display-xl { font-size: var(--oui-text-display-xl); line-height: var(--oui-leading-display-xl); font-weight: 650; letter-spacing: -0.035em; font-variation-settings: "opsz" 96; }
+.t-display-l { font-size: var(--oui-text-display-l); line-height: var(--oui-leading-display-l); font-weight: 650; font-variation-settings: "opsz" 72; }
+.t-display-m { font-size: var(--oui-text-display-m); line-height: var(--oui-leading-display-m); font-weight: 620; letter-spacing: -0.028em; font-variation-settings: "opsz" 48; }
+.t-title { font-size: var(--oui-text-title); line-height: var(--oui-leading-title); font-weight: 600; letter-spacing: -0.012em; }
+.t-body-l { font-size: var(--oui-text-body-l); line-height: var(--oui-leading-body-l); }
+.t-body { font-size: var(--oui-text-body); line-height: var(--oui-leading-body); }
+.t-label { font-size: var(--oui-text-label); line-height: var(--oui-leading-label); font-weight: 500; }
+.t-caption { font-size: var(--oui-text-caption); line-height: var(--oui-leading-caption); font-weight: 500; }
+.t-micro { font-size: var(--oui-text-micro); line-height: var(--oui-leading-micro); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+.t-mono { font-family: var(--oui-font-numeric); font-variant-numeric: tabular-nums; }
+.tnum { font-variant-numeric: tabular-nums; }
+.text-balance { text-wrap: balance; }
+.text-pretty { text-wrap: pretty; }
+@media (max-width: 40rem) {
+  .t-display-xl { font-size: 2.125rem; line-height: 2.375rem; }
+  .t-display-l { font-size: 1.75rem; line-height: 2.125rem; }
+}
+
+/* AI-generated or agent-presence text only: the AI gradient clipped to glyphs. */
+.ui-ai-text {
+  color: transparent;
+  background: var(--oui-ai-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ───────────────────────── Small pieces ───────────────────────── */
+.ui-eyebrow { margin: 0; color: var(--oui-text-quaternary); font-size: var(--oui-text-micro); line-height: var(--oui-leading-micro); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+.ui-eyebrow--brand { color: var(--oui-text-brand); }
+
+.ui-link { color: var(--oui-text-brand); text-decoration: underline; text-decoration-color: color-mix(in srgb, currentColor 35%, transparent); text-underline-offset: 3px; transition: text-decoration-color var(--oui-dur-1) var(--oui-ease-out), color var(--oui-dur-1) var(--oui-ease-out); }
+.ui-link:hover { color: var(--oui-text-brand-strong); text-decoration-color: currentColor; }
+.ui-link:focus-visible { outline: none; border-radius: var(--oui-radius-xs); box-shadow: var(--oui-focus-ring); }
+.ui-link--quiet { color: inherit; text-decoration-color: var(--oui-line-2); }
+.ui-link--quiet:hover { color: var(--oui-text-primary); }
+
+.ui-divider { height: 1px; margin: var(--oui-space-4) 0; background: var(--oui-line); border: 0; }
+.ui-divider--vertical { display: inline-block; width: 1px; height: 1em; margin: 0 var(--oui-space-2); vertical-align: middle; }
+.ui-divider--label { display: flex; align-items: center; gap: var(--oui-space-3); height: auto; background: none; color: var(--oui-text-quaternary); font-size: var(--oui-text-caption); font-weight: 500; }
+.ui-divider--label::before, .ui-divider--label::after { flex: 1; height: 1px; background: var(--oui-line); content: ""; }
+
+.ui-kbd-group { display: inline-flex; align-items: center; gap: 3px; }
+.ui-kbd {
+  display: inline-grid;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.3125rem;
+  place-items: center;
+  color: var(--oui-text-quaternary);
+  background: var(--oui-surface-2);
+  border-radius: 5px;
+  box-shadow: 0 0 0 1px var(--oui-line-2), 0 1px 0 var(--oui-line-2);
+  font-family: var(--oui-font-sans);
+  font-size: var(--oui-text-micro);
+  font-weight: 500;
+  line-height: 1;
+}
+
+.visually-hidden,
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); clip-path: inset(50%); white-space: nowrap; border: 0; }
+
+.skip-link {
+  position: fixed;
+  z-index: 1000;
+  top: 0.75rem;
+  left: 0.75rem;
+  padding: 0.625rem 0.875rem;
+  color: var(--oui-ink-on);
+  background: var(--oui-ink);
+  border-radius: var(--oui-radius-sm);
+  font-size: var(--oui-text-label);
+  font-weight: 500;
+  text-decoration: none;
+  transform: translateY(-160%);
+  transition: transform var(--oui-dur-2) var(--oui-ease-out);
+}
+.skip-link:focus { transform: translateY(0); }
+
+/* ───────────────────────── Prose (rendered Markdown) ───────────────────────── */
+.ui-prose { color: var(--oui-text-secondary); font-size: var(--oui-text-body-l); line-height: var(--oui-leading-body-l); overflow-wrap: anywhere; }
+.ui-prose > :first-child { margin-top: 0; }
+.ui-prose > :last-child { margin-bottom: 0; }
+.ui-prose p { margin: 0 0 0.625rem; }
+.ui-prose strong { color: var(--oui-text-primary); font-weight: 600; }
+.ui-prose em { font-style: italic; }
+.ui-prose ul, .ui-prose ol { margin: 0 0 0.625rem; padding-left: 1.375rem; }
+.ui-prose ul { list-style: disc; }
+.ui-prose ol { list-style: decimal; }
+.ui-prose li { margin: 0.1875rem 0; padding-left: 0.125rem; }
+.ui-prose li::marker { color: var(--oui-ink-4); }
+.ui-prose li > p { margin: 0; }
+.ui-prose :is(h1, h2, h3, h4) { margin: 1.125rem 0 0.375rem; color: var(--oui-text-primary); font-weight: 600; letter-spacing: -0.012em; line-height: 1.5rem; text-wrap: balance; }
+.ui-prose h1 { font-size: 1.125rem; }
+.ui-prose h2 { font-size: 1.03rem; }
+.ui-prose :is(h3, h4) { font-size: 0.9375rem; }
+.ui-prose a { color: var(--oui-text-brand); text-decoration: underline; text-decoration-color: color-mix(in srgb, currentColor 40%, transparent); text-underline-offset: 3px; transition: text-decoration-color var(--oui-dur-1); }
+.ui-prose a:hover { text-decoration-color: currentColor; }
+.ui-prose code { padding: 1px 5px; color: var(--oui-text-primary); background: var(--oui-surface-2); border-radius: var(--oui-radius-xs); box-shadow: inset 0 0 0 1px var(--oui-line); font-family: var(--oui-font-mono); font-size: 0.86em; }
+.ui-prose pre { margin: 0 0 0.75rem; padding: 0.75rem 0.875rem; overflow-x: auto; background: var(--oui-surface-2); border-radius: var(--oui-radius-md); box-shadow: inset 0 0 0 1px var(--oui-line); font-size: var(--oui-text-label); line-height: 1.25rem; }
+.ui-prose pre code { padding: 0; background: none; box-shadow: none; font-size: inherit; }
+.ui-prose blockquote { margin: 0 0 0.625rem; padding-left: 0.75rem; color: var(--oui-text-quaternary); border-left: 2px solid var(--oui-line-2); }
+.ui-prose hr { margin: 0.875rem 0; border: 0; border-top: 1px solid var(--oui-line); }
+.ui-prose table { width: 100%; margin: 0 0 0.75rem; border-collapse: collapse; font-size: 0.84rem; }
+.ui-prose :is(th, td) { padding: 0.375rem 0.625rem; text-align: left; border-bottom: 1px solid var(--oui-line); }
+.ui-prose th { color: var(--oui-text-primary); font-weight: 600; }
+.ui-prose img { max-width: 100%; height: auto; border-radius: var(--oui-radius-sm); }
