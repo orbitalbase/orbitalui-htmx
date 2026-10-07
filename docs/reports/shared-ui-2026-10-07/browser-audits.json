@@ -1,0 +1,126 @@
+{
+  "scope": "Production templates with synthetic data; axe WCAG 2 A/AA, 2.1 A/AA and 2.2 AA tags. Final exact-build checks below; historical intermediate checks retained separately.",
+  "source_heads": {
+    "cosec": "b77c7c1",
+    "ledger": "fd61396",
+    "orbital": "27a4835"
+  },
+  "final_build_checks": [
+    {
+      "label": "cosec-precedent-phone-final-build",
+      "layout": {
+        "clientWidth": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "width": 390
+      },
+      "violations": []
+    },
+    {
+      "label": "cosec-precedent-desktop-final-build",
+      "layout": {
+        "clientWidth": 1440,
+        "height": 1000,
+        "scrollWidth": 1440,
+        "width": 1440
+      },
+      "violations": []
+    },
+    {
+      "label": "ledger-expanded-contact-phone-final-build",
+      "layout": {
+        "clientWidth": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "width": 390
+      },
+      "violations": []
+    },
+    {
+      "label": "ledger-expanded-contact-narrow-final-build",
+      "layout": {
+        "clientWidth": 320,
+        "height": 740,
+        "scrollWidth": 320,
+        "width": 320
+      },
+      "violations": []
+    },
+    {
+      "label": "ledger-accounts-desktop-final-build",
+      "layout": {
+        "clientWidth": 1440,
+        "height": 1000,
+        "scrollWidth": 1440,
+        "width": 1440
+      },
+      "violations": []
+    },
+    {
+      "label": "ledger-accounts-phone-final-build",
+      "layout": {
+        "clientWidth": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "width": 390
+      },
+      "violations": []
+    },
+    {
+      "label": "ledger-new-account-phone-final-build",
+      "layout": {
+        "clientWidth": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "width": 390
+      },
+      "violations": []
+    },
+    {
+      "label": "ledger-accounts-empty-phone-final-build",
+      "layout": {
+        "clientWidth": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "width": 390
+      },
+      "violations": []
+    },
+    {
+      "label": "ledger-accounts-empty-desktop-final-build",
+      "layout": {
+        "clientWidth": 1440,
+        "height": 1000,
+        "scrollWidth": 1440,
+        "width": 1440
+      },
+      "violations": []
+    }
+  ],
+  "resolved_review_findings": [
+    {
+      "finding": "Workspace accessible name mismatched visible identity",
+      "fix": "c86be54",
+      "rerun": "cosec-precedent-desktop-final-build"
+    },
+    {
+      "finding": "Cosec phone grid page overflow",
+      "fix": "e00b6e0",
+      "rerun": "cosec-precedent-phone-final-build"
+    },
+    {
+      "finding": "Template link name omitted its visible Review template text",
+      "fix": "1c33c36",
+      "rerun": "ledger-accounts-empty-desktop-final-build"
+    },
+    {
+      "finding": "Native dialog reset geometry and phone content overflow",
+      "fixes": [
+        "27a4835",
+        "d84f28a",
+        "fd61396"
+      ],
+      "rerun": "ledger-expanded-contact-phone-final-build"
+    }
+  ]
+}

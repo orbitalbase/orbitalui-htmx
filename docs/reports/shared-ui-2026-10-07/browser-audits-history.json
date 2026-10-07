@@ -1,0 +1,446 @@
+[
+  {
+    "label": "cosec-precedent-desktop",
+    "layout": {
+      "height": 1000,
+      "scroll": 1440,
+      "width": 1440
+    },
+    "violations": [
+      {
+        "id": "label-content-name-mismatch",
+        "impact": "serious",
+        "nodes": [
+          {
+            "summary": "Fix any of the following:\n  Text inside the element is not included in the accessible name",
+            "target": [
+              ".ui-switcher__trigger"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "label": "cosec-malformed-desktop",
+    "layout": {
+      "height": 1000,
+      "scroll": 1440,
+      "width": 1440
+    },
+    "violations": [
+      {
+        "id": "label-content-name-mismatch",
+        "impact": "serious",
+        "nodes": [
+          {
+            "summary": "Fix any of the following:\n  Text inside the element is not included in the accessible name",
+            "target": [
+              ".ui-switcher__trigger"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "label": "ledger-accounts-desktop",
+    "layout": {
+      "height": 1000,
+      "scroll": 1440,
+      "width": 1440
+    },
+    "violations": []
+  },
+  {
+    "label": "cosec-precedent-desktop-final",
+    "layout": {
+      "height": 1000,
+      "scroll": 1440,
+      "width": 1440
+    },
+    "violations": []
+  },
+  {
+    "label": "cosec-precedent-phone",
+    "layout": {
+      "height": 1037,
+      "scroll": 480,
+      "width": 480
+    },
+    "violations": []
+  },
+  {
+    "label": "cosec-precedent-unselected-phone-final",
+    "layout": {
+      "clientWidth": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "width": 390
+    },
+    "violations": []
+  },
+  {
+    "label": "cosec-precedent-selected-phone-final",
+    "layout": {
+      "clientWidth": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "width": 390
+    },
+    "violations": []
+  },
+  {
+    "label": "cosec-navigation-phone-final",
+    "layout": {
+      "clientWidth": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "width": 390
+    },
+    "violations": []
+  },
+  {
+    "label": "cosec-precedent-empty-phone-final",
+    "layout": {
+      "clientWidth": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "width": 390
+    },
+    "violations": []
+  },
+  {
+    "label": "ledger-accounts-desktop-final",
+    "layout": {
+      "clientWidth": 1440,
+      "height": 1000,
+      "scrollWidth": 1440,
+      "width": 1440
+    },
+    "violations": []
+  },
+  {
+    "label": "ledger-accounts-phone-final",
+    "layout": {
+      "clientWidth": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "width": 390
+    },
+    "violations": []
+  },
+  {
+    "label": "ledger-navigation-phone-final",
+    "layout": {
+      "clientWidth": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "width": 390
+    },
+    "violations": []
+  },
+  {
+    "label": "ledger-invoice-phone-final",
+    "layout": {
+      "clientWidth": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "width": 390
+    },
+    "violations": []
+  },
+  {
+    "label": "cosec-precedent-desktop-final2",
+    "layout": {
+      "clientWidth": 1440,
+      "height": 1000,
+      "scrollWidth": 1440,
+      "width": 1440
+    },
+    "violations": []
+  },
+  {
+    "label": "cosec-fullscreen-desktop-final",
+    "layout": {
+      "clientWidth": 1440,
+      "height": 1000,
+      "scrollWidth": 1440,
+      "width": 1440
+    },
+    "violations": []
+  },
+  {
+    "label": "cosec-dashboard-desktop-final",
+    "layout": {
+      "clientWidth": 1425,
+      "height": 1000,
+      "scrollWidth": 1425,
+      "width": 1440
+    },
+    "violations": []
+  },
+  {
+    "label": "cosec-dashboard-phone-final",
+    "layout": {
+      "clientWidth": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "width": 390
+    },
+    "violations": []
+  },
+  {
+    "label": "ledger-invoice-desktop-final",
+    "layout": {
+      "clientWidth": 1440,
+      "height": 1000,
+      "scrollWidth": 1440,
+      "width": 1440
+    },
+    "violations": []
+  },
+  {
+    "label": "ledger-payment-desktop-final",
+    "layout": {
+      "clientWidth": 1440,
+      "height": 1000,
+      "scrollWidth": 1440,
+      "width": 1440
+    },
+    "violations": []
+  },
+  {
+    "label": "ledger-payment-phone-final",
+    "layout": {
+      "clientWidth": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "width": 390
+    },
+    "violations": []
+  },
+  {
+    "label": "ledger-contact-dialog-phone-final",
+    "layout": {
+      "clientWidth": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "width": 390
+    },
+    "violations": []
+  },
+  {
+    "label": "cosec-companies-demo-officers-phone-final",
+    "layout": {
+      "clientWidth": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "width": 390
+    },
+    "violations": []
+  },
+  {
+    "label": "cosec-companies-demo-actions-phone-final",
+    "layout": {
+      "clientWidth": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "width": 390
+    },
+    "violations": []
+  },
+  {
+    "label": "cosec-admin-clients-phone-final",
+    "layout": {
+      "clientWidth": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "width": 390
+    },
+    "violations": []
+  },
+  {
+    "label": "cosec-admin-platform-phone-final",
+    "layout": {
+      "clientWidth": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "width": 390
+    },
+    "violations": []
+  },
+  {
+    "label": "cosec-login-phone-final",
+    "layout": {
+      "clientWidth": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "width": 390
+    },
+    "violations": []
+  },
+  {
+    "label": "ledger-accounts-shell-desktop-final",
+    "layout": {
+      "clientWidth": 1440,
+      "height": 1000,
+      "scrollWidth": 1440,
+      "width": 1440
+    },
+    "violations": []
+  },
+  {
+    "label": "ledger-new-account-dialog-desktop-before-modal-fix",
+    "layout": {
+      "clientWidth": 1440,
+      "height": 1000,
+      "scrollWidth": 1440,
+      "width": 1440
+    },
+    "violations": []
+  },
+  {
+    "label": "ledger-accounts-empty-desktop-final",
+    "layout": {
+      "clientWidth": 1440,
+      "height": 1000,
+      "scrollWidth": 1440,
+      "width": 1440
+    },
+    "violations": [
+      {
+        "id": "label-content-name-mismatch",
+        "impact": "serious",
+        "nodes": [
+          {
+            "summary": "Fix any of the following:\n  Text inside the element is not included in the accessible name",
+            "target": [
+              "a[aria-label=\"Preview Service business\"]"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "label": "ledger-contact-dialog-desktop-final2",
+    "layout": {
+      "clientWidth": 1440,
+      "height": 1000,
+      "scrollWidth": 1440,
+      "width": 1440
+    },
+    "violations": []
+  },
+  {
+    "label": "ledger-contact-dialog-phone-final2",
+    "layout": {
+      "clientWidth": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "width": 390
+    },
+    "violations": []
+  },
+  {
+    "label": "cosec-precedent-phone-final-build",
+    "layout": {
+      "clientWidth": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "width": 390
+    },
+    "violations": []
+  },
+  {
+    "label": "cosec-precedent-desktop-final-build",
+    "layout": {
+      "clientWidth": 1440,
+      "height": 1000,
+      "scrollWidth": 1440,
+      "width": 1440
+    },
+    "violations": []
+  },
+  {
+    "label": "ledger-accounts-empty-phone-final2",
+    "layout": {
+      "clientWidth": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "width": 390
+    },
+    "violations": []
+  },
+  {
+    "label": "ledger-expanded-contact-phone-final-build",
+    "layout": {
+      "clientWidth": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "width": 390
+    },
+    "violations": []
+  },
+  {
+    "label": "ledger-expanded-contact-narrow-final-build",
+    "layout": {
+      "clientWidth": 320,
+      "height": 740,
+      "scrollWidth": 320,
+      "width": 320
+    },
+    "violations": []
+  },
+  {
+    "label": "ledger-accounts-desktop-final-build",
+    "layout": {
+      "clientWidth": 1440,
+      "height": 1000,
+      "scrollWidth": 1440,
+      "width": 1440
+    },
+    "violations": []
+  },
+  {
+    "label": "ledger-accounts-phone-final-build",
+    "layout": {
+      "clientWidth": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "width": 390
+    },
+    "violations": []
+  },
+  {
+    "label": "ledger-new-account-phone-final-build",
+    "layout": {
+      "clientWidth": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "width": 390
+    },
+    "violations": []
+  },
+  {
+    "label": "ledger-accounts-empty-phone-final-build",
+    "layout": {
+      "clientWidth": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "width": 390
+    },
+    "violations": []
+  },
+  {
+    "label": "ledger-accounts-empty-desktop-final-build",
+    "layout": {
+      "clientWidth": 1440,
+      "height": 1000,
+      "scrollWidth": 1440,
+      "width": 1440
+    },
+    "violations": []
+  }
+]
