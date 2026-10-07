@@ -163,10 +163,11 @@ templ MenuHeader(title string, subtitle string) {
 }
 
 templ WorkspaceSwitcher(opts WorkspaceSwitcherOpts, panel templ.Component) {
-	@Menu(MenuOpts{Label: switcherLabel(opts), Width: "wide", Class: joinClass("ui-switcher", opts.Class), TriggerClass: "ui-switcher__trigger"}, switcherTrigger(opts), panel)
+	@Menu(MenuOpts{Width: "wide", Class: joinClass("ui-switcher", opts.Class), TriggerClass: "ui-switcher__trigger"}, switcherTrigger(opts), panel)
 }
 
 templ switcherTrigger(opts WorkspaceSwitcherOpts) {
+	<span class="visually-hidden">{ switcherLabel(opts) }</span>
 	<span class="ui-switcher__avatar">
 		@Avatar(opts.Name, AvatarOpts{Size: AvatarSM, Square: true, Tone: "brand"})
 		if opts.StatusTone != "" && opts.StatusTone != ToneNeutral {

@@ -131,12 +131,8 @@ type WorkspaceSwitcherOpts struct {
 }
 
 func switcherLabel(o WorkspaceSwitcherOpts) string {
-	identity := o.Name
-	if o.Subtitle != "" {
-		identity += " " + o.Subtitle
-	}
 	if o.Kind == "" {
-		return "Switch workspace. Current: " + identity
+		return "Workspace menu: "
 	}
-	return o.Kind + ": " + identity + ". Open workspace menu"
+	return o.Kind + " workspace menu: "
 }
