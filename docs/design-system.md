@@ -152,3 +152,9 @@ for direct-link accessibility, or explicit `ClientSort` keys for a host
 external sorting runtime. No new sorting behavior is enabled by default.
 `TableClass` and `SortClass` retain host layout and runtime hooks without
 duplicating the frame; optional `EmptyContent` supplies a host empty state.
+
+Sidebar hosts can scope navigation density and state skin with `--oui-nav-*`
+and switcher surfaces with `--oui-switcher-*` properties. These are optional
+component-local overrides with semantic fallbacks in `theme.css`, so hosts
+need no selector copies. Only set the properties needed by the app; component
+structure, keyboard focus, and default states remain shared.

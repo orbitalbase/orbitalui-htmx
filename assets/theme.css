@@ -542,13 +542,13 @@ a.ui-feed__title:hover { color: var(--oui-text-brand); }
   gap: 0.625rem;
   padding: 0.5rem;
   color: var(--oui-text-primary);
-  background: var(--oui-bg-primary);
-  border: 1px solid var(--oui-border-secondary);
+  background: var(--oui-switcher-bg, var(--oui-bg-primary));
+  border: 1px solid var(--oui-switcher-border, var(--oui-border-secondary));
   border-radius: var(--oui-radius-lg);
-  box-shadow: var(--oui-shadow-xs);
+  box-shadow: var(--oui-switcher-shadow, var(--oui-shadow-xs));
   transition: border-color var(--oui-duration-fast) var(--oui-ease-out), background-color var(--oui-duration-fast) var(--oui-ease-out);
 }
-.ui-switcher__trigger:hover { background: var(--oui-bg-primary-hover); }
+.ui-switcher__trigger:hover { background: var(--oui-switcher-hover-bg, var(--oui-bg-primary-hover)); border-color: var(--oui-switcher-hover-border, var(--oui-switcher-border, var(--oui-border-secondary))); }
 .ui-switcher[open] > .ui-switcher__trigger { border-color: var(--oui-border-primary); }
 .ui-switcher__avatar { position: relative; display: inline-flex; }
 .ui-switcher__status { position: absolute; right: -0.125rem; bottom: -0.125rem; width: 0.625rem; height: 0.625rem; border: 2px solid var(--oui-bg-primary); border-radius: 50%; background: var(--oui-gray-400); }
@@ -566,14 +566,15 @@ a.ui-feed__title:hover { color: var(--oui-text-brand); }
 .ui-nav { display: grid; align-content: start; gap: var(--oui-space-4); }
 .ui-nav__list { display: grid; gap: 0.125rem; margin: 0; padding: 0; list-style: none; }
 .ui-nav__section { display: grid; gap: 0.125rem; }
+.ui-nav__section + .ui-nav__section { margin-top: var(--oui-nav-section-margin, 0); }
 .ui-nav__heading {
   display: flex;
   align-items: center;
   gap: var(--oui-space-1);
-  min-height: 1.75rem;
+  min-height: var(--oui-nav-heading-height, 1.75rem);
   margin: 0;
   padding: 0 0.75rem;
-  color: var(--oui-text-quaternary);
+  color: var(--oui-nav-heading-color, var(--oui-text-quaternary));
   border-radius: var(--oui-radius-sm);
   font-size: var(--oui-text-xs);
   font-weight: 600;
@@ -595,22 +596,23 @@ summary.ui-nav__heading:focus-visible .ui-nav__heading-chevron { opacity: 1; }
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  min-height: 2.25rem;
+  min-height: var(--oui-nav-link-height, 2.25rem);
   padding: 0.375rem 0.75rem;
-  color: var(--oui-text-secondary);
+  color: var(--oui-nav-color, var(--oui-text-secondary));
   border-radius: var(--oui-radius-md);
   font-size: var(--oui-text-sm);
-  font-weight: 600;
+  font-weight: var(--oui-nav-weight, 600);
   line-height: var(--oui-leading-sm);
   text-decoration: none;
   transition: background-color var(--oui-duration-fast) var(--oui-ease-out), color var(--oui-duration-fast) var(--oui-ease-out);
 }
-.ui-nav__link:hover { color: var(--oui-text-primary); background: var(--oui-bg-primary-hover); }
-.ui-nav__link:focus-visible { outline: none; box-shadow: var(--oui-ring-brand); }
-.ui-nav__link.is-active { color: var(--oui-text-primary); background: var(--oui-bg-active); }
+.ui-nav__link:hover { color: var(--oui-nav-hover-color, var(--oui-text-primary)); background: var(--oui-nav-hover-bg, var(--oui-bg-primary-hover)); }
+
+.ui-nav__link.is-active, .ui-nav__link.is-active:hover { color: var(--oui-nav-active-color, var(--oui-text-primary)); background: var(--oui-nav-active-bg, var(--oui-bg-active)); box-shadow: var(--oui-nav-active-shadow, none); }
+.ui-nav__link:focus-visible, .ui-nav__link.is-active:focus-visible { outline: none; box-shadow: var(--oui-ring-brand); }
 .ui-nav__icon { width: 1.25rem; height: 1.25rem; flex: 0 0 auto; color: var(--oui-fg-quaternary); }
 .ui-nav__link:hover .ui-nav__icon { color: var(--oui-fg-tertiary); }
-.ui-nav__link.is-active .ui-nav__icon { color: var(--oui-fg-brand); }
+.ui-nav__link.is-active .ui-nav__icon { color: var(--oui-nav-active-icon, var(--oui-fg-brand)); }
 .ui-nav__label { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ui-nav__badge { padding: 0.0625rem 0.5rem; color: var(--oui-text-secondary); background: var(--oui-bg-tertiary); border-radius: var(--oui-radius-full); font-size: var(--oui-text-xs); font-weight: 500; font-variant-numeric: tabular-nums; }
 .ui-nav__link.is-active .ui-nav__badge { background: var(--oui-bg-primary); box-shadow: inset 0 0 0 1px var(--oui-border-secondary); }
