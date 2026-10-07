@@ -1,0 +1,196 @@
+/* Orbital UI design tokens.
+ *
+ * Three layers, each overridable by the host:
+ *   1. Primitive scales (--oui-gray-*, --oui-brand-*, semantic hues).
+ *   2. Semantic roles (--oui-text-*, --oui-bg-*, --oui-border-*, --oui-fg-*).
+ *   3. Shape, elevation, type and motion.
+ *
+ * Every rule sits inside :where(:root) so a host stylesheet can re-point any
+ * token (for example, the brand scale) without specificity fights. Components
+ * in theme.css only ever read the semantic layer, so a host theme normally
+ * re-points the brand scale and nothing else.
+ */
+:where(:root) {
+  /* ── Neutral: a cool gray that keeps records calm and crisp. ── */
+  --oui-gray-25: #fcfcfd;
+  --oui-gray-50: #f9fafb;
+  --oui-gray-100: #f2f4f7;
+  --oui-gray-200: #eaecf0;
+  --oui-gray-300: #d0d5dd;
+  --oui-gray-400: #98a2b3;
+  --oui-gray-500: #667085;
+  --oui-gray-600: #475467;
+  --oui-gray-700: #344054;
+  --oui-gray-800: #182230;
+  --oui-gray-900: #101828;
+  --oui-gray-950: #0c111d;
+
+  /* ── Brand: indigo. Hosts re-point this scale to rebrand. ── */
+  --oui-brand-25: #f5f8ff;
+  --oui-brand-50: #eef4ff;
+  --oui-brand-100: #e0eaff;
+  --oui-brand-200: #c7d7fe;
+  --oui-brand-300: #a4bcfd;
+  --oui-brand-400: #8098f9;
+  --oui-brand-500: #6172f3;
+  --oui-brand-600: #444ce7;
+  --oui-brand-700: #3538cd;
+  --oui-brand-800: #2d31a6;
+  --oui-brand-900: #2d3282;
+  --oui-brand-950: #1f235b;
+
+  /* ── Semantic hues. Reserved for state, never decoration. ── */
+  --oui-success-25: #f6fef9;
+  --oui-success-50: #ecfdf3;
+  --oui-success-100: #dcfae6;
+  --oui-success-200: #abefc6;
+  --oui-success-500: #17b26a;
+  --oui-success-600: #079455;
+  --oui-success-700: #067647;
+  --oui-warning-25: #fffcf5;
+  --oui-warning-50: #fffaeb;
+  --oui-warning-100: #fef0c7;
+  --oui-warning-200: #fedf89;
+  --oui-warning-500: #f79009;
+  --oui-warning-600: #dc6803;
+  --oui-warning-700: #b54708;
+  --oui-error-25: #fffbfa;
+  --oui-error-50: #fef3f2;
+  --oui-error-100: #fee4e2;
+  --oui-error-200: #fecdca;
+  --oui-error-300: #fda29b;
+  --oui-error-500: #f04438;
+  --oui-error-600: #d92d20;
+  --oui-error-700: #b42318;
+  --oui-info-50: #eff8ff;
+  --oui-info-100: #d1e9ff;
+  --oui-info-200: #b2ddff;
+  --oui-info-500: #2e90fa;
+  --oui-info-600: #1570ef;
+  --oui-info-700: #175cd3;
+  --oui-ai-50: #f4f3ff;
+  --oui-ai-100: #ebe9fe;
+  --oui-ai-200: #d9d6fe;
+  --oui-ai-500: #7a5af8;
+  --oui-ai-700: #5925dc;
+
+  /* ── Semantic roles. ── */
+  --oui-text-primary: var(--oui-gray-900);
+  --oui-text-secondary: var(--oui-gray-700);
+  --oui-text-tertiary: var(--oui-gray-600);
+  --oui-text-quaternary: var(--oui-gray-500);
+  --oui-text-placeholder: var(--oui-gray-400);
+  --oui-text-disabled: var(--oui-gray-400);
+  --oui-text-on-brand: #ffffff;
+  --oui-text-brand: var(--oui-brand-700);
+  --oui-text-brand-strong: var(--oui-brand-800);
+
+  --oui-bg-primary: #ffffff;
+  --oui-bg-primary-hover: var(--oui-gray-50);
+  --oui-bg-secondary: var(--oui-gray-50);
+  --oui-bg-tertiary: var(--oui-gray-100);
+  --oui-bg-quaternary: var(--oui-gray-200);
+  --oui-bg-canvas: var(--oui-gray-25);
+  --oui-bg-active: var(--oui-gray-50);
+  --oui-bg-brand: var(--oui-brand-600);
+  --oui-bg-brand-hover: var(--oui-brand-700);
+  --oui-bg-brand-subtle: var(--oui-brand-50);
+  --oui-bg-brand-faint: var(--oui-brand-25);
+  --oui-bg-overlay: rgb(12 17 29 / 0.55);
+
+  --oui-border-primary: var(--oui-gray-300);
+  --oui-border-secondary: var(--oui-gray-200);
+  --oui-border-tertiary: var(--oui-gray-100);
+  --oui-border-brand: var(--oui-brand-300);
+  --oui-border-strong: var(--oui-gray-400);
+
+  --oui-fg-primary: var(--oui-gray-900);
+  --oui-fg-secondary: var(--oui-gray-700);
+  --oui-fg-tertiary: var(--oui-gray-600);
+  --oui-fg-quaternary: var(--oui-gray-400);
+  --oui-fg-brand: var(--oui-brand-600);
+
+  /* ── Shape. ── */
+  --oui-radius-xs: 4px;
+  --oui-radius-sm: 6px;
+  --oui-radius-md: 8px;
+  --oui-radius-lg: 10px;
+  --oui-radius-xl: 12px;
+  --oui-radius-2xl: 16px;
+  --oui-radius-full: 9999px;
+
+  /* ── Elevation. Low-contrast, layered shadows read as paper, not glass. ── */
+  --oui-shadow-xs: 0 1px 2px rgb(16 24 40 / 0.05);
+  --oui-shadow-sm: 0 1px 3px rgb(16 24 40 / 0.1), 0 1px 2px rgb(16 24 40 / 0.06);
+  --oui-shadow-md: 0 4px 8px -2px rgb(16 24 40 / 0.1), 0 2px 4px -2px rgb(16 24 40 / 0.06);
+  --oui-shadow-lg: 0 12px 16px -4px rgb(16 24 40 / 0.08), 0 4px 6px -2px rgb(16 24 40 / 0.03);
+  --oui-shadow-xl: 0 20px 24px -4px rgb(16 24 40 / 0.08), 0 8px 8px -4px rgb(16 24 40 / 0.03);
+  --oui-shadow-skeuo: inset 0 0 0 1px rgb(16 24 40 / 0.18), inset 0 -2px 0 rgb(16 24 40 / 0.05);
+  /* Keep keyboard focus aligned with the host's brand override. */
+  --oui-ring-brand: 0 0 0 4px var(--oui-brand-100);
+  --oui-ring-error: 0 0 0 4px rgb(240 68 56 / 0.18);
+  --oui-ring-gray: 0 0 0 4px rgb(152 162 179 / 0.14);
+
+  /* Dialog dimensions are host-overridable for wide help or workflow dialogs. */
+  --oui-dialog-width: 30rem;
+  --oui-dialog-max-width: calc(100vw - 1rem);
+  --oui-dialog-max-height: min(90dvh, 48rem);
+
+  /* ── Type. Sizes pair with a matching line height. ── */
+  --oui-font-sans: Geist, "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --oui-font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --oui-text-xs: 0.75rem;     --oui-leading-xs: 1.125rem;
+  --oui-text-sm: 0.875rem;    --oui-leading-sm: 1.25rem;
+  --oui-text-md: 1rem;        --oui-leading-md: 1.5rem;
+  --oui-text-lg: 1.125rem;    --oui-leading-lg: 1.75rem;
+  --oui-text-xl: 1.25rem;     --oui-leading-xl: 1.875rem;
+  --oui-display-xs: 1.5rem;   --oui-leading-display-xs: 2rem;
+  --oui-display-sm: 1.875rem; --oui-leading-display-sm: 2.375rem;
+
+  /* ── Space (4px rhythm) and control sizes. ── */
+  --oui-space-1: 0.25rem;
+  --oui-space-2: 0.5rem;
+  --oui-space-3: 0.75rem;
+  --oui-space-4: 1rem;
+  --oui-space-5: 1.25rem;
+  --oui-space-6: 1.5rem;
+  --oui-space-8: 2rem;
+  --oui-space-10: 2.5rem;
+  --oui-space-12: 3rem;
+  --oui-control-height-sm: 2.25rem;
+  --oui-control-height: 2.5rem;
+  --oui-control-height-lg: 2.75rem;
+
+  /* ── Motion. ── */
+  --oui-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --oui-duration-fast: 120ms;
+  --oui-duration: 180ms;
+
+  /* ── Layout. ── */
+  --oui-sidebar-width: 17rem;
+  --oui-sidebar-width-compact: 4.25rem;
+  --oui-topbar-height: 3.5rem;
+  --oui-page-gutter: 2rem;
+  --oui-page-measure: 80rem;
+}
+
+@media (max-width: 42rem) {
+  :where(:root) {
+    --oui-page-gutter: 1rem;
+    --oui-control-height: 2.75rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where(:root) {
+    --oui-duration-fast: 0ms;
+    --oui-duration: 0ms;
+  }
+}
+
+/* Custom properties need feature detection for computed-value fallbacks. */
+@supports (color: color-mix(in srgb, black, transparent)) {
+  :where(:root) {
+    --oui-ring-brand: 0 0 0 4px color-mix(in srgb, var(--oui-brand-600) 18%, transparent);
+  }
+}

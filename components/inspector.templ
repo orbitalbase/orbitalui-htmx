@@ -37,7 +37,11 @@ templ Inspector(o InspectorOpts, body templ.Component) {
 					<a href={ templ.SafeURL(o.CloseHref) } class="ui-inspector__tool" aria-label="Close record panel" title="Close record panel" data-inspector-close-link>@Icon("close")</a>
 				</div>
 			</header>
-			<div class="ui-inspector__body">@body</div>
+			<div class="ui-inspector__body">
+				if body != nil {
+					@body
+				}
+			</div>
 		}
 	</aside>
 }

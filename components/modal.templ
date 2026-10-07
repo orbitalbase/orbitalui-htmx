@@ -43,7 +43,9 @@ templ ModalShell(opts ModalOpts, children templ.Component) {
 				</button>
 			</header>
 			<div class="ui-dialog__body">
-				@children
+				if children != nil {
+					@children
+				}
 			</div>
 		</div>
 	</dialog>

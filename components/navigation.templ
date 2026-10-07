@@ -1,0 +1,186 @@
+// SidebarNav, Breadcrumbs, Menu, MenuLink and WorkspaceSwitcher — see
+// navigation.go for options.
+//
+// Usage:
+//
+//	@components.SidebarNav([]components.NavSection{
+//		{Links: []components.NavLink{{Label: "Overview", Href: "/", Icon: "dashboard", Active: true}}},
+//		{Label: "Company", ID: "company", Collapsible: true, Links: companyLinks},
+//	}, components.SidebarNavOpts{})
+//	@components.Menu(components.MenuOpts{Label: "Account", Align: "end"}, avatar(), menuItems())
+package components
+
+templ SidebarNav(sections []NavSection, opts SidebarNavOpts) {
+	<nav class={ joinClass("ui-nav", opts.Class) } aria-label={ sidebarNavLabel(opts) }>
+		for _, section := range sections {
+			if section.Label == "" {
+				<ul class="ui-nav__list" role="list">
+					for _, link := range section.Links {
+						@navLink(link)
+					}
+				</ul>
+			} else if section.Collapsible {
+				<details
+					class="ui-nav__section"
+					open?={ navSectionOpen(section) }
+					if section.ID != "" {
+						data-nav-section={ section.ID }
+					}
+				>
+					<summary class="ui-nav__heading">
+						<span class="ui-nav__heading-label">{ section.Label }</span>
+						<span class="ui-nav__heading-chevron" aria-hidden="true">
+							@Icon("chevron-down")
+						</span>
+					</summary>
+					<ul class="ui-nav__list" role="list">
+						for _, link := range section.Links {
+							@navLink(link)
+						}
+					</ul>
+				</details>
+			} else {
+				<div class="ui-nav__section">
+					<p class="ui-nav__heading">
+						<span class="ui-nav__heading-label">{ section.Label }</span>
+					</p>
+					<ul class="ui-nav__list" role="list">
+						for _, link := range section.Links {
+							@navLink(link)
+						}
+					</ul>
+				</div>
+			}
+		}
+	</nav>
+}
+
+templ navLink(link NavLink) {
+	<li>
+		<a
+			class={ navLinkClass(link) }
+			href={ link.Href }
+			title={ link.Label }
+			if link.Key != "" {
+				data-nav-key={ link.Key }
+			}
+			if link.Active {
+				aria-current="page"
+			}
+		>
+			if link.Icon != "" {
+				@Icon(link.Icon, "ui-nav__icon")
+			}
+			<span class="ui-nav__label">{ link.Label }</span>
+			if link.Badge != "" {
+				<span class={ navBadgeClass(link) }>{ link.Badge }</span>
+			}
+		</a>
+	</li>
+}
+
+templ Breadcrumbs(crumbs []Crumb) {
+	if len(crumbs) > 0 {
+		<nav class="ui-breadcrumbs" aria-label="Breadcrumb">
+			<ol role="list">
+				for i, crumb := range crumbs {
+					<li>
+						if i > 0 {
+							<span class="ui-breadcrumbs__sep" aria-hidden="true">
+								@Icon("chevron-right")
+							</span>
+						}
+						if i == len(crumbs)-1 {
+							<span aria-current="page">{ crumb.Label }</span>
+						} else if crumb.Href != "" {
+							<a href={ crumb.Href }>{ crumb.Label }</a>
+						} else {
+							<span>{ crumb.Label }</span>
+						}
+					</li>
+				}
+			</ol>
+		</nav>
+	}
+}
+
+templ Menu(opts MenuOpts, trigger templ.Component, panel templ.Component) {
+	<details
+		class={ menuClass(opts) }
+		data-ui-menu
+		if opts.ID != "" {
+			id={ opts.ID }
+		}
+	>
+		<summary
+			class={ joinClass("ui-menu__trigger", opts.TriggerClass) }
+			if opts.Label != "" {
+				aria-label={ opts.Label }
+			}
+		>
+			if trigger != nil {
+				@trigger
+			}
+		</summary>
+		<div class="ui-menu__panel">
+			if panel != nil {
+				@panel
+			}
+		</div>
+	</details>
+}
+
+templ MenuLink(label string, href templ.SafeURL, opts MenuItemOpts) {
+	<a
+		class={ menuItemClass(opts) }
+		href={ href }
+		if opts.Selected {
+			aria-current="true"
+		}
+	>
+		if opts.Icon != "" {
+			@Icon(opts.Icon, "ui-menu__icon")
+		}
+		<span class="ui-menu__label">{ label }</span>
+		if opts.Hint != "" {
+			<span class="ui-menu__hint">{ opts.Hint }</span>
+		}
+	</a>
+}
+
+templ MenuSeparator() {
+	<hr class="ui-menu__separator"/>
+}
+
+// MenuHeader renders an identity block at the top of a menu panel.
+templ MenuHeader(title string, subtitle string) {
+	<div class="ui-menu__header">
+		<span class="ui-menu__header-title">{ title }</span>
+		if subtitle != "" {
+			<span class="ui-menu__header-subtitle">{ subtitle }</span>
+		}
+	</div>
+}
+
+templ WorkspaceSwitcher(opts WorkspaceSwitcherOpts, panel templ.Component) {
+	@Menu(MenuOpts{Width: "wide", Class: joinClass("ui-switcher", opts.Class), TriggerClass: "ui-switcher__trigger"}, switcherTrigger(opts), panel)
+}
+
+templ switcherTrigger(opts WorkspaceSwitcherOpts) {
+	<span class="visually-hidden">{ switcherLabel(opts) }</span>
+	<span class="ui-switcher__avatar">
+		@Avatar(opts.Name, AvatarOpts{Size: AvatarSM, Square: true, Tone: "brand"})
+		if opts.StatusTone != "" && opts.StatusTone != ToneNeutral {
+			<span class={ "ui-switcher__status ui-switcher__status--" + opts.StatusTone.Modifier() }></span>
+		}
+	</span>
+	<span class="ui-switcher__copy">
+		<span class="ui-switcher__name">{ opts.Name }</span>
+		if opts.Subtitle != "" {
+			<span class="ui-switcher__subtitle">{ opts.Subtitle }</span>
+		}
+	</span>
+	<span class="ui-switcher__selector" aria-hidden="true">
+		@Icon("selector")
+	</span>
+}

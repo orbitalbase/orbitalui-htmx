@@ -34,8 +34,10 @@ templ AsyncRegion(opts AsyncRegionOpts, body templ.Component) {
 			if internalInteractionHref(opts.RetryHref) != "" {
 				<a href={ templ.SafeURL(internalInteractionHref(opts.RetryHref)) }>Retry</a>
 			}
-			@body
-		} else {
+			if body != nil {
+				@body
+			}
+		} else if body != nil {
 			@body
 		}
 	</section>
@@ -67,6 +69,10 @@ templ SelectionToolbar(opts SelectionToolbarOpts, actions templ.Component) {
 		if opts.ExcludedReason != "" {
 			<p class="selection-toolbar__reason">{ opts.ExcludedReason }</p>
 		}
-		<div class="selection-toolbar__actions">@actions</div>
+		<div class="selection-toolbar__actions">
+			if actions != nil {
+				@actions
+			}
+		</div>
 	</div>
 }

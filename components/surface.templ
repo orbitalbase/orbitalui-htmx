@@ -1,0 +1,185 @@
+// PageHeader, Card and SettingsSection — see surface.go for options.
+//
+// Usage:
+//
+//	@components.PageHeader("Officers", components.PageHeaderOpts{
+//		Description: "Directors, secretaries and shareholders on record.",
+//		Actions:     addOfficerButton(),
+//	})
+//	@components.Card(components.CardOpts{Title: "Recent documents", Actions: viewAll()}, list())
+//	@components.SettingsSection(components.SettingsSectionOpts{
+//		Title: "Email alerts", Description: "Choose what reaches your inbox.",
+//	}, alertFields())
+package components
+
+import "strconv"
+
+templ PageHeader(title string, opts PageHeaderOpts) {
+	<header
+		class={ pageHeaderClass(opts) }
+		if opts.ID != "" {
+			id={ opts.ID }
+		}
+	>
+		<div class="ui-page-header__row">
+			if opts.Leading != nil {
+				<div class="ui-page-header__leading">
+					@opts.Leading
+				</div>
+			}
+			<div class="ui-page-header__copy">
+				if opts.Eyebrow != "" {
+					<p class="ui-page-header__eyebrow">{ opts.Eyebrow }</p>
+				}
+				<h1 class="ui-page-header__title" tabindex="-1">{ title }</h1>
+				if opts.Description != "" {
+					<p class="ui-page-header__description">{ opts.Description }</p>
+				}
+				if opts.Meta != nil {
+					<div class="ui-page-header__meta">
+						@opts.Meta
+					</div>
+				}
+			</div>
+			if opts.Actions != nil {
+				<div class="ui-page-header__actions">
+					@opts.Actions
+				</div>
+			}
+		</div>
+		if opts.Tabs != nil {
+			<div class="ui-page-header__tabs">
+				@opts.Tabs
+			</div>
+		}
+	</header>
+}
+
+templ Card(opts CardOpts, body templ.Component) {
+	<section
+		class={ mergeClass(cardClass(opts), opts.Attrs) }
+		if opts.ID != "" {
+			id={ opts.ID }
+		}
+		if opts.Title != "" && opts.ID != "" {
+			aria-labelledby={ cardHeadingID(opts) }
+		}
+		{ attrsWithoutClass(opts.Attrs)... }
+	>
+		if opts.Title != "" {
+			<header class="ui-card__header">
+				<div class="ui-card__heading">
+					if opts.Eyebrow != "" {
+						<p class="ui-card__eyebrow">{ opts.Eyebrow }</p>
+					}
+					<div class="ui-card__title-row">
+						if opts.HeadingLevel == 3 {
+							<h3
+								class="ui-card__title"
+								if opts.ID != "" {
+									id={ cardHeadingID(opts) }
+								}
+							>{ opts.Title }</h3>
+						} else {
+							<h2
+								class="ui-card__title"
+								if opts.ID != "" {
+									id={ cardHeadingID(opts) }
+								}
+							>{ opts.Title }</h2>
+						}
+						if opts.Badge != nil {
+							@opts.Badge
+						}
+					</div>
+					if opts.Description != "" {
+						<p class="ui-card__description">{ opts.Description }</p>
+					}
+				</div>
+				if opts.Actions != nil {
+					<div class="ui-card__actions">
+						@opts.Actions
+					</div>
+				}
+			</header>
+		}
+		if body != nil {
+			<div class="ui-card__body">
+				@body
+			</div>
+		}
+		if opts.Footer != nil {
+			<footer class="ui-card__footer">
+				@opts.Footer
+			</footer>
+		}
+	</section>
+}
+
+templ SettingsSection(opts SettingsSectionOpts, body templ.Component) {
+	<section
+		class={ settingsSectionClass(opts) }
+		if opts.ID != "" {
+			id={ opts.ID }
+			aria-labelledby={ opts.ID + "-title" }
+		}
+	>
+		<div class="ui-settings-section__label">
+			<h2
+				class="ui-settings-section__title"
+				if opts.ID != "" {
+					id={ opts.ID + "-title" }
+				}
+			>{ opts.Title }</h2>
+			if opts.Description != "" {
+				<p class="ui-settings-section__description">{ opts.Description }</p>
+			}
+			if opts.Aside != nil {
+				<div class="ui-settings-section__aside">
+					@opts.Aside
+				</div>
+			}
+		</div>
+		<div class="ui-settings-section__content">
+			if body != nil {
+				@body
+			}
+		</div>
+	</section>
+}
+
+// CountBadge is the small neutral pill used beside titles and nav labels.
+templ CountBadge(n int) {
+	<span class="ui-count">{ strconv.Itoa(n) }</span>
+}
+
+// RecordHeader is the identity block a record inspector or detail panel
+// opens with: a leading mark, a small eyebrow naming the record type, the
+// record's title, one line of context and its status on the trailing edge.
+templ RecordHeader(opts RecordHeaderOpts) {
+	<header class={ joinClass("ui-record-header", opts.Class) }>
+		if opts.Leading != nil {
+			<span class="ui-record-header__leading">
+				@opts.Leading
+			</span>
+		} else if opts.Icon != "" {
+			<span class={ recordHeaderIconClass(opts) } aria-hidden="true">
+				@Icon(opts.Icon)
+			</span>
+		}
+		<div class="ui-record-header__copy">
+			if opts.Eyebrow != "" {
+				<p class="ui-record-header__eyebrow">{ opts.Eyebrow }</p>
+			}
+			<p class="ui-record-header__title">{ opts.Title }</p>
+			if opts.Subtitle != "" {
+				<p class="ui-record-header__subtitle">{ opts.Subtitle }</p>
+			}
+		</div>
+		if opts.Status != nil {
+			<div class="ui-record-header__status">
+				@opts.Status
+			</div>
+		}
+	</header>
+}

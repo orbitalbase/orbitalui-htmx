@@ -1,0 +1,37 @@
+{
+  "date": "2026-10-07",
+  "push_or_release": false,
+  "repositories": {
+    "orbitalui-htmx": {
+      "base_ref": "main",
+      "base": "b92eaf98a7622a859f62adc5d777e7c80e23d544",
+      "feature_ref": "feat/shared-ui-foundation",
+      "source_feature_head": "27a4835945b45ae414ea65f8b0d1e92f0dad1b5d",
+      "target_ref": "development",
+      "original_dirty_checkout_preserved": "/Users/mingerz/orbitalbase/orbitalui-htmx"
+    },
+    "cosec-agent": {
+      "base_ref": "development",
+      "base": "0dc7ee7477b6558a4959d91e08b3cd74ffe71e1f",
+      "feature_ref": "feat/shared-ui-polish",
+      "feature_head": "b77c7c17adffc49bd77f854d770f9b9c2a01e744",
+      "target_ref": "development"
+    },
+    "ledger-agent": {
+      "base_ref": "development",
+      "base": "52e1c9b01bdb6d3d0fc10908fee81987b7a9bb83",
+      "feature_ref": "feat/shared-ui-polish",
+      "feature_head": "fd61396c3a4f4ad21eed3e085344c565730e700a",
+      "target_ref": "development"
+    }
+  },
+  "preserved_cosec_changes": {
+    "stash": "b6a0771ee218c33a2d8d6168af6eed13026ba299",
+    "stable_ref": "refs/backup/pre-ui-foundation-generated-metadata",
+    "stash_message": "On development: safety: pre-ui-foundation generated FileName metadata (93 files, preserved 2026-10-07)",
+    "path_count": 93,
+    "manifest": "cosec-preserved-paths.json",
+    "reapplied": false,
+    "reason": "Only old generated FileName metadata; preserved separately so corrected generation remains authoritative"
+  }
+}

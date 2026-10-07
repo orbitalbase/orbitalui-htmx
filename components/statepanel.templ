@@ -13,6 +13,14 @@
 //	}) {
 //		Post an entry from the New entry button above.
 //	}
+//
+// Usage — in-card empty state, where the card title owns the heading level:
+//
+//	@components.StatePanel("You are all caught up", components.StatePanelOpts{
+//		Icon: "check", Compact: true,
+//	}) {
+//		No approval or signing task is assigned to you right now.
+//	}
 package components
 
 templ StatePanel(title string, opts StatePanelOpts, children templ.Component) {
@@ -28,7 +36,11 @@ templ StatePanel(title string, opts StatePanelOpts, children templ.Component) {
 			<span class="ui-state__icon" aria-hidden="true">@Icon(opts.Icon)
 </span>
 		}
-		<h2>{ title }</h2>
+		if opts.Compact {
+			<p class="ui-state__title">{ title }</p>
+		} else {
+			<h2>{ title }</h2>
+		}
 		if children != nil {
 			<div class="ui-state__content">@children
 </div>

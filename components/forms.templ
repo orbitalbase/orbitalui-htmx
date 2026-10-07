@@ -6,7 +6,9 @@ templ HTMXPostForm(id string, action string, target string, swap string, indicat
 		if indicator != "" {
 			hx-indicator={ indicator }
 		}
-	>
-		@children
+		>
+		if children != nil {
+			@children
+		}
 	</form>
 }

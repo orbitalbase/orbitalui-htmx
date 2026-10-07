@@ -1,0 +1,61 @@
+// FilterChips and SectionNav — see wayfinding.go for options.
+//
+// Usage:
+//
+//	@components.FilterChips([]components.ChipLink{
+//		{Label: "All actions", Href: "/services"},
+//		{Label: "Filings", Href: "/services?category=filings", Value: "filings"},
+//	}, current, components.FilterChipsOpts{Label: "Filter by category"})
+//
+//	@components.SectionNav([]components.SectionLink{
+//		{Label: "General", ID: "settings-general"},
+//		{Label: "Team", ID: "settings-team"},
+//	}, components.SectionNavOpts{Label: "Settings sections"})
+package components
+
+templ FilterChips(chips []ChipLink, active string, opts FilterChipsOpts) {
+	if len(chips) > 0 {
+		<nav
+			class={ joinClass("ui-chips", opts.Class) }
+			aria-label={ filterChipsLabel(opts) }
+			if opts.ID != "" {
+				id={ opts.ID }
+			}
+		>
+			for _, chip := range chips {
+				<a
+					class={ chipClass(chip, active) }
+					href={ chip.Href }
+					aria-current={ chipCurrent(chip, active) }
+				>
+					<span class="ui-chip__label">{ chip.Label }</span>
+					if chip.Count > 0 {
+						<span class="ui-chip__count">{ IntText(chip.Count) }</span>
+					}
+				</a>
+			}
+		</nav>
+	}
+}
+
+// SectionNav is the index of a long page: sticky beside the content on a
+// desktop, a horizontally scrolling strip above it on a phone.
+templ SectionNav(links []SectionLink, opts SectionNavOpts) {
+	if len(links) > 0 {
+		<nav
+			class={ joinClass("ui-section-nav", opts.Class) }
+			aria-label={ sectionNavLabel(opts) }
+			if opts.ID != "" {
+				id={ opts.ID }
+			}
+		>
+			<ul role="list">
+				for _, link := range links {
+					<li>
+						<a href={ sectionLinkHref(link) }>{ link.Label }</a>
+					</li>
+				}
+			</ul>
+		</nav>
+	}
+}

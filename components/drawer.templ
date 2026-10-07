@@ -132,7 +132,9 @@ templ Drawer(opts DrawerOpts, children templ.Component) {
 				</div>
 			</header>
 			<div class="drawer-content" id={ DrawerContentID(opts.ID) }>
-				@children
+				if children != nil {
+					@children
+				}
 			</div>
 		</div>
 	</div>
