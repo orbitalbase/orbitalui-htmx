@@ -142,3 +142,13 @@ the action should work without JavaScript. `SuggestionChip` requires Alpine
 to evaluate its action expression. `AssistantMessageContent` accepts
 application-rendered content such as cited links; the host owns its validation
 and escaping contract (plain text should use `AssistantMessage`).
+
+## Host table sorting and composition
+
+`TableShell` supports both library `SortState` GET links and host-owned
+`Column.SortHref` links; direct links take precedence and preserve the host
+query convention. Use `SortDirection` (`ascending`, `descending`, or `other`)
+for direct-link accessibility, or explicit `ClientSort` keys for a host
+external sorting runtime. No new sorting behavior is enabled by default.
+`TableClass` and `SortClass` retain host layout and runtime hooks without
+duplicating the frame; optional `EmptyContent` supplies a host empty state.

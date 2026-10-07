@@ -29,7 +29,7 @@ templ TableShell(columns []Column, opts TableOpts, rows templ.Component, footer 
 			id={ opts.ID }
 		}
 	>
-		<table class="ledger-table">
+		<table class={ "ledger-table", opts.TableClass }>
 			if opts.Caption != "" {
 				<caption class="visually-hidden">{ opts.Caption }</caption>
 			}
@@ -44,13 +44,15 @@ templ TableShell(columns []Column, opts TableOpts, rows templ.Component, footer 
 							if c.Width != "" {
 								style={ tableColStyle(c) }
 							}
-							if opts.Sort != nil && c.Sortable {
-								aria-sort={ sortAria(opts.Sort, c.Key) }
+							if columnSortAria(c, opts.Sort) != "" {
+								aria-sort={ columnSortAria(c, opts.Sort) }
 							}
 						>
-							if opts.Sort != nil && c.Sortable {
+							if c.SortHref != "" {
+								<a class={ tableSortClass(opts) } href={ c.SortHref }>{ c.Label }</a>
+							} else if opts.Sort != nil && c.Sortable {
 								<a
-									class="th-sort"
+									class={ tableSortClass(opts) }
 									href={ sortHref(opts.Sort, c.Key) }
 									if sortAria(opts.Sort, c.Key) != "" {
 										aria-label={ sortAriaLabel(opts.Sort, c.Key, c.Label) }
@@ -65,6 +67,8 @@ templ TableShell(columns []Column, opts TableOpts, rows templ.Component, footer 
 										}
 									}
 								</a>
+							} else if c.ClientSort != "" {
+								<button type="button" class={ tableSortClass(opts) } data-table-sort={ c.ClientSort }>{ c.Label }</button>
 							} else {
 								{ c.Label }
 							}
@@ -76,6 +80,9 @@ templ TableShell(columns []Column, opts TableOpts, rows templ.Component, footer 
 				<tbody>
 					<tr class="ledger-table__empty-row">
 						<td colspan={ colSpanText(columns) }>
+							if opts.EmptyContent != nil {
+								@opts.EmptyContent
+							} else {
 							<div class="table-empty">
 								if opts.EmptyIcon != "" {
 									<span class="table-empty__icon" aria-hidden="true">@Icon(opts.EmptyIcon)
@@ -91,6 +98,7 @@ templ TableShell(columns []Column, opts TableOpts, rows templ.Component, footer 
 									</a>
 								}
 							</div>
+						}
 						</td>
 					</tr>
 				</tbody>

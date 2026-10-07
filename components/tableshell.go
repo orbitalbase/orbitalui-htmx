@@ -33,6 +33,11 @@ type Column struct {
 	Sortable bool   // emits a sort link when opts.Sort is set
 	Class    string // extra classes on the <th>
 	Optional bool   // may be hidden through per-user view preferences
+
+	// Direct sorting preserves host-owned URL/query conventions.
+	SortHref      templ.SafeURL
+	SortDirection string // ascending, descending, other; invalid values omitted
+	ClientSort    string // explicit host client-sort key; no library runtime required
 }
 
 // SortState describes the current sort for the header links. The wire value
@@ -98,9 +103,11 @@ func sortAriaLabel(s *SortState, key, label string) string {
 
 // TableOpts configures the shell.
 type TableOpts struct {
-	ID      string // optional id on the .table-region (htmx target anchor)
-	Caption string // sr-only table caption (page description)
-	Class   string // extra classes on the .table-region
+	ID         string // optional id on the .table-region (htmx target anchor)
+	Caption    string // sr-only table caption (page description)
+	Class      string // extra classes on the .table-region
+	TableClass string // optional table modifier, e.g. a host wide-table class
+	SortClass  string // optional sort control class; defaults to th-sort
 
 	// Empty state (rendered instead of rows when Empty is set).
 	Empty            bool
@@ -109,8 +116,9 @@ type TableOpts struct {
 	EmptyIcon        string // icon-set name (icons.go)
 	EmptyActionHref  templ.SafeURL
 	EmptyActionLabel string
+	EmptyContent     templ.Component // optional host empty state; defaults to built-in state
 
-	Sort *SortState // nil = no sort links even on Sortable columns
+	Sort *SortState // optional generated GET sorting; direct column links take precedence
 }
 
 // thClass builds the header-cell classes for a column.
@@ -161,5 +169,29 @@ func tdClass(base string, extra ...string) string {
 
 // colSpanText is the colspan value for empty-row/footer cells.
 func colSpanText(columns []Column) string {
+	if len(columns) == 0 {
+		return "1"
+	}
 	return IntText(len(columns))
+}
+
+// columnSortAria supports direct host links without changing SortState URLs.
+func columnSortAria(c Column, state *SortState) string {
+	if c.SortHref != "" || (c.ClientSort != "" && (state == nil || !c.Sortable)) {
+		switch c.SortDirection {
+		case "ascending", "descending", "other":
+			return c.SortDirection
+		}
+		return ""
+	}
+	if state != nil && c.Sortable {
+		return sortAria(state, c.Key)
+	}
+	return ""
+}
+func tableSortClass(opts TableOpts) string {
+	if opts.SortClass != "" {
+		return opts.SortClass
+	}
+	return "th-sort"
 }
