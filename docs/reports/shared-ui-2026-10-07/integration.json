@@ -33,5 +33,16 @@
     "manifest": "cosec-preserved-paths.json",
     "reapplied": false,
     "reason": "Only old generated FileName metadata; preserved separately so corrected generation remains authoritative"
+  },
+  "cosec_local_workspace": {
+    "original_blob": "d0f5ffc2a3d4d2ffd1543292ccd56ff837888514",
+    "stable_ref": "refs/backup/pre-ui-foundation-go-work",
+    "current_uses": [
+      ".",
+      "./third_party/orbitalui-htmx"
+    ],
+    "go_version": "1.26.2",
+    "restore_command": "git show refs/backup/pre-ui-foundation-go-work > go.work",
+    "reason": "Ignored workspace previously overrode go.mod with the old dirty absolute library checkout; default Go and Task launches now use the portable committed snapshot. Original bytes remain durably preserved."
   }
 }
