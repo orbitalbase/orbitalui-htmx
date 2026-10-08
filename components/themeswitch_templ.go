@@ -36,7 +36,7 @@ func ThemeSwitch(opts ThemeSwitchOpts) templ.Component {
 			{Value: "system", Label: "System", Icon: "monitor", IconOnly: true},
 			{Value: "dark", Label: "Dark", Icon: "moon", IconOnly: true},
 		}, "system", SegmentedChoiceOpts{
-			Name:      "oui-theme",
+			Name:      themeName(opts),
 			AriaLabel: themeAriaLabel(opts),
 			Size:      opts.Size,
 			Class:     opts.Class,

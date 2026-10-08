@@ -20,6 +20,11 @@
  * storageKey}. setPreference also fires `oui:theme` on document
  * (detail: {preference, theme}). ThemeSwitch (orbital-ui.js) drives it.
  *
+ * Browser UI colour: a <meta name="theme-color" data-light="#fff"
+ * data-dark="#111"> gets its content set to the active theme's value whenever
+ * the theme is applied (first paint, changes, other tabs). Without the data
+ * attributes the meta is left untouched.
+ *
  * A light-only app skips this file and pins <html data-theme="light">.
  */
 (function () {
@@ -54,11 +59,20 @@
         return preference;
     }
 
+    function paintChrome(theme) {
+        var metas = document.querySelectorAll('meta[name="theme-color"]');
+        for (var i = 0; i < metas.length; i++) {
+            var color = metas[i].getAttribute("data-" + theme);
+            if (color) metas[i].setAttribute("content", color);
+        }
+    }
+
     function apply() {
         var theme = resolve();
         root.setAttribute("data-theme", theme);
         root.setAttribute("data-theme-preference", preference);
         root.style.colorScheme = theme;
+        paintChrome(theme);
         return theme;
     }
 
@@ -87,4 +101,9 @@
         },
     };
     apply();
+    // A theme-color meta placed after this script is not parsed yet: paint it
+    // once the document is.
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", function () { paintChrome(resolve()); });
+    }
 })();

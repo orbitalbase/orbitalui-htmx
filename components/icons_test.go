@@ -1,6 +1,9 @@
 package components
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 // The icon set is the sidebar + component contract: every name the UI can
 // render must resolve to a real path (never the fallback), and the minimum
@@ -32,6 +35,75 @@ func TestIconPathsAreSVGPathData(t *testing.T) {
 	for name, d := range iconPaths {
 		if d == "" {
 			t.Errorf("icon %q has empty path data", name)
+		}
+	}
+}
+
+func TestTargetAndListIcons(t *testing.T) {
+	for _, name := range []string{"target", "list"} {
+		if Path(name) == fallbackIcon {
+			t.Errorf("icon %q is missing", name)
+		}
+	}
+}
+
+func TestRegisterIconsAddsAndOverrides(t *testing.T) {
+	builtin := iconPaths["spark"]
+	t.Cleanup(func() {
+		hostIconsMu.Lock()
+		delete(hostIcons, "test-glyph")
+		delete(hostIcons, "spark")
+		hostIconsMu.Unlock()
+	})
+	RegisterIcons(map[string]string{"test-glyph": "M1 1h2", "spark": "M2 2h3", "": "M0 0", "empty": ""})
+	if Path("test-glyph") != "M1 1h2" {
+		t.Errorf("registered icon not resolved: %q", Path("test-glyph"))
+	}
+	if Path("spark") != "M2 2h3" {
+		t.Errorf("registered icon did not override the built-in: %q", Path("spark"))
+	}
+	if Path("empty") != fallbackIcon || Path("") != fallbackIcon {
+		t.Error("empty names / path data must be ignored")
+	}
+	hostIconsMu.Lock()
+	delete(hostIcons, "spark")
+	hostIconsMu.Unlock()
+	if Path("spark") != builtin {
+		t.Error("removing the override must restore the built-in")
+	}
+}
+
+func TestCommandPaletteIncludesRegisteredIcons(t *testing.T) {
+	t.Cleanup(func() {
+		hostIconsMu.Lock()
+		delete(hostIcons, "host-only")
+		hostIconsMu.Unlock()
+	})
+	RegisterIcons(map[string]string{"host-only": "M5 5h14"})
+	var b strings.Builder
+	if err := CommandPalette(CommandPaletteOpts{Icons: []string{"host-only"}}).Render(t.Context(), &b); err != nil {
+		t.Fatal(err)
+	}
+	out := b.String()
+	if !strings.Contains(out, `data-icon="host-only"`) || !strings.Contains(out, `d="M5 5h14"`) {
+		t.Errorf("palette icon template lacks the registered glyph:\n%s", out)
+	}
+}
+
+func TestMenuHeaderQuietAndPaletteRowOptions(t *testing.T) {
+	var b strings.Builder
+	if err := MenuHeader("", "ada@example.com").Render(t.Context(), &b); err != nil {
+		t.Fatal(err)
+	}
+	out := b.String()
+	if !strings.Contains(out, "ui-menu__header--quiet") || strings.Contains(out, "ui-menu__header-title") || !strings.Contains(out, "ada@example.com") {
+		t.Errorf("empty title must render the quiet single line: %s", out)
+	}
+	o := CommandPaletteOpts{Groups: []PaletteGroup{{Items: []PaletteItem{{Label: "Ask agent", Href: "/a", Default: true, Promoted: true, QueryLabel: true, Form: &PaletteForm{Action: "/x", QueryField: "q"}}}}}}
+	j := paletteGroupsJSON(o)
+	for _, k := range []string{`"default":true`, `"promoted":true`, `"queryLabel":true`, `"queryField":"q"`} {
+		if !strings.Contains(j, k) {
+			t.Errorf("palette JSON lacks %s: %s", k, j)
 		}
 	}
 }

@@ -22,7 +22,9 @@
 //	]}
 //
 // An item with "form" submits a hidden form instead of following href (a
-// link can never POST); href is still its fallback target. JSON, not an HTML
+// link can never POST); href is still its fallback target. A form with
+// "queryField" also posts the palette input's current text under that name,
+// read at submit time (see PaletteForm). JSON, not an HTML
 // fragment, because rows are built with textContent (no injection surface),
 // the page needs no inline script, and static and remote results share one
 // shape. Static Groups use the same keys and are filtered client-side
@@ -40,7 +42,7 @@ import (
 // PaletteItem is one palette result. Icon is an icon-set name (see Icons in
 // CommandPaletteOpts). Tone tints the icon (ai, brand, accent). Avatar draws
 // initials of that name instead of an icon; Square gives it the organisation
-// shape. Keywords are matched but not shown.
+// shape and the accent tone. Keywords are matched but not shown.
 type PaletteItem struct {
 	Label    string       `json:"label"`
 	Href     string       `json:"href"`
@@ -51,14 +53,29 @@ type PaletteItem struct {
 	Avatar   string       `json:"avatar,omitempty"`
 	Square   bool         `json:"square,omitempty"`
 	Form     *PaletteForm `json:"form,omitempty"`
+	// Default makes this the row selected when results render (the first
+	// Default row wins; without one, row 0 is selected).
+	Default bool `json:"default,omitempty"`
+	// Promoted gives the row the highlighted (AI-tinted) look.
+	Promoted bool `json:"promoted,omitempty"`
+	// QueryLabel renders the label followed by the typed query as a muted
+	// quoted suffix ("Ask agent “budget”"; no suffix while the box is empty).
+	// The label is not match-highlighted, and a static QueryLabel row is
+	// always listed first and never filtered out.
+	QueryLabel bool `json:"queryLabel,omitempty"`
 }
 
 // PaletteForm makes Enter on an item submit a hidden form. Include any CSRF
-// token in Fields.
+// token in Fields. QueryField names a field that carries the typed query: at
+// submit time the runtime writes the palette input's current value into it
+// (creating the hidden input, overriding any Fields entry of that name), so a
+// row like "Ask agent: <typed text>" always posts exactly what is in the box,
+// even when the last endpoint response lags behind the keystrokes.
 type PaletteForm struct {
-	Action string            `json:"action"`
-	Method string            `json:"method,omitempty"` // default "post"
-	Fields map[string]string `json:"fields,omitempty"`
+	Action     string            `json:"action"`
+	Method     string            `json:"method,omitempty"` // default "post"
+	Fields     map[string]string `json:"fields,omitempty"`
+	QueryField string            `json:"queryField,omitempty"`
 }
 
 // PaletteGroup is a labelled run of results.
@@ -79,6 +96,7 @@ type PaletteGroup struct {
 //	EmptyText — shown when nothing matches (the query is appended in quotes).
 //	Icons — extra icon names the results may use; the defaults cover the
 //	    common set (search, home, user, users, document, settings, plus, …).
+//	    Names registered with RegisterIcons work here too.
 type CommandPaletteOpts struct {
 	ID          string
 	Endpoint    string

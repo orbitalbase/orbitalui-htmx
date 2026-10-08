@@ -113,7 +113,7 @@
         var q = query.trim().toLowerCase();
         var out = [];
         groups.forEach(function (g) {
-            var items = (g.items || []).map(function (it) { return {it: it, s: q ? itemScore(q, it) : 1}; })
+            var items = (g.items || []).map(function (it) { return {it: it, s: it.queryLabel ? 1e6 : (q ? itemScore(q, it) : 1)}; })
                 .filter(function (r) { return r.s > 0; })
                 .sort(function (a, b) { return b.s - a.s; })
                 .map(function (r) { return r.it; });
@@ -197,7 +197,7 @@
         function lead(item) {
             var el = document.createElement("span");
             if (item.avatar) {
-                el.className = "ui-avatar ui-avatar--20 ui-avatar--hue-" + hue(item.avatar) + (item.square ? " ui-avatar--square" : "");
+                el.className = "ui-avatar ui-avatar--20 " + (item.square ? "ui-avatar--accent ui-avatar--square" : "ui-avatar--hue-" + hue(item.avatar));
                 el.setAttribute("aria-hidden", "true");
                 var text = document.createElement("span");
                 text.className = "ui-avatar__initials";
@@ -247,7 +247,7 @@
                 g.items.forEach(function (item) {
                     var li = document.createElement("li");
                     li.id = dialog.id + "-opt-" + rows.length;
-                    li.className = "ui-palette__item";
+                    li.className = "ui-palette__item" + (item.promoted ? " ui-palette__item--promoted" : "");
                     li.setAttribute("role", "option");
                     li.setAttribute("aria-selected", "false");
                     var a = document.createElement("a");
@@ -255,7 +255,18 @@
                     a.tabIndex = -1;
                     var text = document.createElement("span");
                     text.className = "ui-palette__label";
-                    text.appendChild(highlight(item.label || "", q));
+                    if (item.queryLabel) {
+                        // The label plus the typed query as a muted quoted suffix, never highlighted.
+                        text.appendChild(document.createTextNode(item.label || ""));
+                        if (query) {
+                            var quote = document.createElement("span");
+                            quote.className = "ui-palette__quote";
+                            quote.textContent = " “" + query + "”";
+                            text.appendChild(quote);
+                        }
+                    } else {
+                        text.appendChild(highlight(item.label || "", q));
+                    }
                     a.appendChild(lead(item));
                     a.appendChild(text);
                     if (item.hint) {
@@ -278,7 +289,11 @@
             }
             input.setAttribute("aria-expanded", rows.length ? "true" : "false");
             status.textContent = rows.length ? rows.length + (rows.length === 1 ? " result" : " results") : (query ? emptyText + " " + query : "");
-            setActive(rows.length ? 0 : -1);
+            var first = 0;
+            for (var d = 0; d < rows.length; d++) {
+                if (rows[d].item.default) { first = d; break; }
+            }
+            setActive(rows.length ? first : -1);
         }
 
         function load() {
@@ -322,6 +337,17 @@
                     field.value = f.fields[name];
                     form.appendChild(field);
                 });
+                if (f.queryField) {
+                    // The box is the source of truth, not the last response.
+                    var q = form.elements[f.queryField];
+                    if (!q) {
+                        q = document.createElement("input");
+                        q.type = "hidden";
+                        q.name = f.queryField;
+                        form.appendChild(q);
+                    }
+                    q.value = input.value;
+                }
                 dialog.appendChild(form);
                 form.submit();
                 return;

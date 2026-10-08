@@ -3,6 +3,8 @@
 // without it. This adds the behaviour people expect from a popover menu:
 //   - opening one menu closes any other open menu;
 //   - a click outside, or Escape, closes the open menu and restores focus;
+//   - ArrowDown / ArrowUp / Home / End move focus between the items of an
+//     open menu (ArrowDown on its closed trigger opens it);
 //   - collapsible sidebar sections remember their state per browser.
 (function () {
   "use strict";
@@ -47,6 +49,41 @@
     last.removeAttribute("open");
     var summary = last.querySelector("summary");
     if (summary) summary.focus();
+  });
+
+  var ITEM = ".ui-menu__item, [role='menuitem']";
+
+  document.addEventListener("keydown", function (event) {
+    var keys = {ArrowDown: 1, ArrowUp: 1, Home: 1, End: 1};
+    if (!keys[event.key] || event.altKey || event.ctrlKey || event.metaKey) return;
+    var target = event.target instanceof Element ? event.target : null;
+    var menu = target && target.closest(MENU);
+    if (!menu) return;
+    var summary = menu.querySelector(":scope > summary");
+    if (!menu.open) {
+      if (target === summary && event.key === "ArrowDown") {
+        event.preventDefault();
+        menu.setAttribute("open", "");
+        var first = menu.querySelector(ITEM);
+        if (first) first.focus();
+      }
+      return;
+    }
+    // Only the trigger and the items navigate: a control inside the panel
+    // (ThemeSwitch radios, a search field) keeps its own arrow keys.
+    if (target !== summary && !target.closest(ITEM)) return;
+    var items = Array.prototype.slice.call(menu.querySelectorAll(ITEM)).filter(function (el) {
+      return !el.disabled && el.getAttribute("aria-disabled") !== "true" && el.getClientRects().length > 0;
+    });
+    if (!items.length) return;
+    event.preventDefault();
+    var at = items.indexOf(target.closest(ITEM));
+    var next;
+    if (event.key === "Home") next = 0;
+    else if (event.key === "End") next = items.length - 1;
+    else if (event.key === "ArrowDown") next = at < 0 ? 0 : (at + 1) % items.length;
+    else next = at < 0 ? items.length - 1 : (at - 1 + items.length) % items.length;
+    items[next].focus();
   });
 
   function readStore() {

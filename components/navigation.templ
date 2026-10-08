@@ -171,9 +171,12 @@ templ MenuSeparator() {
 }
 
 // MenuHeader renders an identity block at the top of a menu panel.
+// With an empty title it is a quiet single muted line (e.g. just an email).
 templ MenuHeader(title string, subtitle string) {
-	<div class="ui-menu__header">
-		<span class="ui-menu__header-title">{ title }</span>
+	<div class={ joinClass("ui-menu__header", modifier(title == "", "ui-menu__header--quiet")) }>
+		if title != "" {
+			<span class="ui-menu__header-title">{ title }</span>
+		}
 		if subtitle != "" {
 			<span class="ui-menu__header-subtitle">{ subtitle }</span>
 		}
