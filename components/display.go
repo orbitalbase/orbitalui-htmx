@@ -28,6 +28,12 @@ type DescriptionItem struct {
 	Mono bool
 }
 
+// DataItemOpts configures DataItemWith.
+type DataItemOpts struct {
+	Wide  bool   // span every column of a multi-column list
+	Field string // becomes data-field on the value element ("" = none)
+}
+
 // DescriptionLayout selects how terms and values are arranged.
 type DescriptionLayout string
 

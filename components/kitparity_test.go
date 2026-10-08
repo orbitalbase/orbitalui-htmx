@@ -153,8 +153,8 @@ func TestKitParityStyles(t *testing.T) {
 	}
 	theme, tokens := css("theme.css"), css("tokens.css")
 	for _, needle := range []string{
-		".ui-badge__dot { width: 0.375rem; height: 0.375rem; flex: 0 0 auto; border-radius: 50%; background: currentColor; }",
-		"inset 0 0 0 1.5px currentColor",
+		".ui-badge__dot { width: 0.375rem; height: 0.375rem; flex: 0 0 auto; border-radius: 50%; background: var(--oui-badge-dot, currentColor); }",
+		"inset 0 0 0 1.5px var(--oui-badge-dot, currentColor)",
 		"--oui-avatar-fs: 8px", "--oui-avatar-fs: 14.5px", "--oui-avatar-fs: 26px; letter-spacing: -0.02em",
 		"var(--oui-orb-a)", "var(--oui-card-title-family", "var(--oui-state-title-family", "var(--oui-ring-glow, none)",
 		".ui-dl__row { align-content: start; }", "svg.ui-icon--24",

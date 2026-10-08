@@ -46,10 +46,21 @@ templ LabelledField(label string, htmlFor string, opts FieldOpts, children templ
 			@children
 		}
 		if opts.Error != "" {
-			<p class="field-error" id={ FieldErrorID(htmlFor) }>{ opts.Error }</p>
+			<p
+				class="field-error"
+				id={ FieldErrorID(htmlFor) }
+				if opts.ErrorAlert {
+					role="alert"
+				}
+			>{ opts.Error }</p>
 		}
 		if opts.Help != "" {
-			<p class="field-help">{ opts.Help }</p>
+			<p
+				class="field-help"
+				if htmlFor != "" {
+					id={ FieldHelpID(htmlFor) }
+				}
+			>{ opts.Help }</p>
 		}
 	</div>
 }
@@ -205,7 +216,7 @@ templ FieldSelect(o FieldSelectOpts) {
 		{ attrsWithoutClass(o.Attrs)... }
 	>
 		if o.Placeholder != "" {
-			<option value="" selected?={ o.Selected == "" }>{ o.Placeholder }</option>
+			<option value="" selected?={ o.Selected == "" } disabled?={ o.PlaceholderDisabled }>{ o.Placeholder }</option>
 		}
 		for _, opt := range o.Options {
 			<option value={ opt.Value } selected?={ opt.Value == o.Selected }>{ opt.Label }</option>

@@ -44,6 +44,9 @@ type ChipGroupOpts struct {
 	Error      string
 	Disabled   bool
 	Class      string
+	// SuggestedTitle is the hover title of the spark on a Suggested chip
+	// (default "Suggested").
+	SuggestedTitle string
 }
 
 // chipGroupDescribedBy lists the ids of the help and error paragraphs.

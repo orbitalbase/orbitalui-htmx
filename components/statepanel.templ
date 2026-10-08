@@ -40,6 +40,8 @@ templ StatePanel(title string, opts StatePanelOpts, children templ.Component) {
 		}
 		if opts.Compact {
 			<p class="ui-state__title">{ title }</p>
+		} else if statePanelH3(opts) {
+			<h3>{ title }</h3>
 		} else {
 			<h2>{ title }</h2>
 		}
