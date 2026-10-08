@@ -94,6 +94,7 @@ async function startChrome() {
     await send('Runtime.enable');
     await send('Log.enable');
     await send('Page.enable');
+    if (process.env.OUI_CPU_THROTTLE) await send('Emulation.setCPUThrottlingRate', {rate: +process.env.OUI_CPU_THROTTLE});
     const resize = (width, height = 900) => send('Emulation.setDeviceMetricsOverride', {width, height, deviceScaleFactor: 1, mobile: width < 600});
     await resize(1280);
     const close = async () => { try { ws.close(); } catch {} chrome.kill(); await rm(profile, {recursive: true, force: true}).catch(() => {}); };
@@ -418,20 +419,23 @@ async function runVariant(name, path, {full = true, host = false} = {}) {
         });
 
         await check('palette results never follow javascript: hrefs or form actions', async () => {
+          try {
             await chord('k', 'KeyK', 75, 2);
             await eventually(paletteOpen, 'palette open');
             await type('unsafe');
-            await eventually(() => js('document.querySelectorAll("#command-palette-list [role=option]").length === 2'), 'two unsafe rows');
+            await eventually(() => js('document.querySelectorAll("#command-palette-list [role=option]").length === 2'), 'two unsafe rows')
+                .catch(async e => { throw new Error(`${e.message}; open=${await paletteOpen()} value=${await js('document.querySelector("#command-palette-input").value')} focus=${await focused()} rows=${await js('[...document.querySelectorAll("#command-palette-list li")].map(e => e.textContent).join("|")')}`); });
             expect(await js('[...document.querySelectorAll("#command-palette-list [role=option] a")].every(a => a.getAttribute("href") === "#")'), 'an unsafe href reached the DOM');
             await key('ArrowDown', 'ArrowDown', 40);
             await key('Enter', 'Enter', 13);
             await key('ArrowUp', 'ArrowUp', 38);
             await key('Enter', 'Enter', 13);
             expect(await js('window.__ouiPwned === undefined && !document.querySelector("dialog[data-oui-palette] form")'), 'an unsafe target ran or a form was built');
-            if (await paletteOpen()) {
-                await key('Escape', 'Escape', 27);
-                await eventually(async () => !(await paletteOpen()), 'palette closed');
-            }
+          } finally {
+            // Leave no modal open for the checks that follow, pass or fail.
+            await js('(() => { const d = document.querySelector("dialog[data-oui-palette]"); if (d.open) d.close(); })()');
+            await eventually(async () => !(await paletteOpen()), 'palette closed');
+          }
         });
 
         await check('an HX-Trigger toast appears with its icon and the right live semantics, then auto-dismisses', async () => {

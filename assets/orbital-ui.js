@@ -1040,6 +1040,7 @@
 
         self.open = open;
         self.close = close;
+        self.closing = function () { return !!closing; };
         self.dialog = dialog;
 
         input.addEventListener("input", function () {
@@ -1215,7 +1216,8 @@
             var p = palette();
             if (!p) return;
             e.preventDefault();
-            if (p.dialog.open) p.close();
+            // A press during the close animation reopens it rather than being lost.
+            if (p.dialog.open && !p.closing()) p.close();
             else p.open();
             return;
         }
