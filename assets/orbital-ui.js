@@ -357,7 +357,7 @@
                 var height = Math.min(256, window.innerHeight * 0.4);
                 var below = window.innerHeight - rect.bottom;
                 var up = below < height && rect.top > below;
-                var top = up ? Math.max(8, rect.top - 4 - height) : rect.bottom + 4;
+                var top = up ? Math.max(8, rect.top - 6 - height) : rect.bottom + 6;
                 var left = rect.left;
                 var origin = this.fixedOrigin();
                 if (origin) {

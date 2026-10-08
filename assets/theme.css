@@ -94,7 +94,7 @@
 }
 .ui-button--ai:focus-visible { box-shadow: var(--ui-btn-shadow), var(--oui-focus-ring); }
 
-.ui-button--sm { --ui-btn-h: var(--oui-control-height-sm); padding: 0 0.6875rem; gap: 0.375rem; font-size: var(--oui-text-caption); }
+.ui-button--sm { --ui-btn-h: var(--oui-control-height-sm); padding: 0 0.6875rem; gap: 0.375rem; font-size: var(--oui-button-sm-text, 0.78125rem); }
 .ui-button--lg { --ui-btn-h: var(--oui-control-height-lg); padding: 0 1.25rem; border-radius: 10px; font-size: var(--oui-text-body); }
 .ui-button--lg > svg { width: 1.125rem; height: 1.125rem; }
 .ui-button--icon { width: var(--ui-btn-h); padding: 0; }
@@ -872,8 +872,13 @@ a.ui-feed__title:focus-visible { outline: none; border-radius: var(--oui-radius-
 .ui-menu__header { display: grid; gap: 0.125rem; padding: 0.5rem 0.625rem 0.625rem; }
 .ui-menu__header-title { color: var(--oui-text-primary); font-size: var(--oui-text-body); font-weight: 600; }
 .ui-menu__header-subtitle { color: var(--oui-text-quaternary); font-size: var(--oui-text-label); overflow-wrap: anywhere; }
+/* A quiet single line (an email under an account menu): no title, one muted row. */
+.ui-menu__header--quiet { padding: 0.5rem 0.625rem 0.375rem; }
+.ui-menu__header--quiet .ui-menu__header-subtitle { overflow: hidden; font-size: var(--oui-text-caption); line-height: var(--oui-leading-caption); text-overflow: ellipsis; white-space: nowrap; }
+/* Phone menu rows keep the v1 44px touch height (hosts rely on it); inside
+   AppShell, shell.css keeps desktop heights. --oui-row-touch overrides both. */
 @media (max-width: 42rem) {
-  .ui-menu__item { min-height: 2.75rem; }
+  .ui-menu__item { min-height: var(--oui-row-touch, 2.75rem); }
 }
 @media (prefers-reduced-motion: reduce) { .ui-menu__panel { animation: none; } }
 
@@ -989,7 +994,7 @@ summary.ui-nav__heading:focus-visible .ui-nav__heading-chevron { opacity: 1; }
 .ui-nav__badge--accent { --tone: var(--oui-accent); --tone-ink: var(--oui-accent-ink); --tone-soft: var(--oui-accent-soft); }
 .ui-nav__badge--success { --tone: var(--oui-success); --tone-ink: var(--oui-success-ink); --tone-soft: var(--oui-success-soft); }
 .ui-nav__badge--ai { --tone: var(--oui-ai); --tone-ink: var(--oui-ai-ink); --tone-soft: var(--oui-ai-soft); }
-@media (max-width: 42rem) { .ui-nav__link { min-height: 2.75rem; } }
+@media (max-width: 42rem) { .ui-nav__link { min-height: var(--oui-row-touch, 2.75rem); } }
 
 /* Rail: icons only. Labels stay in the DOM as accessible names (and the link
    keeps its title tooltip); section headings collapse to a hairline divider
@@ -1904,6 +1909,9 @@ a.ui-timeline__title:focus-visible { outline: none; border-radius: var(--oui-rad
 .ui-seg-choice__input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
 .ui-seg-choice__label { display: inline-flex; align-items: center; justify-content: center; gap: 0.375rem; width: 100%; min-height: var(--seg-h); padding: 0 0.75rem; color: var(--oui-text-quaternary); border-radius: var(--oui-radius-sm); font-size: var(--oui-text-label); font-weight: 500; line-height: 1; white-space: nowrap; user-select: none; transition: color var(--oui-dur-1) var(--oui-ease-out); }
 .ui-seg-choice__label svg { width: 0.9375rem; height: 0.9375rem; flex: 0 0 auto; }
+/* The theme switch is icon-only: 16px glyphs in 10px-padded segments. */
+[data-oui-theme-switch] .ui-seg-choice__label { padding: 0 0.625rem; }
+[data-oui-theme-switch] .ui-seg-choice__label svg { width: 1rem; height: 1rem; }
 .ui-seg-choice__item:hover .ui-seg-choice__label { color: var(--oui-text-primary); }
 .ui-seg-choice__input:checked + .ui-seg-choice__label { color: var(--oui-text-primary); }
 .ui-seg-choice__input:disabled + .ui-seg-choice__label { opacity: 0.45; cursor: not-allowed; }

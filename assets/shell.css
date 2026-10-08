@@ -25,8 +25,8 @@
 .ui-shell__sidebar-close {
   display: none;
   place-items: center;
-  width: 2.75rem;
-  height: 2.75rem;
+  width: var(--oui-touch-target);
+  height: var(--oui-touch-target);
   margin-right: -0.5rem;
   color: var(--oui-text-quaternary);
   background: transparent;
@@ -78,8 +78,8 @@
 .ui-topbar__burger {
   display: none;
   place-items: center;
-  width: 2.75rem;
-  height: 2.75rem;
+  width: var(--oui-touch-target);
+  height: var(--oui-touch-target);
   margin-left: -0.75rem;
   color: var(--oui-text-secondary);
   background: transparent;
@@ -92,14 +92,19 @@
 .ui-topbar__burger-icon { width: 1.25rem; height: 1.25rem; }
 .ui-topbar__crumbs { flex: 1 1 auto; min-width: 0; }
 .ui-topbar__actions { display: flex; flex: none; align-items: center; gap: 0.5rem; }
-.ui-topbar .ui-breadcrumbs ol { flex-wrap: nowrap; gap: 0.125rem; }
+.ui-topbar .ui-breadcrumbs ol { flex-wrap: nowrap; gap: 0.375rem; }
+.ui-topbar .ui-breadcrumbs li { gap: 0.375rem; }
+.ui-topbar .ui-breadcrumbs a, .ui-topbar .ui-breadcrumbs [aria-current] { padding: 0; font-weight: 400; }
+.ui-topbar .ui-breadcrumbs [aria-current] { font-weight: 550; }
+.ui-topbar .ui-breadcrumbs a:hover { background: transparent; }
+.ui-topbar .ui-breadcrumbs__sep svg { width: 0.75rem; height: 0.75rem; }
 
 .ui-topbar-search {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
   width: 14.5rem;
-  height: var(--oui-control-height-sm);
+  height: 2rem;
   padding: 0 0.375rem 0 0.625rem;
   color: var(--oui-text-quaternary);
   background: var(--oui-surface-2);
@@ -129,6 +134,7 @@
 .ui-nav--shell { gap: 0; }
 .ui-nav--shell > .ui-nav__section { margin-top: 1.375rem; }
 .ui-nav--shell > .ui-nav__section:first-child { margin-top: 0; }
+.ui-nav--shell .ui-nav__section { gap: 0; }
 .ui-nav--shell .ui-nav__heading { min-height: 0; padding: 0 0.625rem 0.375rem; }
 .ui-nav--shell .ui-nav__link { gap: 0.5625rem; min-height: 2rem; padding-top: 0; padding-bottom: 0; }
 .ui-nav--shell .ui-nav__section:first-child .ui-nav__link { min-height: 2.125rem; }
@@ -188,7 +194,7 @@
 .ui-sidebar-user-menu > .ui-menu__panel { right: 0; left: 0; max-width: none; min-width: 0; }
 /* A ThemeSwitch inside a menu row sits right-aligned beside its label. */
 .ui-menu__row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.125rem 0.375rem 0.25rem 0.625rem; }
-.ui-menu__row-label { color: var(--oui-text-quaternary); font-size: var(--oui-text-label); }
+.ui-menu__row-label { color: var(--oui-text-quaternary); font-size: var(--oui-text-micro); font-weight: 600; letter-spacing: 0.06em; line-height: var(--oui-leading-micro); text-transform: uppercase; }
 
 /* ───────────────────────── Command palette ───────────────────────── */
 .ui-palette {
@@ -232,13 +238,16 @@
 .ui-palette__item[aria-selected="true"] .ui-palette__icon:not(.ui-palette__icon--ai):not(.ui-palette__icon--brand):not(.ui-palette__icon--accent) { color: var(--oui-text-primary); }
 .ui-palette__label { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ui-palette__label mark { color: inherit; background: transparent; font-weight: 650; text-decoration: underline; text-decoration-color: var(--oui-ink-4); text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
+.ui-palette__quote { color: var(--oui-text-quaternary); font-weight: 400; }
+.ui-palette__item--promoted a { background: var(--oui-ai-gradient-soft); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--oui-ai) 22%, transparent); }
+.ui-palette__item--promoted[aria-selected="true"] a { background: var(--oui-ai-gradient-soft), var(--oui-surface-3); }
 .ui-palette__hint { flex: none; max-width: 40%; overflow: hidden; color: var(--oui-text-quaternary); font-size: var(--oui-text-caption); text-overflow: ellipsis; white-space: nowrap; }
 .ui-palette__none { padding: 0.875rem 0.625rem 0.625rem; color: var(--oui-text-quaternary); font-size: var(--oui-text-label); line-height: var(--oui-leading-label); }
 .ui-palette__foot { display: flex; flex: none; align-items: center; gap: 1rem; margin: 0; padding: 0.625rem 1rem; color: var(--oui-text-quaternary); box-shadow: 0 -1px 0 var(--oui-line); font-size: var(--oui-text-caption); }
 .ui-palette__tip { display: inline-flex; align-items: center; gap: 0.375rem; }
 .ui-palette[data-busy] .ui-palette__list { opacity: 0.7; }
 @media (max-width: 35rem) { .ui-palette { margin-top: 8vh; } .ui-palette__hint { display: none; } }
-@media (pointer: coarse) { .ui-palette__foot { display: none; } .ui-palette__item a { height: 2.75rem; } }
+@media (pointer: coarse) { .ui-palette__foot { display: none; } .ui-palette__item a { height: var(--oui-row-touch, 2.5rem); } }
 
 /* ───────────────────────── Toasts ───────────────────────── */
 .ui-toasts { position: fixed; z-index: 300; right: 1.25rem; bottom: 1.25rem; display: flex; flex-direction: column; align-items: flex-end; pointer-events: none; }
@@ -250,7 +259,7 @@
   align-items: flex-start;
   gap: 0.625rem;
   width: min(23.75rem, calc(100vw - 2rem));
-  padding: 0.75rem 0.75rem 0.75rem 0.875rem;
+  padding: 0.75rem;
   overflow: hidden;
   color: var(--oui-text-primary);
   background: var(--oui-raised);
@@ -271,7 +280,7 @@
 .ui-toast__icon { display: grid; flex: none; place-items: center; width: 1.5rem; height: 1.5rem; color: var(--tone); background: color-mix(in srgb, var(--tone) 14%, transparent); border-radius: 50%; }
 .ui-toast--ai .ui-toast__icon { background: var(--oui-ai-gradient-soft); }
 .ui-toast__icon svg { width: 0.875rem; height: 0.875rem; }
-.ui-toast__text { flex: 1 1 auto; min-width: 0; padding-top: 0.125rem; }
+.ui-toast__text { flex: 1 1 auto; min-width: 0; }
 .ui-toast__title { margin: 0; color: var(--oui-text-primary); font-size: var(--oui-text-label); font-weight: 600; line-height: 1.25rem; }
 .ui-toast__title:empty { display: none; }
 .ui-toast__msg { margin: 0; color: var(--oui-text-secondary); font-size: var(--oui-text-label); line-height: 1.25rem; overflow-wrap: anywhere; }
@@ -310,15 +319,28 @@
   .ui-shell__sheet { margin: 0; border-radius: 0; box-shadow: none; }
   .ui-topbar { gap: 0.5rem; padding: 0 0.75rem 0 1rem; }
   .ui-topbar__burger { display: grid; }
-  .ui-topbar-search { justify-content: center; width: 2.75rem; height: 2.75rem; padding: 0; background: transparent; box-shadow: none; }
+  /* A compact chip that keeps the desktop surface, ring and radius; the 44px
+     hit area is an invisible ::before so the visual size can stay small. */
+  .ui-topbar-search { position: relative; justify-content: center; flex: none; width: var(--oui-topbar-control); height: var(--oui-topbar-control); padding: 0; }
+  .ui-topbar-search::before { content: ""; position: absolute; inset: min(0px, calc((var(--oui-topbar-control) - var(--oui-touch-target)) / 2)); }
   .ui-topbar-search__text, .ui-topbar-search__kbd { display: none; }
   .ui-topbar-search__icon { width: 1.25rem; height: 1.25rem; }
   .ui-shell__page { padding: 1.25rem 1rem 3rem; }
-  .ui-nav--shell .ui-nav__link { min-height: 2.75rem; }
+  /* Rows keep their desktop heights on phones; a host opts into a uniform
+     taller row with --oui-row-touch (nav, menu and palette rows). */
+  .ui-nav--shell .ui-nav__link { min-height: var(--oui-row-touch, 2rem); }
+  .ui-nav--shell .ui-nav__section:first-child .ui-nav__link { min-height: var(--oui-row-touch, 2.125rem); }
+  .ui-nav--shell .ui-nav__link--dense { min-height: var(--oui-row-touch, 1.875rem); }
+}
+@media (max-width: 42rem) {
+  /* Menus inside the shell (account, New) keep their desktop row height too;
+     theme.css gives menus elsewhere the 44px phone height. */
+  .ui-shell .ui-menu__item { min-height: var(--oui-row-touch, 2rem); }
 }
 @media (max-width: 35rem) {
   .ui-topbar-new__label, .ui-topbar-new__chevron { display: none; }
-  .ui-topbar-new__btn { justify-content: center; width: 2.75rem; padding: 0; }
+  .ui-topbar-new__btn::before { content: ""; position: absolute; inset: min(0px, calc((var(--oui-topbar-control) - var(--oui-touch-target)) / 2)); }
+  .ui-topbar-new__btn { --ui-btn-h: var(--oui-topbar-control); justify-content: center; width: var(--oui-topbar-control); padding: 0; }
   .ui-topbar-new > .ui-menu__panel { right: -0.25rem; }
 }
 

@@ -314,6 +314,12 @@
   --oui-sidebar-width: 17rem;
   --oui-sidebar-width-compact: 4.25rem;
   --oui-topbar-height: 3.5rem;
+  /* Accessible touch target (WCAG 2.5.5) and the visual size of the compact
+     phone topbar controls; the hit area stays --oui-touch-target either way.
+     Phone rows (nav, menu, palette) keep their desktop heights; set
+     --oui-row-touch on a host to give them all one taller min-height. */
+  --oui-touch-target: 2.75rem;
+  --oui-topbar-control: 2.25rem;
   --oui-page-gutter: 2rem;
   --oui-page-measure: 80rem;
   /* PageFrame measures and the vertical rhythm between page sections. */
