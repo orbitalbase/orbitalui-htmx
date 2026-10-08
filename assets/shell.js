@@ -321,8 +321,25 @@
 
         // Enter on a row: a real click on its link (so hx-boost and view
         // transitions still apply), or a hidden form for a POST row.
+        // A cancelable oui:palette-submit event on the dialog, fired before a
+        // row is followed or its form submitted, so the host can show its own
+        // pending state or cancel (preventDefault) the navigation.
+        var following = false;
+        function announce(row) {
+            var ev;
+            var detail = {item: row.item, query: input.value, row: row.el};
+            if (typeof window.CustomEvent === "function") {
+                ev = new CustomEvent("oui:palette-submit", {bubbles: true, cancelable: true, detail: detail});
+            } else {
+                ev = document.createEvent("CustomEvent");
+                ev.initCustomEvent("oui:palette-submit", true, true, detail);
+            }
+            return dialog.dispatchEvent(ev);
+        }
+
         function activate(row) {
             if (!row) return;
+            if (!announce(row)) return;
             var f = row.item.form;
             var action = formTarget(row.item);
             if (action) {
@@ -352,7 +369,8 @@
                 form.submit();
                 return;
             }
-            row.a.click();
+            following = true;
+            try { row.a.click(); } finally { following = false; }
         }
 
         function open() {
@@ -410,6 +428,11 @@
             if (row && formTarget(row.item)) {
                 e.preventDefault();
                 activate(row);
+                return;
+            }
+            // Enter already announced this row; a pointer click announces it here.
+            if (row && !following && !announce(row)) {
+                e.preventDefault();
                 return;
             }
             opener = null;

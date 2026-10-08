@@ -46,7 +46,7 @@ func init() {
 			cell("default", c.SearchField(c.SearchFieldOpts{Placeholder: "Search…"})),
 			cell("with value", c.SearchField(c.SearchFieldOpts{Value: "board resolution", ID: "sf2"})),
 		),
-		group("Suggested tag", plain(c.SuggestedTag("")), plain(c.SuggestedTag("From CV"))),
+		group("Suggested tag", plain(c.SuggestedTag("")), plain(c.SuggestedTag("From CV")), plain(c.SuggestedTagTitled("From CV", "Suggested by your agent"))),
 	)})
 
 	reg := func() url.Values { return url.Values{} }
@@ -57,6 +57,8 @@ func init() {
 			c.ChipGroup([]c.ChipOption{{Value: "a", Label: "Design", Icon: "plus", Selected: true}, {Value: "b", Label: "Engineering", Selected: true}, {Value: "c", Label: "Product"}, {Value: "d", Label: "Sales"}}, c.ChipGroupOpts{Name: "teams", Multiple: true, Legend: "Teams"})),
 		groupStack("ChipGroup, suggested",
 			c.ChipGroup([]c.ChipOption{{Value: "a", Label: "Full-time", Suggested: true}, {Value: "b", Label: "Contract", Suggested: true, Selected: true}, {Value: "c", Label: "Part-time"}}, c.ChipGroupOpts{Name: "kind", Legend: "Contract type"})),
+		groupStack("ChipGroup, tick first and spark last, with help and error",
+			c.ChipGroup([]c.ChipOption{{Value: "a", Label: "Full-time", Suggested: true, Selected: true}, {Value: "b", Label: "Contract", Icon: "plus"}, {Value: "c", Label: "Part-time"}}, c.ChipGroupOpts{Name: "kind2", Legend: "Contract type", Required: true, Help: "Pick the closest match.", Error: "Choose one to continue."})),
 		groupStack("ChipGroup, disabled",
 			c.ChipGroup([]c.ChipOption{{Value: "a", Label: "One", Selected: true}, {Value: "b", Label: "Two"}}, c.ChipGroupOpts{Name: "dis", Legend: "Disabled group", Disabled: true})),
 		group("SegmentedChoice",
@@ -65,6 +67,10 @@ func init() {
 			cell("small, icon only", c.SegmentedChoice([]c.SegChoice{{Value: "l", Label: "Light", Icon: "check", IconOnly: true}, {Value: "s", Label: "System", Icon: "settings", IconOnly: true}, {Value: "d", Label: "Dark", Icon: "close", IconOnly: true}}, "s", c.SegmentedChoiceOpts{Name: "th", AriaLabel: "Theme", Size: "sm"})),
 			cell("with a disabled option", c.SegmentedChoice([]c.SegChoice{{Value: "a", Label: "One"}, {Value: "b", Label: "Two", Disabled: true}, {Value: "c", Label: "Three"}}, "a", c.SegmentedChoiceOpts{Name: "dsg", AriaLabel: "Disabled option"})),
 		),
+		group("SegmentedNav (href-driven, sliding thumb)",
+			cell("3 segments, count", c.SegmentedNav([]c.SegItem{{Label: "Overview", Href: "#o"}, {Label: "Roles", Href: "#r", Active: true, Count: "4"}, {Label: "Notes", Href: "#n"}}, c.SegNavOpts{AriaLabel: "Company"})),
+			cell("icons", c.SegmentedNav([]c.SegItem{{Label: "List", Href: "#l", Icon: "list", Active: true}, {Label: "Board", Href: "#b", Icon: "dashboard"}}, c.SegNavOpts{AriaLabel: "Layout"})),
+		),
 		group("Segmented (links)",
 			cell("active + disabled", c.SegmentedControl([]c.SegOption{{Value: "ar", Label: "AR"}, {Value: "ap", Label: "AP"}, {Value: "x", Label: "Other", Disabled: true}}, "ar", c.SegmentedOpts{Param: "side", BaseHref: "/p", BaseQuery: reg()})),
 		),
@@ -72,6 +78,8 @@ func init() {
 			c.TabBar([]c.Tab{{Value: "", Label: "All", Count: 128}, {Value: "draft", Label: "Draft", Count: 12}, {Value: "posted", Label: "Posted", Count: 1043}, {Value: "void", Label: "Void", Count: 0}}, "draft", c.TabBarOpts{Param: "status", BaseHref: "/j", BaseQuery: reg(), ShowCounts: true})),
 		groupStack("TabBar without counts",
 			c.TabBar([]c.Tab{{Value: "a", Label: "Overview"}, {Value: "b", Label: "Activity"}, {Value: "c", Label: "Settings"}}, "a", c.TabBarOpts{Param: "tab", BaseHref: "/j", BaseQuery: reg()})),
+		groupStack("TabNav (href-driven) with string counts",
+			c.TabNav([]c.TabItem{{Label: "Overview", Href: "#o", Active: true, Count: "12"}, {Label: "Roles", Href: "#r", Count: "99+"}, {Label: "Notes", Href: "#n", Icon: "document"}}, c.TabNavOpts{AriaLabel: "Sections"})),
 		groupStack("FilterChips",
 			c.FilterChips([]c.ChipLink{{Label: "All", Href: "/s"}, {Label: "Filings", Href: "/s?c=f", Value: "f", Count: 4}, {Label: "Notices", Href: "/s?c=n", Value: "n", Count: 11}}, "f", c.FilterChipsOpts{Label: "Filter by category"})),
 	)})

@@ -63,7 +63,7 @@ func TestChipGroup(t *testing.T) {
 		{Value: "c", Label: "Gamma", Disabled: true},
 	}, ChipGroupOpts{Name: "greek", Legend: "Letters"}))
 	want(t, out, `<fieldset class="ui-chip-group">`)
-	want(t, out, `<legend class="ui-chip-group__legend">Letters</legend>`)
+	want(t, out, `<legend class="field-label ui-chip-group__legend">`)
 	want(t, out, `type="radio" name="greek" value="a" checked`)
 	want(t, out, `class="ui-choice-chip is-suggested"`)
 	want(t, out, `ui-choice-chip__spark`)

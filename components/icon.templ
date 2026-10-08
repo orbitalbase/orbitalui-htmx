@@ -12,3 +12,10 @@ templ Icon(name string, class ...string) {
 		<path d={ Path(name) }></path>
 	</svg>
 }
+
+// IconSized renders Icon at an explicit pixel size: 12, 14, 16, 20 or 24
+// (the other values keep Icon's default). The size is a class, ui-icon--16
+// and so on, that wins over a container's default svg size.
+templ IconSized(name string, px int, class ...string) {
+	@Icon(name, iconSizedClass(px, class)...)
+}

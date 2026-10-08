@@ -7,12 +7,16 @@ import (
 	"fmt"
 	"math"
 	"strconv"
+
+	"github.com/a-h/templ"
 )
 
 // RingMeterOpts configures RingMeter.
 //
 //	Value — 0..100; clamped.
 //	Size — pixel size from 32/40/48/56/64/80/96/120 (default 56).
+//	Px — any pixel size from 16 to 320 (Kindred's 28 and 72); wins over Size.
+//	    A size that is not a preset sets --ring-size inline.
 //	Tone — "" reads the primary-action colour; ai draws the arc in the AI
 //	    gradient (brand, AI hue, accent); other tones tint it.
 //	Label — replaces the centre number ("7/9").
@@ -20,6 +24,7 @@ import (
 type RingMeterOpts struct {
 	Value int
 	Size  int
+	Px    int
 	Tone  Tone
 	Label string
 	Name  string
@@ -27,11 +32,31 @@ type RingMeterOpts struct {
 }
 
 func (o RingMeterOpts) size() int {
+	if o.Px > 0 {
+		return min(max(o.Px, 16), 320)
+	}
 	switch o.Size {
 	case 32, 40, 48, 56, 64, 80, 96, 120:
 		return o.Size
 	}
 	return 56
+}
+
+// preset reports whether size() is one of the sized classes in theme.css.
+func (o RingMeterOpts) preset() bool {
+	switch o.size() {
+	case 32, 40, 48, 56, 64, 80, 96, 120:
+		return true
+	}
+	return false
+}
+
+// sizeStyle sets --ring-size for a pixel size without a preset class.
+func (o RingMeterOpts) sizeStyle() templ.SafeCSS {
+	if o.preset() {
+		return ""
+	}
+	return templ.SafeCSS("--ring-size:" + strconv.Itoa(o.size()) + "px")
 }
 
 func (o RingMeterOpts) stroke() float64 {
@@ -72,7 +97,11 @@ func (o RingMeterOpts) class() string {
 	if m := visualTone(o.Tone); m != "" {
 		tone = m
 	}
-	return joinClass("ui-ring", "ui-ring--"+strconv.Itoa(o.size()), "ui-ring--"+tone, o.Class)
+	sz := "ui-ring--px"
+	if o.preset() {
+		sz = "ui-ring--" + strconv.Itoa(o.size())
+	}
+	return joinClass("ui-ring", sz, "ui-ring--"+tone, o.Class)
 }
 
 // gradientID is shared by every AI ring of a size: the definitions are

@@ -53,6 +53,8 @@ const (
 //	    buttons); type/disabled/loading are ignored for anchors.
 //	Icon — icon-set name rendered before the label ("plus", "check", …).
 //	IconRight — put the icon after the label ("arrow-right" on a next step).
+//	TrailingIcon — a second icon after the label, for a leading + trailing
+//	    pair ("plus" … "chevron-down"). With IconRight both sit after the label.
 //	IconOnly — a square icon button: the label is not drawn but becomes the
 //	    accessible name (aria-label and title). Requires Icon and Label.
 //	Block — fill the container's width (forms on a phone, dialog footers).
@@ -65,16 +67,19 @@ type ButtonOpts struct {
 	// IconRight moves Icon after the label; IconOnly draws only the icon and
 	// uses Label as the accessible name; Block fills the container's width.
 	IconRight bool
-	IconOnly  bool
-	Block     bool
-	Type      string // "" (button) | "submit" | "reset"
-	Disabled  bool
-	Loading   bool
-	Name      string // <button name> — payload key
-	Value     string // <button value> — payload value
-	Form      string // associate with a form elsewhere (form attribute)
-	Href      templ.SafeURL
-	Target    string
+	// TrailingIcon is an icon drawn after the label whatever IconRight says,
+	// so a button can carry a leading Icon and a trailing one.
+	TrailingIcon string
+	IconOnly     bool
+	Block        bool
+	Type         string // "" (button) | "submit" | "reset"
+	Disabled     bool
+	Loading      bool
+	Name         string // <button name> — payload key
+	Value        string // <button value> — payload value
+	Form         string // associate with a form elsewhere (form attribute)
+	Href         templ.SafeURL
+	Target       string
 
 	// htmx passthrough (empty = attribute omitted).
 	HXGet       string
@@ -153,12 +158,20 @@ func buttonType(t string) string {
 	return "button"
 }
 
-// buttonTrailingIcon renders the icon after the label for IconRight buttons
-// and nothing otherwise. It is a component call rather than a trailing if
-// block so the default markup carries no extra whitespace node.
+// buttonTrailingIcon renders the icons after the label (IconRight's Icon and
+// TrailingIcon) and nothing otherwise. It is a component call rather than a
+// trailing if block so the default markup carries no extra whitespace node.
+// The DOM order is the visual order: .ui-button is a plain flex row.
 func buttonTrailingIcon(o ButtonOpts) templ.Component {
-	if o.Icon == "" || !o.IconRight {
-		return templ.NopComponent
+	right := o.Icon != "" && o.IconRight
+	trailing := o.TrailingIcon != "" && !o.IconOnly
+	switch {
+	case right && trailing:
+		return templ.Join(Icon(o.Icon), Icon(o.TrailingIcon))
+	case right:
+		return Icon(o.Icon)
+	case trailing:
+		return Icon(o.TrailingIcon)
 	}
-	return Icon(o.Icon)
+	return templ.NopComponent
 }

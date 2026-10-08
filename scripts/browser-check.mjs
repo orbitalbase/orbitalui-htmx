@@ -711,6 +711,167 @@ async function runVariant(name, path, {full = true, host = false} = {}) {
             expect(await js('document.querySelector("#echo-token").textContent') === 't0k', 'the other form fields were lost');
         });
 
+        await check('a palette row announces oui:palette-submit (item, query, row) before it is followed, and a handler can cancel it', async () => {
+            await openShell();
+            await js('window.__ps = []; document.querySelector("dialog[data-oui-palette]").addEventListener("oui:palette-submit", e => { window.__ps.push({label: e.detail.item.label, query: e.detail.query, row: e.detail.row && e.detail.row.getAttribute("role"), cancelable: e.cancelable, path: location.pathname}); if (window.__psCancel) e.preventDefault(); });');
+            await js('window.__psCancel = true');
+            await chord('k', 'KeyK', 75, 2);
+            await eventually(paletteOpen, 'palette open');
+            await type('rep');
+            await eventually(() => js('document.querySelectorAll("#command-palette-list [role=option]").length === 2'), 'two rows');
+            await key('Enter', 'Enter', 13);
+            await sleep(250);
+            const cancelled = await js('({ps: window.__ps, path: location.pathname, open: document.querySelector("dialog[data-oui-palette]").open})');
+            expect(cancelled.ps.length === 1 && cancelled.ps[0].label === 'Reports' && cancelled.ps[0].query === 'rep' && cancelled.ps[0].row === 'option' && cancelled.ps[0].cancelable, `event detail: ${JSON.stringify(cancelled)}`);
+            expect(cancelled.path === '/shell' && cancelled.open, `a cancelled Enter still followed the row: ${JSON.stringify(cancelled)}`);
+            // A pointer click is announced too, once, and cancels the same way.
+            await js('window.__ps.length = 0');
+            await click('#command-palette-opt-0');
+            await sleep(250);
+            const clicked = await js('({n: window.__ps.length, label: window.__ps[0] && window.__ps[0].label, path: location.pathname, open: document.querySelector("dialog[data-oui-palette]").open})');
+            expect(clicked.n === 1 && clicked.label === 'Reports' && clicked.path === '/shell' && clicked.open, `cancelled click: ${JSON.stringify(clicked)}`);
+            // Not cancelled: the event fires once and the row is followed.
+            await js('window.__psCancel = false; window.__ps.length = 0; document.getElementById("command-palette-input").focus()');
+            await key('ArrowDown', 'ArrowDown', 40);
+            await key('Enter', 'Enter', 13);
+            await eventually(() => js('location.pathname === "/shell/target" && location.search === "?to=archive"'), 'navigation after an uncancelled event');
+        });
+
+        await check('oui:palette-submit also precedes a form row, and cancelling it stops the post', async () => {
+            await openShell();
+            await js('window.__ps = []; window.__psCancel = true; document.querySelector("dialog[data-oui-palette]").addEventListener("oui:palette-submit", e => { window.__ps.push({label: e.detail.item.label, query: e.detail.query}); if (window.__psCancel) e.preventDefault(); });');
+            await chord('k', 'KeyK', 75, 2);
+            await eventually(paletteOpen, 'palette open');
+            await type('ask the board');
+            await eventually(() => js('[...document.querySelectorAll("#command-palette-list [role=option]")].some(e => e.textContent.includes("Ask agent"))'), 'the Ask agent row');
+            await key('Enter', 'Enter', 13);
+            await sleep(300);
+            const held = await js('({ps: window.__ps, path: location.pathname, form: !!document.querySelector("dialog[data-oui-palette] form")})');
+            expect(held.ps.length === 1 && held.ps[0].label.startsWith('Ask agent') && held.ps[0].query === 'ask the board', `form row event: ${JSON.stringify(held)}`);
+            expect(held.path === '/shell' && !held.form, `a cancelled form row still submitted: ${JSON.stringify(held)}`);
+            await js('window.__psCancel = false');
+            await key('Enter', 'Enter', 13);
+            await eventually(() => js('!!document.querySelector("#echo")'), 'the echo page after an uncancelled form row');
+        });
+
+        // ── kit parity: icon placement, avatars, orb, cards, data, ring, chips, segments, tabs, fields ──
+        const kitPath = '/kit' + (path.includes('csp=1') ? '?csp=1' : host ? '?host=1' : '');
+        const openKit = async () => {
+            await b.resize(1280);
+            await b.send('Page.navigate', {url: base + kitPath});
+            await eventually(() => js('!!document.querySelector("#k-name")'), 'the kit page');
+        };
+        await openKit();
+        const rect = sel => js(`(() => { const r = document.querySelector(${JSON.stringify(sel)}).getBoundingClientRect(); return {x: r.left, y: r.top, w: r.width, h: r.height, r: r.right, b: r.bottom}; })()`);
+
+        await check('Button IconRight draws the icon after the label; TrailingIcon pairs with a leading icon', async () => {
+            const o = await js(`(() => { const x = el => el.getBoundingClientRect().left; const f = i => { const bt = document.querySelectorAll("#k-buttons .ui-button")[i]; const svgs = [...bt.querySelectorAll("svg")]; return {svgs: svgs.map(x), label: x(bt.querySelector("span"))}; }; return [f(0), f(1), f(2)]; })()`);
+            expect(o[0].svgs.length === 1 && o[0].svgs[0] > o[0].label, `IconRight icon is not right of the label: ${JSON.stringify(o[0])}`);
+            expect(o[1].svgs.length === 2 && o[1].svgs[0] < o[1].label && o[1].svgs[1] > o[1].label, `leading + trailing pair: ${JSON.stringify(o[1])}`);
+            expect(o[2].svgs[0] < o[2].label, `default leading icon moved: ${JSON.stringify(o[2])}`);
+        });
+
+        await check('Avatar initials follow Kindred\'s font size per avatar size', async () => {
+            const o = await js('[...document.querySelectorAll("#k-avatars .ui-avatar")].map(a => { const cs = getComputedStyle(a); return [Math.round(a.getBoundingClientRect().width), parseFloat(cs.fontSize), cs.letterSpacing]; })');
+            const wantFs = {16: 8, 20: 9, 24: 10.5, 32: 12, 40: 14.5, 56: 20, 72: 26};
+            for (const [size, fs, ls] of o) {
+                expect(wantFs[size] === fs, `avatar ${size}px has font-size ${fs}, want ${wantFs[size]}`);
+                if (size === 72) expect(Math.abs(parseFloat(ls) + 0.52) < 0.02, `72px letter-spacing ${ls}, want -0.02em`);
+            }
+        });
+
+        await check('the orb keeps its brand colours in dark mode (--oui-orb-a/-b/-c are not redefined)', async () => {
+            const read = () => js('(() => { const cs = getComputedStyle(document.documentElement); const core = getComputedStyle(document.querySelector("#k-orb .ui-orb__core"), "::before").backgroundImage; return {a: cs.getPropertyValue("--oui-orb-a").trim(), b: cs.getPropertyValue("--oui-orb-b").trim(), c: cs.getPropertyValue("--oui-orb-c").trim(), brand: cs.getPropertyValue("--oui-brand").trim(), core}; })()');
+            await js('OrbitalTheme.setPreference("light")');
+            const light = await read();
+            await js('OrbitalTheme.setPreference("dark")');
+            const dark = await read();
+            expect(dark.a === light.a && dark.b === light.b && dark.c === light.c, `orb tokens changed in dark: ${JSON.stringify([light, dark])}`);
+            expect(dark.brand !== light.brand, 'dark mode did not change --oui-brand, so the check proves nothing');
+            expect(dark.core.includes('rgb(68, 76, 231)') && !dark.core.includes(dark.brand), `the dark orb swirl is not drawn from the light stops: ${dark.core}`);
+            await js('document.documentElement.style.setProperty("--oui-orb-a", "rgb(1, 2, 3)")');
+            expect((await read()).core.includes('rgb(1, 2, 3)'), 'a host re-point of --oui-orb-a did not reach the orb');
+            await js('document.documentElement.style.removeProperty("--oui-orb-a"); OrbitalTheme.setPreference("light")');
+        });
+
+        await check('Card Padded carries a 20px gutter; Bare has no body wrapper and lets host classes lay out the content', async () => {
+            const o = await js(`(() => { const p = document.querySelector("#k-card-padded"), g = document.querySelector("#k-card-bare"); const ps = getComputedStyle(p), gs = getComputedStyle(g), hs = getComputedStyle(p.querySelector(".ui-card__header")); return {pad: ps.paddingLeft + "/" + ps.paddingTop, headPad: hs.paddingLeft, align: hs.alignItems, body: !!p.querySelector(".ui-card__body"), bareBody: !!g.querySelector(".ui-card__body"), bareDisplay: gs.display, barePad: gs.paddingLeft, direct: g.querySelectorAll(":scope > span").length}; })()`);
+            expect(o.pad === '20px/20px' && o.headPad === '0px' && o.body, `padded card: ${JSON.stringify(o)}`);
+            expect(o.align === 'flex-start', `default header align-items ${o.align}, want flex-start`);
+            await js('document.querySelector("#k-card-padded").style.setProperty("--oui-card-header-align", "center")');
+            const centred = await js('getComputedStyle(document.querySelector("#k-card-padded .ui-card__header")).alignItems');
+            expect(centred === 'center', `--oui-card-header-align: center gave ${centred}`);
+            await js('document.querySelector("#k-card-padded").style.removeProperty("--oui-card-header-align")');
+            expect(!o.bareBody && o.bareDisplay === 'block' && o.barePad === '20px' && o.direct === 2, `bare card: ${JSON.stringify(o)}`);
+            await js('(() => { const s = document.createElement("style"); s.id = "host-s"; s.textContent = ".host-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }"; document.head.appendChild(s); })()');
+            const cols = await js('getComputedStyle(document.querySelector("#k-card-bare")).gridTemplateColumns.split(" ").length');
+            expect(cols === 2, `a host layout class on a Bare card did not apply (${cols} columns)`);
+            await js('document.getElementById("host-s").remove()');
+        });
+
+        await check('DataList rows keep their dt/dd together when a sibling row is taller; cols gaps are 16px / 28px', async () => {
+            const o = await js(`(() => { const rows = [...document.querySelectorAll("#k-dl .ui-dl__row")]; const r0 = rows[0]; const dt = r0.querySelector("dt").getBoundingClientRect(), dd = r0.querySelector("dd").getBoundingClientRect(); const dl = getComputedStyle(document.querySelector("#k-dl dl")); return {gap: dt.bottom - dd.top, rowH: r0.getBoundingClientRect().height, dtH: dt.height, ddH: dd.height, rg: dl.rowGap, cg: dl.columnGap, align: getComputedStyle(r0).alignContent, wide: getComputedStyle(rows[2]).gridColumnStart, dd2: rows[1].querySelectorAll("dd span").length}; })()`);
+            expect(o.align === 'start' || o.align === 'flex-start', `row align-content ${o.align}`);
+            expect(Math.abs(o.gap) <= 4, `dt/dd spread inside a tall row (rows stretch to the tallest, content must not): ${JSON.stringify(o)}`);
+            expect(o.rg === '16px' && o.cg === '28px', `gaps ${o.rg} / ${o.cg}`);
+            expect(o.dd2 === 4, 'DataItem children (rich values) were not rendered inside the dd');
+        });
+
+        await check('RingMeter takes any pixel size and an optional arc glow via --oui-ring-glow', async () => {
+            const a = await rect('#k-ring .ui-ring:nth-child(1)'), s = await rect('#k-ring .ui-ring:nth-child(2)'), p = await rect('#k-ring .ui-ring:nth-child(3)');
+            expect(a.w === 72 && a.h === 72 && s.w === 28 && s.h === 28 && p.w === 64, `ring sizes ${a.w}, ${s.w}, ${p.w}`);
+            expect(await js('getComputedStyle(document.querySelector("#k-ring .ui-ring__arc")).filter') === 'none', 'the arc has a glow by default');
+            await js('document.documentElement.style.setProperty("--oui-ring-glow", "drop-shadow(0 1px 5px rgb(178 75 243 / 0.28))")');
+            expect((await js('getComputedStyle(document.querySelector("#k-ring .ui-ring__arc")).filter')).startsWith('drop-shadow'), '--oui-ring-glow did not apply');
+            await js('document.documentElement.style.removeProperty("--oui-ring-glow")');
+        });
+
+        await check('ChipGroup: tick first, spark last, a field-style legend, help and error, 32px chips', async () => {
+            const o = await js(`(() => { const fs = document.querySelector("fieldset.ui-chip-group"); const body = fs.querySelectorAll(".ui-choice-chip__body")[1]; const x = sel => body.querySelector(sel).getBoundingClientRect().left; const lg = getComputedStyle(fs.querySelector("legend")); return {tick: x(".ui-choice-chip__tick"), label: x(".ui-choice-chip__label"), spark: x(".ui-choice-chip__spark"), sparkTitle: body.querySelector(".ui-choice-chip__spark").title, legendW: lg.fontWeight, legendSize: lg.fontSize, req: !!fs.querySelector("legend .field-label__req"), err: fs.querySelector(".field-error").getAttribute("role"), help: !!fs.querySelector(".field-help"), desc: fs.getAttribute("aria-describedby"), h: body.getBoundingClientRect().height}; })()`);
+            expect(o.label < o.spark, `spark is not after the label: ${JSON.stringify(o)}`);
+            const alpha = await js('(() => { const body = document.querySelectorAll("fieldset.ui-chip-group .ui-choice-chip__body")[0]; const t = body.querySelector(".ui-choice-chip__tick"); return [getComputedStyle(t).display, t.getBoundingClientRect().left < body.querySelector(".ui-choice-chip__label").getBoundingClientRect().left]; })()');
+            expect((alpha[0] === 'inline-flex' || alpha[0] === 'flex') && alpha[1], `a selected chip's tick is not before its label: ${JSON.stringify(alpha)}`);
+            expect(o.sparkTitle === 'Suggested' && o.legendW === '500' && o.legendSize === '13px' && o.req, `legend / spark: ${JSON.stringify(o)}`);
+            expect(o.err === 'alert' && o.help && o.desc === 'k-chip-error k-chip-help', `help / error: ${JSON.stringify(o)}`);
+            expect(o.h === 32, `chip height ${o.h}, want 32`);
+        });
+
+        await check('SegmentedNav slides a thumb to the active segment; TabNav counts follow the active-count tokens', async () => {
+            const nav = await rect('#k-seg .ui-seg-nav');
+            const thumb = () => js('(() => { const n = document.querySelector("#k-seg .ui-seg-nav"); const cs = getComputedStyle(n, "::before"); return {x: new DOMMatrix(cs.transform).m41, w: parseFloat(cs.width), r: cs.borderTopLeftRadius, pad: cs.left}; })()');
+            const t1 = await thumb();
+            const seg = (nav.w - 6) / 3;
+            expect(Math.abs(t1.w - seg) < 1 && Math.abs(t1.x - seg) < 1 && t1.r === '8px' && t1.pad === '3px', `thumb on segment 2: ${JSON.stringify(t1)} (segment ${seg})`);
+            await js('document.querySelector("#k-seg .ui-seg-nav").classList.replace("ui-seg-nav--i1", "ui-seg-nav--i2")');
+            await eventually(async () => Math.abs((await thumb()).x - 2 * seg) < 1, 'the thumb to slide to segment 3');
+            const active = await js('(() => { const a = document.querySelector("#k-tabs a.tab--active"); const after = getComputedStyle(a, "::after"); return {line: after.backgroundColor, ariaCurrent: a.getAttribute("aria-current"), count: getComputedStyle(a.querySelector(".tab__count")).backgroundColor}; })()');
+            expect(active.line !== 'rgba(0, 0, 0, 0)' && active.ariaCurrent === 'page', `active tab: ${JSON.stringify(active)}`);
+            await js('document.documentElement.style.setProperty("--oui-tab-count-active-bg", "rgb(1, 2, 3)")');
+            expect(await js('getComputedStyle(document.querySelector("#k-tabs a.tab--active .tab__count")).backgroundColor') === 'rgb(1, 2, 3)', '--oui-tab-count-active-bg did not reach the active count');
+            expect(await js('getComputedStyle(document.querySelector("#k-tabs a:not(.tab--active) .tab__count")).backgroundColor') !== 'rgb(1, 2, 3)', 'the token leaked to an inactive tab');
+            await js('document.documentElement.style.removeProperty("--oui-tab-count-active-bg")');
+        });
+
+        await check('IconSized sets 12/16/24px; SuggestedTag has a configurable title', async () => {
+            const sizes = await js('[...document.querySelectorAll("#k-icons svg")].map(s => s.getBoundingClientRect().width)');
+            expect(sizes.join() === '12,16,24', `icon sizes ${sizes}`);
+            expect(await js('document.querySelector("#k-field .ui-suggested").title') === 'Suggested by your agent', 'SuggestedTag title');
+        });
+
+        await check('field controls are a box-shadow ring (no layout change); focus takes the action ring, halo and --control-focus-border', async () => {
+            const o = await js(`(() => { const el = document.querySelector("#k-plain"); const cs = getComputedStyle(el); return {h: el.getBoundingClientRect().height, want: parseFloat(cs.minHeight) + (cs.boxSizing === "content-box" ? 2 : 0), bw: cs.borderTopWidth, bc: cs.borderTopColor, sh: cs.boxShadow}; })()`);
+            expect(o.h === o.want && o.bw === '1px' && o.bc === 'rgba(0, 0, 0, 0)', `control metrics: ${JSON.stringify(o)}`);
+            expect(/0px 0px 0px 1px/.test(o.sh) && /0px 1px 1px 0px/.test(o.sh), `ring + elevation: ${o.sh}`);
+            await click('#k-plain');
+            await sleep(250);
+            const f = await js('getComputedStyle(document.querySelector("#k-plain")).boxShadow');
+            expect(/0px 0px 0px 1px/.test(f) && /0px 0px 0px 4px/.test(f), `focus ring + halo: ${f}`);
+            await js('document.documentElement.style.setProperty("--control-focus-border", "rgb(255, 0, 0)")');
+            await sleep(250);
+            expect((await js('getComputedStyle(document.querySelector("#k-plain")).boxShadow')).includes('rgb(255, 0, 0)'), '--control-focus-border no longer drives the focus ring');
+            await js('document.documentElement.style.removeProperty("--control-focus-border")');
+        });
+
         await check('no script errors or CSP violations on the page', async () => {
             expect(b.errors.length === 0, b.errors.join('\n'));
         });

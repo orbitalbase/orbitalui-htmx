@@ -154,6 +154,12 @@
   --oui-ai-soft: var(--oui-ai-50);
   --oui-ai-ink: var(--oui-ai-700);
   --oui-on-ai: #ffffff;
+  /* Orb stops: the LIGHT brand / AI / accent values, deliberately not
+     redefined in dark so the sphere keeps its colour (the semantic tones
+     lighten there and wash it out). Hosts re-point these three. */
+  --oui-orb-a: #444ce7;
+  --oui-orb-b: #7a5af8;
+  --oui-orb-c: #f2661f;
   --oui-ai-gradient: linear-gradient(120deg, var(--oui-brand) 0%, var(--oui-ai) 52%, var(--oui-accent) 100%);
   --oui-ai-gradient-soft: linear-gradient(120deg, var(--oui-brand-soft), var(--oui-ai-soft) 52%, var(--oui-accent-soft));
   /* The quiet AI fill (status, badge, alert): a tint of the AI tone with only

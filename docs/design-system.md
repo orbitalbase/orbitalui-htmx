@@ -169,6 +169,106 @@ sizes 16..72 and Anonymous; `ChecklistWith` compact; `BreadcrumbsWith`
 `SettingsSectionOpts.InCard`; `MenuLabel` and menu `Kbd` hints. Each is shown
 in the gallery.
 
+## Kit parity (v1.7)
+
+The shared defaults carry the quality of Kindred's kit, so a host can render
+its cards, avatars, orbs, empty states, rings, data lists, chips, segments,
+tabs and fields from the shared components. Everything is additive: Go
+signatures are unchanged, markup is byte-identical for options that are not
+set (except where a default below says otherwise), and identity choices are
+tokens whose default is the previous look.
+
+### Defaults that changed (quality choices)
+
+| Component | Was | Now |
+| --- | --- | --- |
+| `Badge` dot | `--ui-tone` fill; hollow ring in `--ui-tone` | `currentColor` fill and hollow ring |
+| `Avatar` initials | `size * 0.38` | per size: 16 to 8px, 20 to 9, 24 to 10.5, 32 to 12, 40 to 14.5, 56 to 20, 72 to 26 (72 also `-0.02em`); `--oui-avatar-fs` overrides |
+| `Button` `IconRight` | icon drawn on the LEFT (template order plus `row-reverse`) | icon drawn on the right; the DOM order is the visual order |
+| `Card` header | `align-items: flex-start`, 2px title gap | `align-items: var(--oui-card-header-align, flex-start)` (unchanged default; Kindred sets `center`), 1px gap; header + `CardSection` top padding 14px |
+| `DescriptionList` | rows stretched dt/dd when a sibling row was taller; `cols-N` gap 16px | `.ui-dl__row { align-content: start }`; `cols-N` gaps 16px row / 28px column |
+| `ChipGroup` | spark first, tick last, legend 13/500 with 8px gap, `--oui-control-height-sm` chips | tick first, spark last (with `title="Suggested"`), legend is a `.field-label`, chips 32px (36px on a coarse pointer, hit area kept at 44px) |
+| Field controls | 1px border, 3px focus halo | a transparent 1px border (same box) plus a ring: `0 0 0 1px --oui-line-2, 0 1px 1px --oui-sh-1`; hover ring `--oui-ink-4`; focus `0 0 0 1px action, 0 0 0 4px focus-halo` |
+| `SuggestedTag` | no title | `title="Suggested"` |
+| Shell | phone crumbs 4px right of Kindred, 20px phone search glyph, 20px nav glyph, 9px New padding | burger `margin-right: -0.25rem`, 16px phone search glyph, nav icon 16px drawn in the 20px box (`padding: 2px`), New `padding-right: 8px` and chevron `margin-left: -1px` |
+
+### Tokens
+
+| Token | Default | Use |
+| --- | --- | --- |
+| `--oui-orb-a/-b/-c` | `#444ce7` / `#7a5af8` / `#f2661f` (the light brand, AI, accent) | the orb's gradient stops; defined once in `tokens.css` and not redefined in dark, so the sphere keeps its colour. Hosts re-point them (Kindred: `#4b3ff5` / `#b24bf3` / `#f2551f`) |
+| `--oui-card-title-family` | `--oui-font-display` | `Card` title face |
+| `--oui-card-header-align` | `flex-start` | `Card` header cross-axis alignment; `center` suits single-line headers (Kindred), top alignment keeps actions beside a wrapping title |
+| `--oui-card-pad` | `1.25rem` | `Padded` card gutter |
+| `--oui-state-title-family` | `--oui-font-display` | `StatePanel` title face |
+| `--oui-ring-glow` | `none` | a `filter` for the ring arc (Kindred: `drop-shadow(0 1px 5px rgb(178 75 243 / 0.28))`) |
+| `--oui-chip-height` / `--oui-chip-height-touch` | `2rem` / `2.25rem` | `ChipGroup` chip height, fine and coarse pointers |
+| `--oui-tab-count-active-bg` / `-fg` | `--oui-action-soft` / `--oui-action-ink` | the count pill on the active `TabNav` / `TabBar` tab and `SegmentedNav` segment (Kindred: ink fill) |
+| `--oui-avatar-fs` | per size | initials font size |
+| `--oui-field-ring` | `0 0 0 1px var(--oui-line-2)` | the resting ring of a field control (the elevation hairline is added after it) |
+| `--control-focus-border` | the action ring colour | still overrides the focus ring colour of `.field-control` |
+
+### New options and components
+
+- `ButtonOpts.TrailingIcon string`: an icon after the label, so a button can
+  carry a leading `Icon` and a trailing one. With `IconRight` both icons sit
+  after the label.
+- `CardOpts.Padded`: the card carries the 20px gutter itself (header, body and
+  footer share it). `CardOpts.Bare`: a block root with no `.ui-card__body`
+  wrapper, so a host's layout classes on the card (`Class`) lay out the
+  content directly. The body wrapper is a flex child inside a flex-column root,
+  which is why host classes used to break; `Bare` removes both. Kindred's plain
+  card is `Bare` plus `Padded`.
+- `DataList(DescriptionListOpts) { children }`, `DataItem(label) { children }`
+  and `DataItemWide(label) { children }`: the composable form of
+  `DescriptionList` for rich values. `DescriptionList` is unchanged.
+- `RingMeterOpts.Px`: any size from 16 to 320px; a size without a preset class
+  sets `--ring-size` in a `style` attribute (the arc itself stays attributes
+  only).
+- `ChipGroupOpts.Required`, `Help` and `Error`: drawn like a field label,
+  `.field-help` and `.field-error` (role alert); the fieldset's
+  `aria-describedby` lists `Name-error` and `Name-help`.
+- `SegmentedNav([]SegItem, SegNavOpts)`: href-driven segments (`Label`, `Href`,
+  `Icon`, `Count string`, `Active`, `Attrs`) with a sliding thumb driven by
+  `--seg-n` / `--seg-i` (set through count and index classes, up to 8
+  segments, a filled active segment beyond that), 3px track padding and an 8px
+  thumb. `TabNav([]TabItem, TabNavOpts)`: the `TabBar` look for plain links,
+  same item fields.
+- `SuggestedTagTitled(label, title)` and `FieldOpts.SuggestedTitle`: the hover
+  title of the tag (default "Suggested").
+- `IconSized(name, px, class...)`: 12, 14, 16, 20 or 24px through
+  `svg.ui-icon--N`, which outranks a container's default svg size. `Icon` is
+  unchanged.
+- Number and money fields keep the mono 13px affix with 6px inner padding
+  (already the shared `FieldInput` Prefix / Suffix).
+
+### Palette submit hook
+
+Before a palette row is followed (Enter or a click) or its form is submitted,
+`shell.js` dispatches a cancelable, bubbling `oui:palette-submit` CustomEvent on
+the dialog:
+
+```js
+dialog.addEventListener("oui:palette-submit", (e) => {
+  // e.detail.item   the row's JSON item (label, href, form, ...)
+  // e.detail.query  the text in the box
+  // e.detail.row    the row's <li role="option">
+  showThinkingOrb(e.detail.query)   // a host's own pending state
+  // e.preventDefault()             // cancel: nothing is followed or posted
+});
+```
+
+The event fires once per activation. A cancelled row keeps the palette open.
+
+### Field controls and focus
+
+`.field-control` and `.field-input` draw their frame as a box-shadow ring and
+keep a 1px transparent border, so the box, padding and text position are
+exactly the old ones; the ring sits 1px outside the box. `controls.css` now
+applies its border and halo treatment to `.oui-control` only (host-native
+controls that keep a real border); `.field-control` reads
+`--control-focus-border` itself in `theme.css`.
+
 ## App shell and runtime contracts (v2 shell)
 
 Files: `assets/shell.css` (frame, topbar, sidebar extras, palette, toasts),

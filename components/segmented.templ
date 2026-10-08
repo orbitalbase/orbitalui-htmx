@@ -43,3 +43,35 @@ templ SegmentedControl(options []SegOption, active string, opts SegmentedOpts) {
 		}
 	</nav>
 }
+
+// SegmentedNav is the href-driven segmented control: each segment is a link
+// to any URL, and a raised thumb slides to the active one (CSS only, driven
+// by the nav's count and index classes). Use SegmentedControl instead when
+// the segments should set one query parameter and keep sibling filters.
+//
+//	@components.SegmentedNav([]components.SegItem{
+//		{Label: "Overview", Href: "/c/1", Active: true},
+//		{Label: "Roles", Href: "/c/1/roles", Count: "4"},
+//	}, components.SegNavOpts{AriaLabel: "Company"})
+templ SegmentedNav(items []SegItem, opts SegNavOpts) {
+	<nav class={ segNavClass(items, opts) } aria-label={ segNavLabel(opts) }>
+		for _, it := range items {
+			<a
+				class={ segNavItemClass(it) }
+				href={ it.Href }
+				if it.Active {
+					aria-current="page"
+				}
+				{ attrsWithoutClass(it.Attrs)... }
+			>
+				if it.Icon != "" {
+					@Icon(it.Icon)
+				}
+				<span class="ui-seg-nav__label">{ it.Label }</span>
+				if it.Count != "" {
+					<span class="ui-seg-nav__count">{ it.Count }</span>
+				}
+			</a>
+		}
+	</nav>
+}

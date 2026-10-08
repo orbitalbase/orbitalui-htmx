@@ -120,7 +120,9 @@ templ Card(opts CardOpts, body templ.Component) {
 				}
 			</header>
 		}
-		if body != nil {
+		if body != nil && opts.Bare {
+			@body
+		} else if body != nil {
 			<div class="ui-card__body">
 				@body
 			</div>

@@ -41,6 +41,38 @@ templ DescriptionList(items []DescriptionItem, opts DescriptionListOpts) {
 	</dl>
 }
 
+// DataList is the composable DescriptionList: the same <dl> and layouts,
+// with the rows given as DataItem children so values can be rich markup
+// (badges, links, avatars, several lines) without building a
+// []DescriptionItem. opts.Placeholder is unused; an item renders what it
+// is given.
+//
+//	@components.DataList(components.DescriptionListOpts{Columns: 2}) {
+//		@components.DataItem("Role") { Staff engineer }
+//		@components.DataItemWide("Status") { @components.Badge(...) }
+//	}
+templ DataList(opts DescriptionListOpts) {
+	<dl class={ descriptionListClass(opts) }>
+		{ children... }
+	</dl>
+}
+
+// DataItem is one label/value row of a DataList; its children are the value.
+templ DataItem(label string) {
+	<div class="ui-dl__row">
+		<dt>{ label }</dt>
+		<dd>{ children... }</dd>
+	</div>
+}
+
+// DataItemWide is a DataItem that spans every column of a multi-column list.
+templ DataItemWide(label string) {
+	<div class="ui-dl__row ui-dl__row--wide">
+		<dt>{ label }</dt>
+		<dd>{ children... }</dd>
+	</div>
+}
+
 templ Avatar(name string, opts AvatarOpts) {
 	<span
 		class={ avatarClass(name, opts) }

@@ -37,6 +37,7 @@ func main() {
 	vendorFS, _ := fs.Sub(vendor, "vendor")
 	mux.Handle("/vendor/", http.StripPrefix("/vendor/", http.FileServerFS(vendorFS)))
 	mux.HandleFunc("GET /{$}", page)
+	mux.HandleFunc("GET /kit", kitPage)
 	mux.HandleFunc("GET /shell", shellPage)
 	mux.HandleFunc("GET /shell/target", shellTarget)
 	mux.HandleFunc("GET /shell/palette", shellPalette)

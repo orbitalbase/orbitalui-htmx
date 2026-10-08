@@ -64,3 +64,67 @@ func segmentedClass(o SegmentedOpts) string {
 	}
 	return "segmented " + o.Class
 }
+
+// SegItem is one segment of a SegmentedNav: a link to any href, so the
+// destination (a page, a tab route, a filtered list) is the caller's.
+//
+//	Label — visible text. Icon — optional icon-set name before it.
+//	Count — optional count pill after it ("12"; a string so "99+" works).
+//	Active — marks the current segment (aria-current="page"); at most one.
+//	Attrs — extra attributes on the link (hx-*, data-*, class).
+type SegItem struct {
+	Label  string
+	Href   templ.SafeURL
+	Icon   string
+	Count  string
+	Active bool
+	Attrs  templ.Attributes
+}
+
+// SegNavOpts configures SegmentedNav.
+//
+//	AriaLabel — the nav's accessible name (default "View").
+//	Class — extra classes on the nav.
+type SegNavOpts struct {
+	AriaLabel string
+	Class     string
+}
+
+// segNavMax is how many segments the sliding thumb supports (one class per
+// count and index in theme.css); a longer nav falls back to a filled active
+// segment with no slide.
+const segNavMax = 8
+
+var (
+	segNavCounts  = [...]string{"ui-seg-nav--n2", "ui-seg-nav--n3", "ui-seg-nav--n4", "ui-seg-nav--n5", "ui-seg-nav--n6", "ui-seg-nav--n7", "ui-seg-nav--n8"}
+	segNavIndexes = [...]string{"ui-seg-nav--i0", "ui-seg-nav--i1", "ui-seg-nav--i2", "ui-seg-nav--i3", "ui-seg-nav--i4", "ui-seg-nav--i5", "ui-seg-nav--i6", "ui-seg-nav--i7"}
+)
+
+func segNavClass(items []SegItem, o SegNavOpts) string {
+	n := len(items)
+	if n < 2 {
+		n = 2
+	}
+	if n > segNavMax {
+		return joinClass("ui-seg-nav", "ui-seg-nav--flow", o.Class)
+	}
+	active := ""
+	for i, it := range items {
+		if it.Active {
+			active = segNavIndexes[i]
+			break
+		}
+	}
+	return joinClass("ui-seg-nav", segNavCounts[n-2], active, o.Class)
+}
+
+func segNavLabel(o SegNavOpts) string {
+	if o.AriaLabel != "" {
+		return o.AriaLabel
+	}
+	return "View"
+}
+
+func segNavItemClass(it SegItem) string {
+	return mergeClass(joinClass("ui-seg-nav__item", ifClass(it.Active, "is-active")), it.Attrs)
+}

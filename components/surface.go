@@ -70,6 +70,11 @@ const (
 //	    no Title needs LinkLabel as the link's accessible name.
 //	Edge — a 2px coloured edge on the left (brand, accent, info, success,
 //	    warning, danger or ai) that marks a side or a state without tinting.
+//	Padded — the card itself carries a 20px gutter (--oui-card-pad) shared by
+//	    header, body and footer, instead of each part padding itself.
+//	Bare — a block root with no .ui-card__body wrapper: the body is drawn
+//	    straight into the card, so a host's layout classes (Class) shape the
+//	    content directly. Combine with Padded for a plain padded surface.
 //	HeadingLevel — 2 (default) or 3, so nested cards keep a sound outline.
 type CardOpts struct {
 	Title        string
@@ -81,6 +86,8 @@ type CardOpts struct {
 	Actions      templ.Component
 	Footer       templ.Component
 	Flush        bool
+	Padded       bool
+	Bare         bool
 	Interactive  bool
 	Href         templ.SafeURL
 	LinkLabel    string
@@ -101,7 +108,7 @@ func cardClass(o CardOpts) string {
 	if o.Edge != "" && o.Edge != ToneNeutral && o.Edge.Valid() {
 		edge = "ui-card--edge ui-card--edge-" + o.Edge.Modifier()
 	}
-	return joinClass("ui-card", tone, edge, modifier(o.Flush, "ui-card--flush"),
+	return joinClass("ui-card", tone, edge, modifier(o.Flush, "ui-card--flush"), modifier(o.Padded, "ui-card--padded"), modifier(o.Bare, "ui-card--bare"),
 		modifier(o.Interactive || o.Href != "", "ui-card--interactive"), modifier(o.Href != "", "ui-card--link"), o.Class)
 }
 

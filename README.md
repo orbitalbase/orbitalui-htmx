@@ -80,6 +80,18 @@ its close button does nothing), so load it whenever those components render. Ful
 - `components.RegisterIcons(map[string]string)` adds host glyphs at init (a registered name overrides a built-in); palette rows may name them in `Icons`. `PaletteForm.QueryField` posts the palette's typed text under that field at submit time. `PaletteItem.Default` / `Promoted` / `QueryLabel` pick the first-selected row, the highlighted look and the "label “typed query”" row.
 - `ChatComposer`, `TypingIndicator`, `StreamingCaret` complete the chat surfaces.
 
+### Kit parity
+
+The shared defaults match Kindred's kit (see `docs/design-system.md`, "Kit
+parity"): `ButtonOpts.TrailingIcon` (and `IconRight` now draws on the right),
+`CardOpts.Padded` and `Bare`, composable `DataList` / `DataItem`,
+`RingMeterOpts.Px` with `--oui-ring-glow`, `ChipGroupOpts.Help` / `Error` /
+`Required`, `SegmentedNav` and `TabNav` (href-driven), `SuggestedTagTitled`,
+`IconSized`, the orb tokens `--oui-orb-a/-b/-c`, `--oui-card-title-family`,
+`--oui-state-title-family`, `--oui-chip-height` and
+`--oui-tab-count-active-bg/-fg`, and a cancelable `oui:palette-submit` event on
+the command palette dialog (`detail.item`, `detail.query`, `detail.row`).
+
 ## Use
 
 ```go
@@ -221,9 +233,11 @@ a visible keyboard focus indicator.
 
 Load the embedded `controls.css` after the host theme to give `FieldInput` and
 the shared `oui-control` input/select/textarea controls a consistent focus
-treatment. The active border changes color without an outer outline; keyboard
-focus uses an additional inset pixel. Invalid fields retain their error color.
-Set `--control-focus-border` to override the focus color, or provide the host's
+treatment. `FieldInput` and the other `.field-control` fields draw a 1px ring
+as a box-shadow (the box keeps its size); focus takes the action color with a
+4px halo, and invalid fields retain their error color. `controls.css` itself
+now styles `.oui-control` only, since `.field-control` is handled in
+`theme.css`. Set `--control-focus-border` to override the focus color, or provide the host's
 `--accent-dark` token. Native controls in the host application should use the
 same treatment, while buttons, links, checkboxes and resize handles keep their
 own visible keyboard focus states.
