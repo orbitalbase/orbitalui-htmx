@@ -17,6 +17,7 @@ var presetFS embed.FS
 const galleryCSS = `
 *, ::before, ::after { box-sizing: border-box; }
 body { margin: 0; background: var(--oui-canvas); color: var(--oui-text-primary); font-family: var(--oui-font-sans); font-size: var(--oui-text-body); line-height: var(--oui-leading-body); }
+.g-card-center { --oui-card-header-align: center; }
 .g-shell { display: grid; grid-template-columns: 13rem minmax(0, 1fr); min-height: 100vh; }
 .g-nav { position: sticky; top: 0; align-self: start; display: grid; gap: 2px; max-height: 100vh; overflow: auto; padding: 1rem 0.75rem; border-right: 1px solid var(--oui-line); font-size: 13px; }
 .g-nav a { padding: 4px 8px; border-radius: 6px; color: var(--oui-text-tertiary); text-decoration: none; }

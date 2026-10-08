@@ -73,6 +73,19 @@
   --oui-action-ring: var(--oui-brand);
   --oui-action-soft: var(--oui-surface-2);
   --oui-action-ink: var(--oui-ink);
+
+  /* Kit parity: Kindred's orb keeps its three brand hexes in both themes,
+     titles are set in the sans face, rings glow, and the active count pill
+     is ink. These are the host re-points the shared tokens exist for. */
+  --oui-orb-a: #4b3ff5;
+  --oui-orb-b: #b24bf3;
+  --oui-orb-c: #f2551f;
+  --oui-card-title-family: var(--oui-font-sans);
+  --oui-card-header-align: center;
+  --oui-state-title-family: var(--oui-font-sans);
+  --oui-ring-glow: drop-shadow(0 1px 5px rgb(178 75 243 / 0.28));
+  --oui-tab-count-active-bg: var(--oui-ink);
+  --oui-tab-count-active-fg: var(--oui-ink-on);
 }
 
 :root[data-theme="dark"] {
