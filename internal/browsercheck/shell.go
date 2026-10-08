@@ -32,6 +32,7 @@ func shellHead(w http.ResponseWriter, r *http.Request, title string) templ.Compo
 		hostScript = `<script src="/vendor/host-runtime.js" defer></script>`
 	}
 	return raw(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>` + title + `</title>
+<meta name="theme-color" content="#ffffff" data-light="#fbfaf8" data-dark="#14130f">
 <script src="/static/theme.js"></script>
 <link rel="stylesheet" href="/static/tokens.css"><link rel="stylesheet" href="/static/motion.css"><link rel="stylesheet" href="/static/controls.css"><link rel="stylesheet" href="/static/theme.css"><link rel="stylesheet" href="/static/shell.css">
 <script src="/vendor/htmx.min.js" defer></script>` + hostScript + `<script src="/static/menu.js" defer></script><script src="/static/orbital-ui.js" defer></script><script src="/static/shell.js" defer></script><script src="` + alpine + `" defer></script>
@@ -50,6 +51,7 @@ func shellPage(w http.ResponseWriter, r *http.Request) {
 	)
 	account := seq(
 		c.MenuHeader("Ada Lovelace", "ada@example.com"),
+		c.MenuRow("Theme", c.ThemeSwitch(c.ThemeSwitchOpts{Name: "account-theme", Size: "sm"})),
 		c.MenuLink("Your profile", "/shell/target?to=profile", c.MenuItemOpts{Icon: "user"}),
 	)
 	shell := c.AppShell(c.AppShellOpts{
@@ -60,7 +62,7 @@ func shellPage(w http.ResponseWriter, r *http.Request) {
 		Actions: seq(
 			c.TopbarSearch(c.TopbarSearchOpts{Placeholder: "Search or ask…"}),
 			c.ThemeSwitch(c.ThemeSwitchOpts{Size: "sm"}),
-			c.TopbarNewMenu(c.TopbarNewMenuOpts{Label: "New"}, c.MenuLink("Document", "/shell/target?to=new", c.MenuItemOpts{Icon: "document"})),
+			c.TopbarNewMenu(c.TopbarNewMenuOpts{Label: "New"}, seq(c.MenuLink("Document", "/shell/target?to=new", c.MenuItemOpts{Icon: "document"}), c.MenuLink("Folder", "/shell/target?to=folder", c.MenuItemOpts{Icon: "folder"}), c.MenuLink("Import", "/shell/target?to=import", c.MenuItemOpts{Icon: "upload"}))),
 		),
 		Overlays: seq(
 			c.CommandPalette(c.CommandPaletteOpts{
@@ -108,6 +110,17 @@ func shellPalette(w http.ResponseWriter, r *http.Request) {
 			c.PaletteItem{Label: "Unsafe form", Href: "javascript:window.__ouiPwned=2", Form: &c.PaletteForm{Action: "javascript:window.__ouiPwned=3"}})
 	}
 	groups := []c.PaletteGroup{}
+	// "ask…" returns a form row that carries the typed query: its Fields
+	// prompt is deliberately stale, QueryField must replace it at submit time.
+	if strings.HasPrefix(q, "ask") {
+		groups = append(groups, c.PaletteGroup{Label: "Actions", Items: []c.PaletteItem{
+			{Label: "Open org", Href: "/shell/target?to=org", Avatar: "Acme Inc", Square: true},
+			{
+				Label: "Ask agent", Href: "/shell/target?to=ask", Default: true, Promoted: true, QueryLabel: true,
+				Form: &c.PaletteForm{Action: "/shell/echo", Fields: map[string]string{"prompt": "stale", "token": "t0k"}, QueryField: "prompt"},
+			},
+		}})
+	}
 	if len(items) > 0 {
 		groups = append(groups, c.PaletteGroup{Label: "Documents", Items: items})
 	}
@@ -129,4 +142,10 @@ func shellToast(w http.ResponseWriter, r *http.Request) {
 	b, _ := json.Marshal(map[string]any{"toast": payload})
 	w.Header().Set("HX-Trigger", string(b))
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// shellEcho shows what a palette form row posted.
+func shellEcho(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	render(w, r, shellHead(w, r, "Echo"), raw(`<main><h1 id="echo">`+templ.EscapeString(r.PostForm.Get("prompt"))+`</h1><p id="echo-token">`+templ.EscapeString(r.PostForm.Get("token"))+`</p></main></body></html>`))
 }

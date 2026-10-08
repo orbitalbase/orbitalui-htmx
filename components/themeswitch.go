@@ -26,12 +26,24 @@ package components
 //	    the runtime can still apply a choice if theme.js was not loaded.
 //	    Default "oui-theme".
 //	AriaLabel — the group's name (default "Color theme").
+//	Name — the radio group's name (default "oui-theme"). Give each switch a
+//	    distinct Name when more than one renders on a page (a topbar and an
+//	    account menu): radios sharing a name outside a form are one group, so
+//	    arrow keys would jump between the switches.
 //	Size — "" or "sm". Class — extra classes.
 type ThemeSwitchOpts struct {
 	StorageKey string
 	AriaLabel  string
+	Name       string
 	Size       string
 	Class      string
+}
+
+func themeName(o ThemeSwitchOpts) string {
+	if o.Name == "" {
+		return "oui-theme"
+	}
+	return o.Name
 }
 
 func themeStorageKey(o ThemeSwitchOpts) string {

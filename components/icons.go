@@ -8,7 +8,10 @@
 // as one family.
 package components
 
-import "strings"
+import (
+	"strings"
+	"sync"
+)
 
 // iconPaths maps icon name → inner SVG markup (one or more path `d`
 // subpaths). Names are stable across phases — the sidebar nav (internal/ui
@@ -113,8 +116,8 @@ var iconPaths = map[string]string{
 	"inbox": "M3.75 12.75 6 5.25h12l2.25 7.5v6H3.75zM3.75 12.75h4.5l1.5 2.25h4.5l1.5-2.25h4.5",
 	// Layers — templates and packages.
 	"layers": "M12 3.75 20.25 8.25 12 12.75 3.75 8.25zM3.75 12.25 12 16.75l8.25-4.5M3.75 16.25 12 20.75l8.25-4.5",
-	// More — an overflow menu.
-	"more": "M6 12h.01M12 12h.01M18 12h.01",
+	// More — an overflow menu: three solid 3px dots (a stroke dot would be too faint).
+	"more": "M5.25 12a.75.75 0 1 0 1.5 0 .75.75 0 1 0-1.5 0M11.25 12a.75.75 0 1 0 1.5 0 .75.75 0 1 0-1.5 0M17.25 12a.75.75 0 1 0 1.5 0 .75.75 0 1 0-1.5 0",
 	// Edit — a pencil.
 	"edit": "M15.75 4.5 19.5 8.25 8.25 19.5H4.5v-3.75zM13.5 6.75l3.75 3.75",
 	// Trash — permanent removal.
@@ -150,6 +153,34 @@ var iconPaths = map[string]string{
 	"circle-check":   "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z M8.5 12.2l2.4 2.4 4.6-4.9",
 	"circle-x":       "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z M9 9l6 6m0-6-6 6",
 	"triangle-alert": "M12 3.5 21.5 20h-19z M12 10v4.5m0 2.5h.01",
+	// Target (concentric rings) and list (bulleted rows).
+	"target": "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10z M12 11a1 1 0 1 0 0 2 1 1 0 0 0 0-2",
+	"list":   "M9 6.5h11M9 12h11M9 17.5h11M4.5 6.5h.01M4.5 12h.01M4.5 17.5h.01",
+}
+
+// hostIcons holds glyphs registered by the host app; lookups consult it
+// before iconPaths.
+var (
+	hostIconsMu sync.RWMutex
+	hostIcons   = map[string]string{}
+)
+
+// RegisterIcons adds host glyphs to the icon set: name → inner SVG path data,
+// the same format as the built-ins (24×24 viewBox, stroke artwork, one or more
+// path `d` subpaths). Call it at init, before serving; it is safe for
+// concurrent use but is not meant for per-request changes. A registered name
+// replaces a built-in of the same name (the host's glyph wins), and a later
+// registration of a name replaces an earlier one. Empty names and empty path
+// data are ignored. Registered icons work anywhere an icon name does,
+// including CommandPaletteOpts.Icons.
+func RegisterIcons(icons map[string]string) {
+	hostIconsMu.Lock()
+	defer hostIconsMu.Unlock()
+	for name, d := range icons {
+		if name != "" && d != "" {
+			hostIcons[name] = d
+		}
+	}
 }
 
 // fallbackIcon is rendered for unknown icon names — a neutral circle so a
@@ -159,6 +190,12 @@ const fallbackIcon = "M18.5 11a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0z"
 // Path returns the SVG path data for name, or the fallback circle when the
 // name is unknown. Exported so tests and later phases can enumerate the set.
 func Path(name string) string {
+	hostIconsMu.RLock()
+	d, ok := hostIcons[name]
+	hostIconsMu.RUnlock()
+	if ok {
+		return d
+	}
 	if d, ok := iconPaths[name]; ok {
 		return d
 	}

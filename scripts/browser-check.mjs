@@ -537,20 +537,20 @@ async function runVariant(name, path, {full = true, host = false} = {}) {
             await openShell();
             expect(await js('window.__themeAtBody') === 'dark', `data-theme was ${await js('window.__themeAtBody')} when <body> appeared`);
             expect(await js('document.documentElement.dataset.themePreference') === 'system', 'preference is not system');
-            expect(await js('document.querySelector("[data-oui-theme-switch] input:checked").value') === 'system', 'switch does not show system');
+            expect(await js('document.querySelector(".ui-topbar [data-oui-theme-switch] input:checked").value') === 'system', 'switch does not show system');
             await b.send('Emulation.setEmulatedMedia', {features: [{name: 'prefers-color-scheme', value: 'light'}]});
             await eventually(() => js('document.documentElement.dataset.theme === "light"'), 'live follow of the system change');
         });
 
         await check('the theme switch applies, persists and survives a reload without a flash', async () => {
-            await click('[data-oui-theme-switch] input[value=dark]');
+            await click('.ui-topbar [data-oui-theme-switch] input[value=dark]');
             await eventually(() => js('document.documentElement.dataset.theme === "dark"'), 'dark theme applied');
             expect(await js('localStorage.getItem("oui-theme")') === 'dark', 'preference not persisted');
             expect(await js('getComputedStyle(document.querySelector(".ui-shell")).backgroundColor') !== await js('(() => { const el = document.createElement("div"); el.style.background = "#f6f7f9"; document.body.append(el); const c = getComputedStyle(el).backgroundColor; el.remove(); return c; })()'), 'the canvas did not change colour');
             await openShell();
             expect(await js('window.__themeAtBody') === 'dark', `reload painted ${await js('window.__themeAtBody')} first`);
-            expect(await js('document.querySelector("[data-oui-theme-switch] input:checked").value') === 'dark', 'switch does not reflect the stored preference');
-            await click('[data-oui-theme-switch] input[value=light]');
+            expect(await js('document.querySelector(".ui-topbar [data-oui-theme-switch] input:checked").value') === 'dark', 'switch does not reflect the stored preference');
+            await click('.ui-topbar [data-oui-theme-switch] input[value=light]');
             await eventually(() => js('document.documentElement.dataset.theme === "light" && localStorage.getItem("oui-theme") === "light"'), 'light pinned');
             await b.send('Emulation.setEmulatedMedia', {features: [{name: 'prefers-color-scheme', value: 'dark'}]});
             await sleep(150);
@@ -578,6 +578,137 @@ async function runVariant(name, path, {full = true, host = false} = {}) {
             await key('Escape', 'Escape', 27);
             await eventually(() => js('document.querySelector("[data-oui-shell]").dataset.navOpen === "false"'), 'Escape to close');
             await b.resize(1280);
+        });
+
+        await check('phone topbar search and New are 36px chips with an invisible 44px hit area', async () => {
+            await b.resize(390, 800);
+            await openShell();
+            const probe = sel => js(`(() => {
+                const el = document.querySelector(${JSON.stringify(sel)});
+                const r = el.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+                const hit = (dx, dy) => { const t = document.elementFromPoint(cx + dx, cy + dy); return !!t && (t === el || el.contains(t)); };
+                const cs = getComputedStyle(el);
+                return {w: r.width, h: r.height, centre: hit(0, 0), edge: hit(20, 20) && hit(-20, -20) && hit(20, -20) && hit(-20, 20), outside: hit(26, 0) || hit(-26, 0) || hit(0, 26) || hit(0, -26), bg: cs.backgroundColor, shadow: cs.boxShadow, radius: cs.borderTopLeftRadius};
+            })()`);
+            const search = await probe('.ui-topbar-search');
+            expect(search.w === 36 && search.h === 36, `search chip is ${search.w}x${search.h}, want 36x36`);
+            expect(search.centre && search.edge, 'search: a point 20px off-centre does not hit it');
+            expect(!search.outside, 'search: the hit area extends beyond 44px');
+            expect(search.bg !== 'rgba(0, 0, 0, 0)' && search.shadow !== 'none' && parseFloat(search.radius) > 0, `search chip lost its surface/ring/radius (${search.bg} | ${search.shadow} | ${search.radius})`);
+            const add = await probe('.ui-topbar-new__btn');
+            expect(add.w === 36 && add.h === 36, `New is ${add.w}x${add.h}, want 36x36`);
+            expect(add.centre && add.edge, 'New: a point 20px off-centre does not hit it');
+            expect(!add.outside, 'New: the hit area extends beyond 44px');
+            // A host-set --oui-topbar-control resizes the chips and keeps the 44px hit area.
+            await js('document.documentElement.style.setProperty("--oui-topbar-control", "2rem")');
+            const small = await probe('.ui-topbar-search');
+            expect(small.w === 32 && small.edge && !small.outside, `32px chip: ${JSON.stringify(small)}`);
+            await js('document.documentElement.style.removeProperty("--oui-topbar-control")');
+            await click('.ui-topbar-search');
+            await eventually(paletteOpen, 'palette to open from a tap 0px off the chip centre');
+            await key('Escape', 'Escape', 27);
+            await eventually(async () => !(await paletteOpen()), 'palette to close');
+        });
+
+        await check('phone nav, menu and palette rows keep their desktop heights unless a host sets --oui-row-touch', async () => {
+            const rowH = () => js('document.querySelector(".ui-nav--shell .ui-nav__link:not(.ui-nav__link--dense)").getBoundingClientRect().height');
+            const heights = () => js('[...document.querySelectorAll(".ui-nav--shell .ui-nav__link")].map(a => Math.round(a.getBoundingClientRect().height))');
+            await click('.ui-topbar__burger');
+            await eventually(() => js('document.querySelector("[data-oui-shell]").dataset.navOpen === "true"'), 'sidebar to open');
+            await eventually(() => js('document.querySelector(".ui-shell__sidebar").getBoundingClientRect().left >= -1'), 'sidebar to slide in');
+            const phone = await heights();
+            expect(phone[0] === 34 && phone[1] === 34, `default phone nav rows are ${phone} (want the desktop 34 for the first section)`);
+            await js('document.documentElement.style.setProperty("--oui-row-touch", "2.75rem")');
+            const touch = await heights();
+            expect(touch.every(h => h === 44), `with --oui-row-touch every nav row should be 44: ${touch}`);
+            await js('document.documentElement.style.removeProperty("--oui-row-touch")');
+            await key('Escape', 'Escape', 27);
+            // Shell menu rows: 32px by default on a phone, uniform with the token.
+            await click('.ui-topbar-new__btn');
+            await eventually(() => js('document.querySelector(".ui-topbar-new").open'), 'New menu to open');
+            await sleep(400); // the panel scales in
+            const menuH = () => js('[...document.querySelectorAll(".ui-topbar-new .ui-menu__item")].map(a => Math.round(a.getBoundingClientRect().height))');
+            expect((await menuH()).every(h => h === 32), `default phone menu rows are ${await menuH()}`);
+            await js('document.documentElement.style.setProperty("--oui-row-touch", "2.75rem")');
+            expect((await menuH()).every(h => h === 44), `tokened menu rows are ${await menuH()}`);
+            await key('Escape', 'Escape', 27);
+            await js('document.documentElement.style.removeProperty("--oui-row-touch")');
+            // Outside AppShell a phone menu row keeps the v1 44px touch height.
+            const looseH = await js('(() => { const a = document.createElement("a"); a.className = "ui-menu__item"; a.href = "#"; a.textContent = "Row"; document.body.append(a); const h = Math.round(a.getBoundingClientRect().height); a.remove(); return h; })()');
+            expect(looseH === 44, `phone menu row outside the shell is ${looseH}, want 44`);
+            // Palette rows: the pointer: coarse rule defaults to the desktop 2.5rem and takes the token.
+            const coarse = await js('[...document.styleSheets].flatMap(sh => { try { return [...sh.cssRules]; } catch (e) { return []; } }).filter(r => r.media && r.media.mediaText.includes("pointer: coarse")).map(r => r.cssText).join(" ")');
+            expect(/\.ui-palette__item a \{[^}]*height: var\(--oui-row-touch, 2\.5rem\)/.test(coarse), `coarse palette rule: ${coarse}`);
+            await b.resize(1280);
+        });
+
+        await check('menus: arrows, Home/End move between items; Escape closes and returns focus to the trigger', async () => {
+            await openShell();
+            const onItem = () => js('document.activeElement.textContent.trim()');
+            await js('document.querySelector(".ui-topbar-new > summary").focus()');
+            await key('ArrowDown', 'ArrowDown', 40);
+            await eventually(() => js('document.querySelector(".ui-topbar-new").open'), 'ArrowDown to open the menu');
+            expect(await onItem() === 'Document', `first item is ${await onItem()}`);
+            await key('ArrowDown', 'ArrowDown', 40);
+            expect(await onItem() === 'Folder', `next item is ${await onItem()}`);
+            await key('End', 'End', 35);
+            expect(await onItem() === 'Import', `End -> ${await onItem()}`);
+            await key('ArrowDown', 'ArrowDown', 40);
+            expect(await onItem() === 'Document', `wrap -> ${await onItem()}`);
+            await key('ArrowUp', 'ArrowUp', 38);
+            expect(await onItem() === 'Import', `ArrowUp wrap -> ${await onItem()}`);
+            await key('Home', 'Home', 36);
+            expect(await onItem() === 'Document', `Home -> ${await onItem()}`);
+            await key('Escape', 'Escape', 27);
+            await eventually(() => js('!document.querySelector(".ui-topbar-new").open'), 'Escape to close');
+            expect(await js('document.activeElement === document.querySelector(".ui-topbar-new > summary")'), `focus is on ${await focused()}, not the trigger`);
+        });
+
+        await check('arrow keys on a ThemeSwitch inside a menu move the radio, not the menu focus', async () => {
+            await openShell();
+            await js('OrbitalTheme.setPreference("system")');
+            await js('document.querySelector(".ui-sidebar-user-menu").setAttribute("open", "")');
+            await js('document.querySelector(".ui-sidebar-user-menu input[name=account-theme][value=system]").focus()');
+            await key('ArrowDown', 'ArrowDown', 40);
+            await eventually(() => js('document.activeElement.name === "account-theme" && document.activeElement.value !== "system" && document.activeElement.checked'), 'the next theme radio to be focused and checked')
+                .catch(async e => { throw new Error(`${e.message}; focus=${await focused()}`); });
+            expect(await js('document.querySelectorAll("input[name=account-theme]").length === 3 && document.querySelectorAll("input[name=oui-theme]").length === 3'), 'the two switches do not have separate radio groups');
+            await js('OrbitalTheme.setPreference("system"); document.querySelector(".ui-sidebar-user-menu").removeAttribute("open")');
+        });
+
+        await check('theme-color meta follows the theme through the data-light / data-dark attributes', async () => {
+            await openShell();
+            const meta = () => js('document.querySelector("meta[name=theme-color]").getAttribute("content")');
+            await js('OrbitalTheme.setPreference("light")');
+            expect(await meta() === '#fbfaf8', `light content is ${await meta()}`);
+            await js('OrbitalTheme.setPreference("dark")');
+            expect(await meta() === '#14130f', `dark content is ${await meta()}`);
+            // Another tab changing the preference arrives as a storage event.
+            await js('localStorage.setItem("oui-theme", "light"); window.dispatchEvent(new StorageEvent("storage", {key: "oui-theme", newValue: "light"}))');
+            expect(await meta() === '#fbfaf8', `cross-tab content is ${await meta()}`);
+            // No data attributes: untouched.
+            await js('(() => { const m = document.createElement("meta"); m.name = "theme-color"; m.content = "#123456"; document.head.appendChild(m); window.__plainMeta = m; })()');
+            await js('OrbitalTheme.setPreference("dark")');
+            expect(await js('window.__plainMeta.getAttribute("content")') === '#123456', 'a theme-color meta without data attributes was changed');
+            await js('localStorage.clear()');
+        });
+
+        await check('a palette form row posts the text in the box, not the last response', async () => {
+            await openShell();
+            await chord('k', 'KeyK', 75, 2);
+            await eventually(paletteOpen, 'palette open');
+            await type('ask');
+            await eventually(() => js('[...document.querySelectorAll("#command-palette-list [role=option]")].some(e => e.textContent.includes("Ask agent"))'), 'the Ask agent row');
+            const ask = await js('(() => { const o = [...document.querySelectorAll("#command-palette-list [role=option]")]; const row = o.find(e => e.textContent.includes("Ask agent")); const org = o.find(e => e.textContent.includes("Open org")); return {selected: row.getAttribute("aria-selected"), index: o.indexOf(row), promoted: row.classList.contains("ui-palette__item--promoted"), text: row.textContent, quoteIn: !!row.querySelector(".ui-palette__quote"), marks: row.querySelectorAll("mark").length, orgAccent: !!org.querySelector(".ui-avatar--accent.ui-avatar--square")}; })()');
+            expect(ask.index === 1 && ask.selected === 'true', `Default row: ${JSON.stringify(ask)}`);
+            expect(ask.promoted && ask.quoteIn && ask.marks === 0 && ask.text.includes('Ask agent “ask”'), `promoted/quote row: ${JSON.stringify(ask)}`);
+            expect(ask.orgAccent, 'a square avatar row did not take the accent tone');
+            // Keep typing and submit inside the debounce window, before the next response.
+            await type(' the board');
+            await key('Enter', 'Enter', 13);
+            await eventually(() => js('!!document.querySelector("#echo")'), 'the echo page');
+            expect(await js('document.querySelector("#echo").textContent') === 'ask the board', `posted ${JSON.stringify(await js('document.querySelector("#echo").textContent'))}`);
+            expect(await js('document.querySelector("#echo-token").textContent') === 't0k', 'the other form fields were lost');
         });
 
         await check('no script errors or CSP violations on the page', async () => {
