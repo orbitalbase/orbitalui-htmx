@@ -3,6 +3,8 @@ package main
 import (
 	"net/http"
 
+	"github.com/a-h/templ"
+
 	c "github.com/orbitalbase/orbitalui-htmx/components"
 )
 
@@ -48,7 +50,43 @@ func kitPage(w http.ResponseWriter, r *http.Request) {
 		raw(`</div><div id="k-field" style="display:grid;gap:12px">`),
 		c.LabelledField("Name", "k-name", c.FieldOpts{Suggested: true, SuggestedTitle: "Suggested by your agent"}, c.FieldInput(c.FieldInputOpts{ID: "k-name", Value: "Ada"})),
 		c.FieldInput(c.FieldInputOpts{ID: "k-plain", Value: "Plain"}),
-		raw(`</div></main></body></html>`),
+		raw(`</div>`),
 	)
-	render(w, r, shellHead(w, r, "Kit parity"), body, dl, rest)
+	render(w, r, shellHead(w, r, "Kit parity"), body, dl, rest, kitFinish(), raw(`</main></body></html>`))
+}
+
+// kitFinish is the markup of the final kit-parity options (field pad token,
+// textarea tokens, suggested shell, chips, bare flex card, data list spans,
+// badge dot, numeric field, icon shrink, state panel tag, select placeholder,
+// field help/error ids, standalone card header, inset ring).
+func kitFinish() templ.Component {
+	finishDL := with(c.DataList(c.DescriptionListOpts{Columns: 2}),
+		with(c.DataItem("A"), raw(`one`)),
+		with(c.DataItem("B"), raw(`two`)),
+		with(c.DataItemWith("Wide", c.DataItemOpts{Wide: true, Field: "wide"}), raw(`spans`)),
+		with(c.DataItemWith("Plain", c.DataItemOpts{Field: "plain"}), raw(`x`)),
+	)
+	barecard := c.Card(c.CardOpts{ID: "kf-bcard", Bare: true, Padded: true, Class: "kf-flex"}, seq(
+		c.CardHeader(c.CardHeaderOpts{Icon: "search", Title: "Standalone", Subtitle: "header", Actions: c.Button("", c.ButtonSizeSM, c.ButtonOpts{Label: "Edit"})}),
+		raw(`<span>a</span><span>b</span>`),
+	))
+	return seq(
+		raw(`<style>.kf-flex { display: flex; }</style><div id="k-finish" style="display:grid;gap:12px">`),
+		c.LabelledField("Suggested icon", "kf-sug", c.FieldOpts{Suggested: true}, c.FieldInput(c.FieldInputOpts{ID: "kf-sug", Icon: "search", Value: "x"})),
+		c.LabelledField("Plain affix", "kf-pad", c.FieldOpts{}, c.FieldInput(c.FieldInputOpts{ID: "kf-pad", Prefix: "$", Value: "1"})),
+		c.FieldInput(c.FieldInputOpts{ID: "kf-bare", Value: "bare"}),
+		c.FieldInput(c.FieldInputOpts{ID: "kf-num", Value: "1,204.50", Numeric: true}),
+		c.FieldInput(c.FieldInputOpts{ID: "kf-numtype", Type: "number", Value: "5"}),
+		c.FieldTextarea(c.FieldTextareaOpts{ID: "kf-ta", Value: "x"}),
+		c.FieldTextarea(c.FieldTextareaOpts{ID: "kf-ta-grow", Value: "x", Autogrow: true}),
+		c.LabelledField("Required select", "kf-sel", c.FieldOpts{Help: "Pick one.", Error: "Required.", ErrorAlert: true}, c.FieldSelect(c.FieldSelectOpts{ID: "kf-sel", Options: []c.SelectOption{{Value: "a", Label: "A"}}, Placeholder: "Choose", PlaceholderDisabled: true, Required: true, AriaDescribedBy: c.FieldDescribedBy("kf-sel", c.FieldOpts{Help: "Pick one.", Error: "Required."})})),
+		c.LabelledField("Calm", "kf-calm", c.FieldOpts{Error: "Bad."}, c.FieldInput(c.FieldInputOpts{ID: "kf-calm"})),
+		c.ChipGroup([]c.ChipOption{{Value: "a", Label: "Alpha", Selected: true, Suggested: true}, {Value: "b", Label: "Beta", Suggested: true}}, c.ChipGroupOpts{Name: "kf-chip", Legend: "Finish", SuggestedTitle: "Suggested by your agent"}),
+		raw(`<div id="kf-dl">`), finishDL, raw(`</div>`),
+		barecard,
+		raw(`<div id="kf-badge">`), c.Badge(c.ToneBrand, "Dot", c.BadgeOpts{Dot: true}), raw(`</div>`),
+		raw(`<div id="kf-iconrow" style="display:flex;width:8px">`), c.Icon("plus"), raw(`</div>`),
+		raw(`<div id="kf-state">`), c.StatePanel("Nothing here", c.StatePanelOpts{TitleTag: "h3"}, nil), raw(`</div>`),
+		raw(`</div>`),
+	)
 }

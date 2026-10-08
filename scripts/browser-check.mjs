@@ -872,6 +872,102 @@ async function runVariant(name, path, {full = true, host = false} = {}) {
             await js('document.documentElement.style.removeProperty("--control-focus-border")');
         });
 
+        // ── kit finish: the last small options and tokens ──
+        const cs = (sel, prop, pseudo) => js(`getComputedStyle(document.querySelector(${JSON.stringify(sel)})${pseudo ? ', ' + JSON.stringify(pseudo) : ''})[${JSON.stringify(prop)}]`);
+        const setVar = (sel, name, val) => js(`document.querySelector(${JSON.stringify(sel)}).style.setProperty(${JSON.stringify(name)}, ${JSON.stringify(val)})`);
+        const clearVar = (sel, name) => js(`document.querySelector(${JSON.stringify(sel)}).style.removeProperty(${JSON.stringify(name)})`);
+
+        await check('--oui-control-pad-x insets field text (default .75rem) and the shell affixes', async () => {
+            expect(await cs('#kf-bare', 'paddingLeft') === '12px', `default pad ${await cs('#kf-bare', 'paddingLeft')}`);
+            await setVar('#k-finish', '--oui-control-pad-x', '11px');
+            const o = await js('(() => { const i = document.querySelector("#kf-bare"), a = document.querySelector("#kf-pad").parentElement.querySelector(".field-input__affix"); return [getComputedStyle(i).paddingLeft, getComputedStyle(i).paddingRight, "", getComputedStyle(a).paddingLeft]; })()');
+            expect(o[0] === '11px' && o[1] === '11px' && o[3] === '11px', `pad-x token: ${JSON.stringify(o)}`);
+            await clearVar('#k-finish', '--oui-control-pad-x');
+        });
+
+        await check('a suggested field with an icon or affix draws one ring (on the shell), not two', async () => {
+            const o = await js('(() => { const i = document.querySelector("#kf-sug"); const shell = i.parentElement; return {shell: getComputedStyle(shell).boxShadow, inner: getComputedStyle(i).boxShadow}; })()');
+            expect(o.inner === 'none' && o.shell !== 'none' && o.shell.includes('0px 0px 0px 1px'), `suggested shell rings: ${JSON.stringify(o)}`);
+            const bare = await js('getComputedStyle(document.querySelector("#k-name")).boxShadow');
+            expect(bare !== 'none', 'a suggested bare control lost its ring');
+        });
+
+        await check('textarea min-height, resize and numeric face come from tokens with unchanged defaults', async () => {
+            expect(await cs('#kf-ta', 'minHeight') === '88px' && await cs('#kf-ta', 'resize') === 'vertical', `textarea defaults ${await cs('#kf-ta', 'minHeight')} / ${await cs('#kf-ta', 'resize')}`);
+            expect(await cs('#kf-ta-grow', 'resize') === 'none', 'autogrow textarea must not resize');
+            await setVar('#k-finish', '--oui-textarea-min-height', '120px');
+            await setVar('#k-finish', '--oui-textarea-resize', 'none');
+            expect(await cs('#kf-ta', 'minHeight') === '120px' && await cs('#kf-ta', 'resize') === 'none', 'textarea tokens did not apply');
+            await clearVar('#k-finish', '--oui-textarea-min-height'); await clearVar('#k-finish', '--oui-textarea-resize');
+            const num = await js('(() => { const a = getComputedStyle(document.querySelector("#kf-num")), b = getComputedStyle(document.querySelector("#kf-numtype")), p = getComputedStyle(document.querySelector("#kf-bare")); return {num: a.fontFamily, numeric: a.fontVariantNumeric, type: b.fontFamily, plain: p.fontFamily}; })()');
+            expect(num.num === num.type && num.num !== num.plain && num.numeric.includes('tabular-nums'), `.num does not win over font: inherit: ${JSON.stringify(num)}`);
+        });
+
+        await check('--oui-control-ring-inset draws the field ring inside; default is outside', async () => {
+            expect(!(await cs('#kf-bare', 'boxShadow')).includes('inset'), 'default ring is inset');
+            await setVar('#k-finish', '--oui-control-ring-inset', 'inset');
+            const o = await js('[getComputedStyle(document.querySelector("#kf-bare")).boxShadow, getComputedStyle(document.querySelector("#kf-sug").parentElement).boxShadow]');
+            expect(o[0].includes('inset') && o[1].includes('inset'), `inset ring: ${JSON.stringify(o)}`);
+            await clearVar('#k-finish', '--oui-control-ring-inset');
+        });
+
+        await check('ChipGroup finish: 12px tick/spark, legend flush, ai spark on a checked chip, ring tokens, spark title', async () => {
+            const o = await js(`(() => { const fs = document.querySelector("fieldset.ui-chip-group[aria-describedby=undefined], fieldset.ui-chip-group:has(input[name=kf-chip])"); const body = fs.querySelector(".ui-choice-chip__body"); const w = sel => body.querySelector(sel + " svg").getBoundingClientRect().width; const checkedSpark = getComputedStyle(body.querySelector(".ui-choice-chip__spark")).color; return {tick: w(".ui-choice-chip__tick"), spark: w(".ui-choice-chip__spark"), legend: getComputedStyle(fs.querySelector("legend")).marginBottom, sparkColor: checkedSpark, chipColor: getComputedStyle(body).color, title: body.querySelector(".ui-choice-chip__spark").title}; })()`);
+            expect(o.tick === 12 && o.spark === 12 && o.legend === '0px', `chip marks: ${JSON.stringify(o)}`);
+            expect(o.sparkColor !== o.chipColor && o.title === 'Suggested by your agent', `checked spark inherits the chip colour / title: ${JSON.stringify(o)}`);
+            const ring = sel => js(`getComputedStyle(document.querySelectorAll("fieldset:has(input[name=kf-chip]) .ui-choice-chip__body")[${sel}]).boxShadow`);
+            const beta = await ring(1);
+            await setVar('#k-finish', '--oui-chip-suggested-ring', 'rgb(1, 2, 3)');
+            await setVar('#k-finish', '--oui-chip-suggested-halo', 'rgb(4, 5, 6)');
+            await sleep(300);
+            const after = [await ring(1), await ring(0)];
+            expect(after[0].includes('rgb(1, 2, 3)') && after[1].includes('rgb(4, 5, 6)') && beta !== after[0], `chip ring tokens: ${beta} -> ${after}`);
+            await clearVar('#k-finish', '--oui-chip-suggested-ring'); await clearVar('#k-finish', '--oui-chip-suggested-halo');
+        });
+
+        await check('DataList wide rows span all columns; DataItem Field renders data-field on the dd', async () => {
+            const o = await js('(() => { const rows = [...document.querySelectorAll("#kf-dl .ui-dl__row")]; const wide = rows[2].getBoundingClientRect(), a = rows[0].getBoundingClientRect(), dl = document.querySelector("#kf-dl dl").getBoundingClientRect(); return {wideW: wide.width, dlW: dl.width, aW: a.width, field: rows[2].querySelector("dd").dataset.field, plain: rows[3].querySelector("dd").dataset.field, none: rows[0].querySelector("dd").hasAttribute("data-field")}; })()');
+            expect(Math.abs(o.wideW - o.dlW) < 1 && o.aW < o.dlW, `wide row does not span the columns: ${JSON.stringify(o)}`);
+            expect(o.field === 'wide' && o.plain === 'plain' && !o.none, `data-field: ${JSON.stringify(o)}`);
+        });
+
+        await check('a Bare card keeps a host display:flex class as a row; padded cards stay columns; CardHeader renders alone', async () => {
+            expect(await cs('#kf-bcard', 'display') === 'flex' && await cs('#kf-bcard', 'flexDirection') === 'row', `bare flex card: ${await cs('#kf-bcard', 'display')} ${await cs('#kf-bcard', 'flexDirection')}`);
+            expect(await cs('#k-card-padded', 'flexDirection') === 'column', 'a normal card lost its column');
+            const h = await js('(() => { const c = document.querySelector("#kf-bcard"); return {hdr: !!c.querySelector(":scope > header.ui-card__header .ui-card__icon"), t: c.querySelector(".ui-card__title").tagName, sub: !!c.querySelector(".ui-card__subtitle"), act: !!c.querySelector(".ui-card__actions .ui-button")}; })()');
+            expect(h.hdr && h.t === 'H2' && h.sub && h.act, `CardHeader: ${JSON.stringify(h)}`);
+        });
+
+        await check('--oui-badge-dot tints a badge dot separately from its text', async () => {
+            expect(await cs('#kf-badge .ui-badge__dot', 'backgroundColor') === await cs('#kf-badge .ui-badge', 'color'), 'the dot no longer follows the badge colour');
+            await setVar('#kf-badge', '--oui-badge-dot', 'rgb(9, 8, 7)');
+            expect(await cs('#kf-badge .ui-badge__dot', 'backgroundColor') === 'rgb(9, 8, 7)', '--oui-badge-dot did not apply');
+            expect(await cs('#kf-badge .ui-badge', 'color') !== 'rgb(9, 8, 7)', 'the token tinted the label');
+            await clearVar('#kf-badge', '--oui-badge-dot');
+        });
+
+        await check('the shared Icon svg does not shrink in a narrow flex row', async () => {
+            expect(await js('document.querySelector("#kf-iconrow svg").getBoundingClientRect().width') === 17, 'the icon shrank');
+        });
+
+        await check('StatePanel TitleTag h3, FieldSelect disabled placeholder, field help id + describedby, opt-in error alert', async () => {
+            const o = await js('(() => { const sel = document.querySelector("#kf-sel"); const f = sel.closest(".field"); const calm = document.querySelector("#kf-calm").closest(".field"); return {tag: document.querySelector("#kf-state .ui-state > *:not(.ui-state__icon)").tagName, dis: sel.options[0].disabled, selected: sel.selectedIndex, helpId: f.querySelector(".field-help").id, desc: sel.getAttribute("aria-describedby"), role: f.querySelector(".field-error").getAttribute("role"), calmRole: calm.querySelector(".field-error").getAttribute("role"), calmHelp: calm.querySelector(".field-help")}; })()');
+            expect(o.tag === 'H3' && o.dis && o.selected === 0, `h3 / disabled placeholder: ${JSON.stringify(o)}`);
+            expect(o.helpId === 'kf-sel-help' && o.desc === 'kf-sel-help kf-sel-error', `help id / describedby: ${JSON.stringify(o)}`);
+            expect(o.role === 'alert' && o.calmRole === null, `error role: ${JSON.stringify(o)}`);
+        });
+
+        await check('--oui-tab-height-phone sets the phone tab height (TabNav included)', async () => {
+            await b.resize(400);
+            await sleep(150);
+            const d = await js('document.querySelector("#k-tabs a").getBoundingClientRect().height');
+            await setVar('#k-tabs', '--oui-tab-height-phone', '3.25rem');
+            const t = await js('document.querySelector("#k-tabs a").getBoundingClientRect().height');
+            await clearVar('#k-tabs', '--oui-tab-height-phone');
+            await b.resize(1280);
+            expect(d === 44 && t === 52, `phone tab height ${d} -> ${t}`);
+        });
+
         await check('no script errors or CSP violations on the page', async () => {
             expect(b.errors.length === 0, b.errors.join('\n'));
         });
