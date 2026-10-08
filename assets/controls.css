@@ -1,14 +1,18 @@
-/* Shared field focus treatment: the control's border takes the action
-   colour and a soft halo (--oui-focus-halo) surrounds it. Applies to library
-   fields and host-native controls that carry .field-control or .oui-control.
-   --control-focus-border remains as an explicit override. */
-:is(.field-control, .oui-control):focus {
+/* Shared focus treatment for host-native controls that carry .oui-control:
+   the border takes the action colour and a soft halo (--oui-focus-halo)
+   surrounds it. --control-focus-border remains as an explicit override.
+   .field-control (FieldInput and friends) draws its ring as a box-shadow in
+   theme.css and reads --control-focus-border there, so it is deliberately
+   not matched here. */
+.oui-control:focus {
   outline: none;
   outline-offset: 0;
   border-color: var(--control-focus-border, var(--oui-action-ring, var(--oui-fg-brand)));
   box-shadow: var(--oui-focus-halo, none);
 }
-:is(.field-control, .oui-control):is([aria-invalid="true"], :user-invalid):focus {
+.oui-control:is([aria-invalid="true"], :user-invalid):focus {
   border-color: var(--oui-danger, var(--oui-error-500));
   box-shadow: var(--oui-ring-error, none);
 }
+/* The browser-detected invalid state on a focused .field-control. */
+.field-control:user-invalid:focus { box-shadow: 0 0 0 1px var(--oui-danger, var(--oui-error-500)), var(--oui-ring-error, none); }
