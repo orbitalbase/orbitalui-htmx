@@ -47,6 +47,32 @@ append reply fragments to the thread; the host owns endpoints, CSRF, authorizati
 conversation context, loading/error recovery, citations and any actual tool calls.
 These components provide a chat interface, not an agent backend.
 
+### App shell, command palette, toasts and theme (v2 shell)
+
+Optional pieces for a full product frame, styled by `assets/shell.css`
+(load after `tokens.css` and `theme.css`) and run by `orbital-ui.js` as plain
+DOM delegation, so they work under Alpine's CSP build and beside a host
+`window.LedgerUI` runtime. Full contracts are in `docs/design-system.md`
+("App shell and runtime contracts").
+
+```go
+@components.AppShell(components.AppShellOpts{
+	Brand:       brand(),                       // logo link slot
+	Sidebar:     nav(),                         // SidebarMenu > SidebarSection > SidebarItem
+	Footer:      components.SidebarUser(components.SidebarUserOpts{Name: "Ada"}, accountMenu()),
+	Breadcrumbs: []components.Crumb{{Label: "Home", Href: "/"}, {Label: "Reports"}},
+	Actions: templ.Join(components.TopbarSearch(components.TopbarSearchOpts{Placeholder: "Search or ask…"}),
+		components.TopbarNewMenu(components.TopbarNewMenuOpts{Label: "New"}, newMenu())),
+	Overlays: overlays(),                       // CommandPalette + ToastRegion
+}, page)
+```
+
+- `AppShell` / `SidebarMenu` / `SidebarSection` / `SidebarItem` / `SidebarUser` / `TopbarSearch` / `TopbarNewMenu` / `MenuRow`: the frame. Sidebar items extend the existing `.ui-nav__*` look (`SidebarNav` stays for data-driven lists).
+- `CommandPalette(CommandPaletteOpts{Endpoint, Groups, ...})`: ⌘K / Ctrl+K dialog fed by static groups and/or a JSON endpoint.
+- `ToastRegion()` + `Toast(ToastOpts)`; `HX-Trigger: {"toast": {...}}` raises one client-side.
+- `ThemeSwitch(ThemeSwitchOpts{StorageKey})` + `assets/theme.js` (pre-paint, external). A light-only app pins `<html data-theme="light">` and skips both.
+- `ChatComposer`, `TypingIndicator`, `StreamingCaret` complete the chat surfaces.
+
 ## Use
 
 ```go
@@ -114,7 +140,10 @@ render every component and state with the shipped CSS (no Tailwind), in four
 token presets: `default`, `dark`, `kindred` and `kindred-dark`
 (`internal/gallery/presets/kindred.css` maps Kindred's brand, accent, AI,
 ink-action, radii and fonts onto `--oui-*`; pass `-kindred-fonts DIR` to copy
-its woff2 files, otherwise system fonts are used).
+its woff2 files, otherwise system fonts are used). Each preset also has
+`shell.html` and `shell-full.html`, whole `AppShell` pages that load the
+runtime (press Ctrl/Cmd K, resize below 900px for the off-canvas sidebar), and
+sections for shell parts, the command palette, toasts and the theme switch.
 
 ## Record inspectors
 
