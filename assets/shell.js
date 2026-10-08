@@ -392,6 +392,10 @@
         dialog.addEventListener("click", function (e) { if (e.target === dialog) close(); });
         dialog.addEventListener("cancel", function (e) { e.preventDefault(); close(); });
         dialog.addEventListener("close", function () {
+            // The close event is queued, not synchronous: after a close and an
+            // immediate reopen it arrives while the dialog is open again, and
+            // must not cancel the new session's pending search or move focus.
+            if (dialog.open) return;
             window.clearTimeout(timer);
             seq++;
             if (controller && controller.abort) controller.abort();

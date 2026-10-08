@@ -332,8 +332,11 @@ async function runVariant(name, path, {full = true, host = false} = {}) {
             });
 
             await check('components swapped in by htmx initialise and work', async () => {
-                await click('#load-swap');
-                await eventually(() => js('!!document.querySelector("#swapped .entity-picker")?._x_dataStack'), 'Alpine on swapped picker');
+                // A programmatic click: the previous picker's list may still be
+                // fading out over the button, and this check is about the swap.
+                await js('document.getElementById("load-swap").click()');
+                await eventually(() => js('!!document.querySelector("#swapped .entity-picker")?._x_dataStack'), 'Alpine on swapped picker')
+                    .catch(async e => { throw new Error(`${e.message}; swapped=${await js('!!document.querySelector("#swapped .entity-picker")')} htmx=${await js('document.querySelectorAll(".htmx-request").length')}`); });
                 await htmxIdle();
                 await click('#swapped-picker');
                 await eventually(() => js('document.querySelectorAll("#swapped-picker-list [role=option]").length === 3'), 'swapped picker options');
@@ -431,6 +434,27 @@ async function runVariant(name, path, {full = true, host = false} = {}) {
             expect(await js('document.querySelector("#command-palette-input").getAttribute("aria-expanded")') === 'false', 'aria-expanded stayed true with no rows');
             await chord('k', 'KeyK', 75, 2);
             await eventually(async () => !(await paletteOpen()), 'palette to close on the second Ctrl+K');
+        });
+
+        await check('a close followed by an immediate reopen keeps the new search alive', async () => {
+            // dialog's close event is queued: it lands after the reopen and the
+            // typed query below, and must not cancel the endpoint search.
+            await js(`(() => {
+                const d = document.querySelector("dialog[data-oui-palette]");
+                if (!d.open) d.showModal();
+                d.close();
+                window.OrbitalShell.openPalette();
+                const input = document.getElementById("command-palette-input");
+                input.value = "rep";
+                input.dispatchEvent(new Event("input", {bubbles: true}));
+            })()`);
+            try {
+                await eventually(() => js('document.querySelectorAll("#command-palette-list [role=option]").length === 2'), 'static + endpoint rows after a fast reopen')
+                    .catch(async e => { throw new Error(`${e.message}; rows=${await js('[...document.querySelectorAll("#command-palette-list li")].map(e => e.textContent).join("|")')}`); });
+            } finally {
+                await js('(() => { const d = document.querySelector("dialog[data-oui-palette]"); if (d.open) d.close(); })()');
+                await eventually(async () => !(await paletteOpen()), 'palette closed');
+            }
         });
 
         await check('palette results never follow javascript: hrefs or form actions', async () => {
