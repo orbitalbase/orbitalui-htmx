@@ -75,7 +75,9 @@ its close button does nothing), so load it whenever those components render. Ful
 - `AppShell` / `SidebarMenu` / `SidebarSection` / `SidebarItem` / `SidebarUser` / `TopbarSearch` / `TopbarNewMenu` / `MenuRow`: the frame. Sidebar items extend the existing `.ui-nav__*` look (`SidebarNav` stays for data-driven lists).
 - `CommandPalette(CommandPaletteOpts{Endpoint, Groups, ...})`: ⌘K / Ctrl+K dialog fed by static groups and/or a JSON endpoint.
 - `ToastRegion()` + `Toast(ToastOpts)`; `HX-Trigger: {"toast": {...}}` raises one client-side.
-- `ThemeSwitch(ThemeSwitchOpts{StorageKey})` + `assets/theme.js` (pre-paint, external). A light-only app pins `<html data-theme="light">` and skips both.
+- `ThemeSwitch(ThemeSwitchOpts{StorageKey})` + `assets/theme.js` (pre-paint, external). A light-only app pins `<html data-theme="light">` and skips both. A `<meta name="theme-color" data-light="…" data-dark="…">` follows the active theme.
+- Touch sizing tokens: `--oui-touch-target` (44px hit area), `--oui-topbar-control` (visual size of the phone search/New chips; the hit area stays 44px), `--oui-row-touch` (one min-height for phone nav, menu and palette rows; unset, rows inside AppShell keep desktop heights and SidebarNav/menu rows elsewhere keep 44px).
+- `components.RegisterIcons(map[string]string)` adds host glyphs at init (a registered name overrides a built-in); palette rows may name them in `Icons`. `PaletteForm.QueryField` posts the palette's typed text under that field at submit time. `PaletteItem.Default` / `Promoted` / `QueryLabel` pick the first-selected row, the highlighted look and the "label “typed query”" row.
 - `ChatComposer`, `TypingIndicator`, `StreamingCaret` complete the chat surfaces.
 
 ## Use

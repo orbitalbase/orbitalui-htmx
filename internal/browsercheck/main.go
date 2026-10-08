@@ -40,6 +40,7 @@ func main() {
 	mux.HandleFunc("GET /shell", shellPage)
 	mux.HandleFunc("GET /shell/target", shellTarget)
 	mux.HandleFunc("GET /shell/palette", shellPalette)
+	mux.HandleFunc("POST /shell/echo", shellEcho)
 	mux.HandleFunc("POST /shell/toast", shellToast)
 	mux.HandleFunc("POST /dialog", dialogSubmit)
 	mux.HandleFunc("GET /drawer", drawerBody)

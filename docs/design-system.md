@@ -73,6 +73,17 @@ Three layers, all declared in `:where(:root)` so any host rule wins:
 5. **Layout** — `--oui-page-measure` / `-narrow` / `-wide`, `--oui-page-gap`,
    `--oui-form-gap-x/y`. Below 42rem, controls (small ones included) grow to
    the 44px touch target.
+6. **Touch sizing** — `--oui-touch-target` (default `2.75rem`, the WCAG 2.5.5
+   minimum) is the hit area of the phone topbar controls and the visual size of
+   the burger and sidebar close; `--oui-topbar-control` (default `2.25rem`) is
+   the *visual* size of the compact phone search chip and New button, which keep
+   their desktop surface, ring and radius. The 44px hit area is an invisible
+   pseudo-element, so shrinking `--oui-topbar-control` never shrinks the target.
+   Inside `AppShell`, phone nav, menu and palette rows keep their desktop
+   heights (they meet WCAG 2.5.8 AA) so the shell keeps one rhythm. Outside
+   it, `SidebarNav` links and menu rows keep the v1 44px phone height. Setting
+   `--oui-row-touch` on a host gives every one of those rows that single
+   `min-height`.
 
 **Rebranding** means re-pointing `--oui-brand-*`. **Bridging** an existing
 application means aliasing its own names to the semantic layer
@@ -239,7 +250,19 @@ older request. The response:
 `href` is required; `icon` names an icon from the set (the dialog ships the
 common ones in a `<template>`; list extras in `Icons`); `avatar` draws initials
 of that name instead of an icon; `form` makes Enter submit a hidden form (a link
-cannot POST; include any CSRF token in `fields`). Static `Groups` use the same
+cannot POST; include any CSRF token in `fields`). `form.queryField` names a
+field that carries the typed query: at submit time the runtime writes the
+input's current text into it (creating the hidden input), so a row such as
+"Ask agent: <typed text>" posts exactly what is in the box even when the last
+endpoint response lags the keystrokes. Host glyphs added with `RegisterIcons`
+(below) can be named in `icon` and listed in `Icons`.
+
+Row options: `default` selects that row when results render (the first one
+wins; otherwise row 0); `promoted` gives it the AI-tinted look; `queryLabel`
+renders the label followed by the typed query as a muted quoted suffix
+(`Ask agent “budget”`, unhighlighted; a static `queryLabel` row is always
+listed first and never filtered out). An avatar row with `square` (an
+organisation) uses the accent tone, others a name-derived hue. Static `Groups` use the same
 keys, are filtered client-side (prefix, word, substring, subsequence) and are
 shown first; endpoint groups follow unfiltered, so the server decides what a
 query matches. A non-2xx or non-JSON response leaves only the static results.
@@ -290,6 +313,28 @@ tabs while the preference is `system`. It exposes `window.OrbitalTheme`
 `SegmentedChoice` (sun, monitor, moon) the runtime keeps in sync; give it the
 same `StorageKey` as the script. If `theme.js` is not loaded the switch still
 stores the choice and applies it after first paint.
+
+Browser UI colour: a `<meta name="theme-color" content="#fbfaf8"
+data-light="#fbfaf8" data-dark="#14130f">` (before the script, or anywhere in
+`<head>`) has its `content` set to the active theme's value on first apply, on
+every change and across tabs. A meta without `data-light` / `data-dark` is left
+alone.
+
+Menus (`Menu`, native `<details>`; `assets/menu.js`): ArrowDown / ArrowUp /
+Home / End move focus between the items (ArrowDown on a closed trigger opens
+it), Escape closes and returns focus to the trigger. `MenuHeader("", email)`
+renders a quiet single muted line; `MenuRow` labels use the uppercase micro
+style.
+
+### Host icons
+
+`components.RegisterIcons(map[string]string{"name": "<path d data>"})` adds
+glyphs to the icon set: same format as the built-ins (24x24 viewBox, stroke
+artwork, `M..` subpaths). Call it at init, before serving; it is guarded by a
+mutex but is not meant for per-request changes. A registered name overrides a
+built-in of the same name (the host's glyph wins) and a later registration
+replaces an earlier one; empty names or path data are ignored. `target` and
+`list` ship in the built-in set.
 
 An app that is light-only (or dark-only) does not load `theme.js`, does not
 render `ThemeSwitch`, and pins the theme in markup: `<html data-theme="light">`.
