@@ -60,7 +60,16 @@ async function startChrome() {
     const profile = await mkdtemp(join(tmpdir(), 'oui-browser-'));
     const chrome = spawn(chromePath(), ['--headless=new', '--no-first-run', '--no-default-browser-check', '--disable-gpu',
         '--remote-debugging-port=0', `--user-data-dir=${profile}`, '--window-size=1280,900', 'about:blank'], {stdio: 'ignore'});
-    const port = await eventually(async () => (await readFile(join(profile, 'DevToolsActivePort'), 'utf8')).split('\n')[0], 'Chrome DevTools port', 15000);
+    let port;
+    try {
+        port = await eventually(async () => (await readFile(join(profile, 'DevToolsActivePort'), 'utf8')).split('\n')[0], 'Chrome DevTools port', 15000);
+    } catch (e) {
+        // A cold CI runner occasionally never writes the port file: clean up so
+        // the caller can retry with a fresh process and profile.
+        chrome.kill();
+        await rm(profile, {recursive: true, force: true}).catch(() => {});
+        throw e;
+    }
     const targets = await eventually(async () => (await fetch(`http://127.0.0.1:${port}/json/list`)).json(), 'Chrome targets');
     const page = targets.find(t => t.type === 'page');
     const ws = new WebSocket(page.webSocketDebuggerUrl);
@@ -110,7 +119,10 @@ const results = [];
 async function runVariant(name, path, {full = true, host = false} = {}) {
     let b;
     try {
-        b = await startChrome();
+        b = await startChrome().catch(e => {
+            console.error(`Chrome did not start (${e.message}); retrying once`);
+            return startChrome();
+        });
     } catch (e) {
         console.error(`could not start Chrome (${chromePath()}): ${e.message}`);
         process.exit(1);
