@@ -3,7 +3,7 @@
  * AppShell frame, sidebar extras, topbar pieces, CommandPalette and toasts.
  * Everything reads --oui-* tokens, so dark mode and host rebrands apply
  * without edits here. Markup: components/shell.templ, palette.templ,
- * toast.templ. Behaviour: orbital-ui.js (burger, scrim, palette, toasts).
+ * toast.templ. Behaviour: shell.js (burger, scrim, palette, toasts).
  * Every animation has a prefers-reduced-motion fallback at the end.
  */
 

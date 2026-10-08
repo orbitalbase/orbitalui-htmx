@@ -64,6 +64,6 @@ func writeShellPage(path string, p preset, full bool) error {
 	if err := shellDemo(full).Render(context.Background(), f); err != nil {
 		return err
 	}
-	io.WriteString(f, `<script src="../assets/menu.js" defer></script><script src="../assets/orbital-ui.js" defer></script></body></html>`)
+	io.WriteString(f, `<script src="../assets/menu.js" defer></script><script src="../assets/orbital-ui.js" defer></script><script src="../assets/shell.js" defer></script></body></html>`)
 	return nil
 }

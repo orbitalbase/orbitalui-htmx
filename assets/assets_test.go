@@ -9,7 +9,7 @@ import (
 // The runtime and every stylesheet ship in Files, so a host serving the
 // embedded assets gets the whole contract.
 func TestFilesShipRuntimeAndStyles(t *testing.T) {
-	for _, name := range []string{"tokens.css", "base.css", "motion.css", "theme.css", "controls.css", "inspector.css", "inspector.js", "menu.js", "orbital-ui.js", "shell.css", "theme.js"} {
+	for _, name := range []string{"tokens.css", "base.css", "motion.css", "theme.css", "controls.css", "inspector.css", "inspector.js", "menu.js", "orbital-ui.js", "shell.js", "shell.css", "theme.js"} {
 		if _, err := fs.Stat(Files, name); err != nil {
 			t.Errorf("%s is not embedded: %v", name, err)
 		}
@@ -57,6 +57,27 @@ func TestRuntimeAdaptsToHostRuntime(t *testing.T) {
 	for _, needle := range []string{"after any host", "alpinejs-csp", "data-oui-picker"} {
 		if !strings.Contains(js, needle) {
 			t.Errorf("the load-order documentation in orbital-ui.js is missing %q", needle)
+		}
+	}
+}
+
+// The shell runtime ships as its own file and the component runtime carries
+// none of it, so a host can take orbital-ui.js without the shell.
+func TestShellRuntimeIsSeparate(t *testing.T) {
+	raw, err := fs.ReadFile(Files, "shell.js")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(raw), "window.OrbitalShell =") {
+		t.Error("shell.js does not define window.OrbitalShell")
+	}
+	raw, err = fs.ReadFile(Files, "orbital-ui.js")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, needle := range []string{"OrbitalShell", "data-toast-stack", "data-oui-palette"} {
+		if strings.Contains(string(raw), needle) {
+			t.Errorf("orbital-ui.js still references %s", needle)
 		}
 	}
 }

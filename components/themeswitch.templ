@@ -1,7 +1,7 @@
 package components
 
 // ThemeSwitch is the sun / monitor / moon control. The server renders
-// "system" checked; orbital-ui.js checks the stored preference on load.
+// "system" checked; shell.js checks the stored preference on load.
 templ ThemeSwitch(opts ThemeSwitchOpts) {
 	@SegmentedChoice([]SegChoice{
 		{Value: "light", Label: "Light", Icon: "sun", IconOnly: true},

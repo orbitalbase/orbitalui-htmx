@@ -50,9 +50,14 @@ These components provide a chat interface, not an agent backend.
 ### App shell, command palette, toasts and theme (v2 shell)
 
 Optional pieces for a full product frame, styled by `assets/shell.css`
-(load after `tokens.css` and `theme.css`) and run by `orbital-ui.js` as plain
+(load after `tokens.css` and `theme.css`) and run by `assets/shell.js` as plain
 DOM delegation, so they work under Alpine's CSP build and beside a host
-`window.LedgerUI` runtime. Full contracts are in `docs/design-system.md`
+`window.LedgerUI` runtime. `shell.js` is independent of `orbital-ui.js` and of
+Alpine (any load order): hosts that bring their own toast or palette system
+load the component runtime alone. Toast, palette, theme-switch and shell
+markup only works when `shell.js` is loaded; server-rendered toasts and the
+ThemeSwitch radios degrade gracefully without it (the toast stays visible and
+its close button does nothing), so load it whenever those components render. Full contracts are in `docs/design-system.md`
 ("App shell and runtime contracts").
 
 ```go
@@ -127,7 +132,10 @@ script). The markup is safe for Alpine's CSP build (`alpinejs-csp`, for
 argument-free handler references only. When the host already provides
 `window.LedgerUI`, `orbital-ui.js` still registers those factories, delegating
 to the host's `dialog()`, `drawer()` and `picker()`, and skips its own click
-delegation. `data-autogrow` textareas use CSS `field-sizing`, with a small
+delegation. `orbital-ui.js` is the component runtime only; the shell runtime
+(sidebar, palette, toasts, ThemeSwitch) is `assets/shell.js` and is loaded
+separately, in any order (`<script src="/static/shell.js" defer>`).
+`data-autogrow` textareas use CSS `field-sizing`, with a small
 fallback in the same file. Other components use native HTML or HTMX attributes
 and need no library-specific JavaScript. `node scripts/browser-check.mjs`
 drives them in headless Chrome against both the standard and the CSP Alpine

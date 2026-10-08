@@ -156,6 +156,10 @@
   --oui-on-ai: #ffffff;
   --oui-ai-gradient: linear-gradient(120deg, var(--oui-brand) 0%, var(--oui-ai) 52%, var(--oui-accent) 100%);
   --oui-ai-gradient-soft: linear-gradient(120deg, var(--oui-brand-soft), var(--oui-ai-soft) 52%, var(--oui-accent-soft));
+  /* The quiet AI fill (status, badge, alert): a tint of the AI tone with only
+     a hint of the brand and accent at the ends. A host that wants the louder
+     look points it at --oui-ai-gradient-soft. */
+  --oui-ai-surface: var(--oui-ai-soft);
   --oui-ai-glow: 0 0 0 1px rgb(122 90 248 / 0.35), 0 0 0 4px rgb(122 90 248 / 0.1), 0 8px 30px -6px rgb(122 90 248 / 0.35);
 
   /* ── Primary action. Buttons, selected chips and segmented thumbs read
@@ -352,6 +356,37 @@
 }
 
 /* ───────── Dark mode. A full flip of the primitives and base semantics. ───────── */
+/* Soft tones follow the host's colours: each -soft tint is a mix of
+   its tone's base colour, so a host overrides --oui-brand (etc.) and the
+   tints, selected chips, nav current item and AI fills follow without a
+   second override. Light mixes the base into --oui-surface at strengths that
+   match the opaque 50-steps above (so a tint on the canvas keeps its pale
+   look); dark mixes into transparent, a little stronger, so tints blend with
+   and read on every dark surface, raised ones included.
+   Browsers without color-mix keep the opaque steps. */
+@supports (color: color-mix(in oklab, black, transparent)) {
+  :where(:root) {
+    --oui-brand-soft: color-mix(in oklab, var(--oui-brand) 8%, var(--oui-surface));
+    --oui-accent-soft: color-mix(in oklab, var(--oui-accent) 8%, var(--oui-surface));
+    --oui-info-soft: color-mix(in oklab, var(--oui-info) 6%, var(--oui-surface));
+    --oui-success-soft: color-mix(in oklab, var(--oui-success) 7%, var(--oui-surface));
+    --oui-warning-soft: color-mix(in oklab, var(--oui-warning) 8%, var(--oui-surface));
+    --oui-danger-soft: color-mix(in oklab, var(--oui-danger) 6%, var(--oui-surface));
+    --oui-ai-soft: color-mix(in oklab, var(--oui-ai) 8%, var(--oui-surface));
+    --oui-ai-surface: linear-gradient(120deg, color-mix(in oklab, var(--oui-brand-soft) 40%, var(--oui-ai-soft)), var(--oui-ai-soft) 52%, color-mix(in oklab, var(--oui-accent-soft) 40%, var(--oui-ai-soft)));
+  }
+  :root[data-theme="dark"] {
+    --oui-brand-soft: color-mix(in oklab, var(--oui-brand) 20%, transparent);
+    --oui-accent-soft: color-mix(in oklab, var(--oui-accent) 18%, transparent);
+    --oui-info-soft: color-mix(in oklab, var(--oui-info) 17%, transparent);
+    --oui-success-soft: color-mix(in oklab, var(--oui-success) 15%, transparent);
+    --oui-warning-soft: color-mix(in oklab, var(--oui-warning) 17%, transparent);
+    --oui-danger-soft: color-mix(in oklab, var(--oui-danger) 15%, transparent);
+    --oui-ai-soft: color-mix(in oklab, var(--oui-ai) 20%, transparent);
+    --oui-ai-surface: linear-gradient(120deg, color-mix(in oklab, var(--oui-brand-soft) 40%, var(--oui-ai-soft)), var(--oui-ai-soft) 52%, color-mix(in oklab, var(--oui-accent-soft) 40%, var(--oui-ai-soft)));
+  }
+}
+
 :root[data-theme="light"] { color-scheme: light; }
 
 :root[data-theme="dark"] {
@@ -579,6 +614,20 @@
     :root:not([data-theme]) {
       --oui-focus-halo-color: color-mix(in srgb, var(--oui-action-ring) 28%, transparent);
     --oui-ai-glow: 0 0 0 1px color-mix(in srgb, var(--oui-ai) 45%, transparent), 0 0 0 4px color-mix(in srgb, var(--oui-ai) 16%, transparent), 0 8px 30px -6px color-mix(in srgb, var(--oui-ai) 45%, transparent);
+    }
+  }
+}
+@media (prefers-color-scheme: dark) {
+  @supports (color: color-mix(in oklab, black, transparent)) {
+    :root:not([data-theme]) {
+      --oui-brand-soft: color-mix(in oklab, var(--oui-brand) 20%, transparent);
+      --oui-accent-soft: color-mix(in oklab, var(--oui-accent) 18%, transparent);
+      --oui-info-soft: color-mix(in oklab, var(--oui-info) 17%, transparent);
+      --oui-success-soft: color-mix(in oklab, var(--oui-success) 15%, transparent);
+      --oui-warning-soft: color-mix(in oklab, var(--oui-warning) 17%, transparent);
+      --oui-danger-soft: color-mix(in oklab, var(--oui-danger) 15%, transparent);
+      --oui-ai-soft: color-mix(in oklab, var(--oui-ai) 20%, transparent);
+      --oui-ai-surface: linear-gradient(120deg, color-mix(in oklab, var(--oui-brand-soft) 40%, var(--oui-ai-soft)), var(--oui-ai-soft) 52%, color-mix(in oklab, var(--oui-accent-soft) 40%, var(--oui-ai-soft)));
     }
   }
 }

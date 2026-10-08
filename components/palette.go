@@ -1,6 +1,6 @@
 // CommandPalette (palette.templ): a host-driven ⌘K / Ctrl+K dialog. The host
 // supplies results either as static Groups, a JSON Endpoint, or both; the
-// runtime in assets/orbital-ui.js owns the dialog, the debounced query, the
+// runtime in assets/shell.js owns the dialog, the debounced query, the
 // grouped listbox, keyboard navigation and focus return.
 //
 // Endpoint contract. The runtime issues
