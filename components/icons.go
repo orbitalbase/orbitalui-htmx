@@ -9,6 +9,7 @@
 package components
 
 import (
+	"strconv"
 	"strings"
 	"sync"
 )
@@ -206,4 +207,14 @@ func Path(name string) string {
 // so templ stays declarative and the class list stays testable.
 func iconClass(class ...string) string {
 	return strings.Join(class, " ")
+}
+
+// iconSizedClass puts the size modifier for px (12, 14, 16, 20, 24) ahead of
+// the caller's classes; any other px adds none.
+func iconSizedClass(px int, class []string) []string {
+	switch px {
+	case 12, 14, 16, 20, 24:
+		return append([]string{"ui-icon--" + strconv.Itoa(px)}, class...)
+	}
+	return class
 }

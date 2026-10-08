@@ -11,12 +11,23 @@ package components
 //		{Value: "onsite", Label: "On-site"},
 //	}, components.ChipGroupOpts{Name: "mode", Legend: "Work mode"})
 templ ChipGroup(options []ChipOption, opts ChipGroupOpts) {
-	<fieldset class={ chipGroupClass(opts) } disabled?={ opts.Disabled }>
+	<fieldset
+		class={ chipGroupClass(opts) }
+		disabled?={ opts.Disabled }
+		if chipGroupDescribedBy(opts) != "" {
+			aria-describedby={ chipGroupDescribedBy(opts) }
+		}
+	>
 		if opts.Legend != "" {
 			if opts.HideLegend {
 				<legend class="visually-hidden">{ opts.Legend }</legend>
 			} else {
-				<legend class="ui-chip-group__legend">{ opts.Legend }</legend>
+				<legend class="field-label ui-chip-group__legend">
+					{ opts.Legend }
+					if opts.Required {
+						<span class="field-label__req" aria-hidden="true">*</span>
+					}
+				</legend>
 			}
 		}
 		<div class="ui-chip-group__list">
@@ -31,18 +42,24 @@ templ ChipGroup(options []ChipOption, opts ChipGroupOpts) {
 						disabled?={ o.Disabled }
 					/>
 					<span class="ui-choice-chip__body">
-						if o.Suggested {
-							<span class="ui-choice-chip__spark" aria-hidden="true">@Icon("ai")</span>
-						}
+						<span class="ui-choice-chip__tick" aria-hidden="true">@Icon("check")</span>
 						if o.Icon != "" {
 							@Icon(o.Icon)
 						}
 						<span class="ui-choice-chip__label">{ o.Label }</span>
-						<span class="ui-choice-chip__tick" aria-hidden="true">@Icon("check")</span>
+						if o.Suggested {
+							<span class="ui-choice-chip__spark" title="Suggested">@Icon("ai")</span>
+						}
 					</span>
 				</label>
 			}
 		</div>
+		if opts.Error != "" {
+			<p class="field-error" id={ FieldErrorID(opts.Name) } role="alert">{ opts.Error }</p>
+		}
+		if opts.Help != "" {
+			<p class="field-help" id={ opts.Name + "-help" }>{ opts.Help }</p>
+		}
 	</fieldset>
 }
 

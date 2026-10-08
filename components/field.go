@@ -19,6 +19,8 @@ type FieldOpts struct {
 	// Suggested marks the value as pre-filled by an assistant: the label row
 	// shows a SuggestedTag and the control takes the AI ring until edited.
 	Suggested bool
+	// SuggestedTitle is the tag's hover title (default "Suggested").
+	SuggestedTitle string
 }
 
 // FieldErrorID returns the stable id of the error paragraph LabelledField
@@ -200,4 +202,12 @@ func fieldSelectClass(o FieldSelectOpts) string {
 // fieldSelectShellClass builds the chevron wrapper classes.
 func fieldSelectShellClass(o FieldSelectOpts) string {
 	return joinClass("field-select", ifClass(o.Invalid, "is-invalid"), ifClass(o.Suggested, "is-suggested"), ifClass(o.Disabled, "is-disabled"))
+}
+
+// suggestedTitle resolves the SuggestedTag hover title.
+func suggestedTitle(t string) string {
+	if t == "" {
+		return "Suggested"
+	}
+	return t
 }

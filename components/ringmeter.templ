@@ -8,7 +8,14 @@ import "strconv"
 // RingMeter renders a role="img" score ring; see RingMeterOpts. The arc draws
 // in with the motion.css animation (reduced-motion safe).
 templ RingMeter(opts RingMeterOpts) {
-	<span class={ opts.class() } role="img" aria-label={ opts.aria() }>
+	<span
+		class={ opts.class() }
+		role="img"
+		aria-label={ opts.aria() }
+		if !opts.preset() {
+			style={ opts.sizeStyle() }
+		}
+	>
 		<svg viewBox={ opts.viewBox() } width={ strconv.Itoa(opts.size()) } height={ strconv.Itoa(opts.size()) } aria-hidden="true" focusable="false">
 			if opts.ai() {
 				<defs>

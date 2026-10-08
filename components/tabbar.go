@@ -76,3 +76,40 @@ func tabListClass(o TabBarOpts) string {
 	}
 	return "tab-bar " + o.Class
 }
+
+// TabItem is one tab of a TabNav: a link to any href.
+//
+//	Label — visible text. Icon — optional icon-set name before it.
+//	Count — optional count pill after the label (a string, so "99+" works).
+//	Active — marks the current tab (aria-current="page"); at most one.
+//	Attrs — extra attributes on the link (hx-*, data-*, class).
+type TabItem struct {
+	Label  string
+	Href   templ.SafeURL
+	Icon   string
+	Count  string
+	Active bool
+	Attrs  templ.Attributes
+}
+
+// TabNavOpts configures TabNav.
+//
+//	AriaLabel — the nav's accessible name (default "Sections").
+//	Class — extra classes on the nav.
+type TabNavOpts struct {
+	AriaLabel string
+	Class     string
+}
+
+func tabNavLabel(o TabNavOpts) string {
+	if o.AriaLabel != "" {
+		return o.AriaLabel
+	}
+	return "Sections"
+}
+
+func tabNavClass(o TabNavOpts) string { return joinClass("tab-bar", o.Class) }
+
+func tabNavItemClass(it TabItem) string {
+	return mergeClass(joinClass("tab", ifClass(it.Active, "tab--active")), it.Attrs)
+}

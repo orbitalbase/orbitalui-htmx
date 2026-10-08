@@ -44,3 +44,34 @@ templ TabBar(tabs []Tab, active string, opts TabBarOpts) {
 		}
 	</nav>
 }
+
+// TabNav is the href-driven tab bar: the TabBar look for tabs that are plain
+// links to any URL (record sections, settings pages). The active tab takes
+// the underline; its count pill follows --oui-tab-count-active-bg / -fg.
+//
+//	@components.TabNav([]components.TabItem{
+//		{Label: "Overview", Href: "/c/1", Active: true},
+//		{Label: "Roles", Href: "/c/1/roles", Count: "4"},
+//	}, components.TabNavOpts{AriaLabel: "Company"})
+templ TabNav(items []TabItem, opts TabNavOpts) {
+	<nav class={ tabNavClass(opts) } aria-label={ tabNavLabel(opts) }>
+		for _, it := range items {
+			<a
+				class={ tabNavItemClass(it) }
+				href={ it.Href }
+				if it.Active {
+					aria-current="page"
+				}
+				{ attrsWithoutClass(it.Attrs)... }
+			>
+				if it.Icon != "" {
+					@Icon(it.Icon)
+				}
+				<span class="tab__label">{ it.Label }</span>
+				if it.Count != "" {
+					<span class="tab__count">{ it.Count }</span>
+				}
+			</a>
+		}
+	</nav>
+}

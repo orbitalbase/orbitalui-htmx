@@ -4,7 +4,11 @@
 // out of the box; the visual state is CSS only (:checked, :has(:checked)).
 package components
 
-import "github.com/a-h/templ"
+import (
+	"strings"
+
+	"github.com/a-h/templ"
+)
 
 // ChipOption is one chip in a ChipGroup.
 type ChipOption struct {
@@ -22,6 +26,12 @@ type ChipOption struct {
 //	Multiple — checkboxes (several chips) instead of radios (one chip).
 //	Legend — the group's accessible name, shown above the chips unless
 //	    HideLegend is set (it is then visually hidden but still announced).
+//	Required — adds the * marker to the legend (display only; radios still
+//	    need a required attribute from the host form to block submission).
+//	Help — a muted hint under the chips. Error — an error under the chips,
+//	    rendered like a field error (role alert) and announced with the group.
+//	    Both are tied to the fieldset with aria-describedby (ids derive from
+//	    Name: Name-help and Name-error).
 //	Disabled — disables every chip.
 //	Class — extra classes on the fieldset.
 type ChipGroupOpts struct {
@@ -29,12 +39,27 @@ type ChipGroupOpts struct {
 	Multiple   bool
 	Legend     string
 	HideLegend bool
+	Required   bool
+	Help       string
+	Error      string
 	Disabled   bool
 	Class      string
 }
 
+// chipGroupDescribedBy lists the ids of the help and error paragraphs.
+func chipGroupDescribedBy(o ChipGroupOpts) string {
+	var ids []string
+	if o.Error != "" {
+		ids = append(ids, FieldErrorID(o.Name))
+	}
+	if o.Help != "" {
+		ids = append(ids, o.Name+"-help")
+	}
+	return strings.Join(ids, " ")
+}
+
 func chipGroupClass(o ChipGroupOpts) string {
-	return joinClass("ui-chip-group", o.Class)
+	return joinClass("ui-chip-group", ifClass(o.Error != "", "has-error"), o.Class)
 }
 
 func chipInputType(o ChipGroupOpts) string {
