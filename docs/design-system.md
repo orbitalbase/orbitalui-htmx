@@ -86,16 +86,16 @@ application means aliasing its own names to the semantic layer
   `--oui-on-{tone}` (text on the solid colour). `ai` also has
   `--oui-ai-gradient`, `--oui-ai-gradient-soft`, `--oui-ai-surface` and
   `--oui-ai-glow`. Components read these, never hex.
-- **Soft-tone contract: override the base tone; soft tints follow.** Each
-  `-soft` tint is a `color-mix(in oklab, ...)` of the tone's base colour, so a
-  host re-points `--oui-brand` (or `--oui-info`, ...) and the tints, selected
-  chips, nav current item and AI fills follow without a second override. In
-  light the base is mixed into `--oui-surface` (about 6-8%, matching the former
-  opaque 50-steps); in dark it is mixed into transparent (about 15-20%) so the
-  tint blends with every dark surface, raised ones included. The mixes resolve
-  on `:root`, so override the base tone there (and under the dark selector for
-  dark). A host that wants a hand-picked tint still sets `--oui-{tone}-soft`
-  directly. Browsers without `color-mix` keep the opaque 50-steps.
+- **Soft-tone contract.** In light, each `-soft` tint is the tone's 50 step,
+  so a host that re-points the primitive scale (`--oui-brand-50`, ...) keeps
+  driving its tints, exactly as before v1.5. In dark, each tint is a
+  `color-mix(in oklab, ...)` of the tone's base colour into transparent (about
+  15-20%), so re-pointing `--oui-brand` (or `--oui-info`, ...) carries the
+  tints, selected chips, nav current item and AI fills, and they blend with
+  every dark surface, raised ones included. The dark mixes resolve on `:root`
+  under the dark selectors, so override the base tone there. A host that wants
+  a hand-picked tint sets `--oui-{tone}-soft` directly in both modes. Browsers
+  without `color-mix` keep the opaque steps.
 - **Quiet AI fill.** `.ui-status--ai`, `.ui-badge--ai` and `.ui-alert--ai`
   paint `--oui-ai-surface`: the AI tint with only a hint of the brand and
   accent at the ends, so the badge reads as a soft tint with the AI ink. A host
