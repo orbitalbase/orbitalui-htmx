@@ -117,6 +117,7 @@ func TestThemeStylesEveryEmittedClass(t *testing.T) {
 		"ui-row--link":            "a.ui-row",
 		"drawer-panel__tool-icon": ".drawer-panel__tool-icon--expand/--contract",
 		"oui-assistant-message":   "layout utilities on the element; body is .oui-assistant-message__body",
+		"oui-theme":               "the default theme storage key and radio name (themeswitch.go), not a class",
 	}
 	library := regexp.MustCompile(`^(ui-|oui-|field|form-|tab|kpi-|pager|table-|ledger-table|search-field|segmented|disclosure|selection-toolbar|beam|amount|mono|drawer|entity-picker|async-region|dependency-panel|record-state-summary|confirm-|th-sort)`)
 

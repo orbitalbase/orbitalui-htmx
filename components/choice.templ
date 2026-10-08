@@ -56,7 +56,7 @@ templ ChipGroup(options []ChipOption, opts ChipGroupOpts) {
 //		{Value: "dark", Label: "Dark", Icon: "moon", IconOnly: true},
 //	}, "light", components.SegmentedChoiceOpts{Name: "theme", AriaLabel: "Theme"})
 templ SegmentedChoice(options []SegChoice, selected string, opts SegmentedChoiceOpts) {
-	<div class={ segChoiceClass(len(options), opts) } role="radiogroup" aria-label={ opts.AriaLabel }>
+	<div class={ segChoiceClass(len(options), opts) } role="radiogroup" aria-label={ opts.AriaLabel } { opts.Attrs... }>
 		for _, o := range options {
 			<label class="ui-seg-choice__item">
 				<input

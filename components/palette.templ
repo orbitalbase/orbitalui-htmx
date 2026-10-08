@@ -1,0 +1,55 @@
+package components
+
+// CommandPalette is the ⌘K dialog (see palette.go for the endpoint contract).
+// Render it once, usually in AppShellOpts.Overlays; TopbarSearch and any
+// element with data-palette-open open it, and so do ⌘K / Ctrl+K.
+//
+// Semantics: a modal <dialog> containing a combobox input that controls a
+// listbox, with aria-activedescendant following the arrow keys and a polite
+// status line announcing the result count. Escape closes it and focus returns
+// to whatever opened it.
+templ CommandPalette(opts CommandPaletteOpts) {
+	<dialog id={ paletteID(opts) } class="ui-palette" aria-label={ paletteLabel(opts) } data-oui-palette { paletteAttrs(opts)... }>
+		<div class="ui-palette__box">
+			<div class="ui-palette__field">
+				@Icon("search", "ui-palette__field-icon")
+				<input
+					id={ paletteID(opts) + "-input" }
+					class="ui-palette__input"
+					type="text"
+					role="combobox"
+					aria-label={ paletteLabel(opts) }
+					aria-expanded="false"
+					aria-controls={ paletteID(opts) + "-list" }
+					aria-autocomplete="list"
+					autocomplete="off"
+					spellcheck="false"
+					placeholder={ palettePlaceholder(opts) }
+					data-palette-input
+				/>
+				<span class="ui-palette__esc" aria-hidden="true">
+					@Kbd("esc")
+				</span>
+			</div>
+			<ul id={ paletteID(opts) + "-list" } class="ui-palette__list" role="listbox" aria-label="Results" data-palette-list></ul>
+			<p class="visually-hidden" role="status" aria-live="polite" data-palette-status></p>
+			<p class="ui-palette__foot" aria-hidden="true">
+				<span class="ui-palette__tip">
+					@KbdGroup("↑", "↓")
+					navigate
+				</span>
+				<span class="ui-palette__tip">
+					@Kbd("↵")
+					open
+				</span>
+			</p>
+			<template data-palette-icons>
+				for _, name := range paletteIcons(opts) {
+					<span data-icon={ name }>
+						@Icon(name)
+					</span>
+				}
+			</template>
+		</div>
+	</dialog>
+}

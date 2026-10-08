@@ -1,0 +1,61 @@
+package components
+
+// ChatComposer is the message box: a raised, rounded surface with an
+// autogrowing textarea, a tools slot and a round send button. Focus lights the
+// AI glow. Enter inside the textarea is left to the host (submit on Enter is a
+// product decision); the send button is a real submit button.
+templ ChatComposer(opts ChatComposerOpts) {
+	<form
+		class={ composerClass(opts) }
+		method={ composerMethod(opts) }
+		if opts.ID != "" {
+			id={ opts.ID }
+		}
+		if opts.Action != "" {
+			action={ opts.Action }
+		}
+		if opts.HXPost != "" {
+			hx-post={ opts.HXPost }
+		}
+		if opts.HXTarget != "" {
+			hx-target={ opts.HXTarget }
+		}
+		if opts.HXSwap != "" {
+			hx-swap={ opts.HXSwap }
+		}
+		{ opts.Attrs... }
+	>
+		<div class="ui-composer__box">
+			<label class="visually-hidden" for={ composerFieldID(opts) }>{ composerLabel(opts) }</label>
+			<textarea id={ composerFieldID(opts) } class="ui-composer__input" name={ composerName(opts) } rows="1" placeholder={ opts.Placeholder } data-autogrow>{ opts.Value }</textarea>
+			<div class="ui-composer__bar">
+				if opts.Tools != nil {
+					@opts.Tools
+				}
+				<span class="ui-composer__spacer"></span>
+				<button type="submit" class="ui-composer__send" aria-label={ composerSendLabel(opts) } aria-busy?={ opts.Busy }>
+					if opts.Busy {
+						@Orb(OrbOpts{Size: 20, State: OrbThinking})
+					} else {
+						@Icon("send")
+					}
+				</button>
+			</div>
+		</div>
+		if opts.Hint != "" {
+			<p class="ui-composer__hint">{ opts.Hint }</p>
+		}
+	</form>
+}
+
+// TypingIndicator is the three-dot cue shown while the assistant composes a
+// reply. It is a polite live status, so screen readers hear label once.
+templ TypingIndicator(label string) {
+	<div class="ui-typing" role="status" aria-label={ label }><span></span><span></span><span></span></div>
+}
+
+// StreamingCaret is the blinking AI-gradient caret appended to text that is
+// still streaming in; remove it when the message completes.
+templ StreamingCaret() {
+	<span class="ui-caret" aria-hidden="true"></span>
+}

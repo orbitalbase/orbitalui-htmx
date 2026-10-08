@@ -228,12 +228,14 @@
   --oui-shadow-2: 0 0 0 1px var(--oui-line), 0 2px 4px var(--oui-sh-1), 0 8px 24px -6px var(--oui-sh-2);
   --oui-shadow-3: 0 0 0 1px var(--oui-line-2), 0 12px 32px -8px var(--oui-sh-3), 0 2px 6px var(--oui-sh-3b);
   --oui-shadow-inset: inset 0 1px 0 rgb(255 255 255 / 0.1);
-  /* Older scale, mapped onto the new one. */
-  --oui-shadow-xs: var(--oui-shadow-1);
-  --oui-shadow-sm: var(--oui-shadow-1);
-  --oui-shadow-md: var(--oui-shadow-2);
-  --oui-shadow-lg: var(--oui-shadow-2);
-  --oui-shadow-xl: var(--oui-shadow-3);
+  /* Legacy v1 aliases stay ring-less: v1 consumers pair them with real
+     borders, so a built-in 1px ring would double the edge. Components use
+     the ringed --oui-shadow-1/2/3 scale. */
+  --oui-shadow-xs: 0 1px 2px var(--oui-sh-1);
+  --oui-shadow-sm: 0 1px 3px var(--oui-sh-1);
+  --oui-shadow-md: 0 2px 4px var(--oui-sh-1), 0 8px 24px -6px var(--oui-sh-2);
+  --oui-shadow-lg: var(--oui-shadow-md);
+  --oui-shadow-xl: 0 12px 32px -8px var(--oui-sh-3), 0 2px 6px var(--oui-sh-3b);
   --oui-shadow-skeuo: var(--oui-shadow-inset);
 
   /* Keyboard focus. The ring offsets from the canvas; the halo is the soft

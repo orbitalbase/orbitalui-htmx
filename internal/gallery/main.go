@@ -10,8 +10,11 @@
 // maps Kindred's token values onto --oui-* so shared components can be
 // compared with Kindred's own kit). Open <out>/index.html to pick one; each
 // preset directory has index.html (every section) and one page per section.
-// Pages carry no orbital-ui.js or Alpine: overlays are pinned open statically
-// (an open <dialog> would otherwise be promoted to a real modal).
+// Section pages carry no orbital-ui.js or Alpine: overlays are pinned open
+// statically (an open <dialog> would otherwise be promoted to a real modal).
+// shell.html and shell-full.html are whole AppShell pages that do load
+// orbital-ui.js and menu.js, so the burger, scrim, palette (press Ctrl/Cmd K)
+// and menus work.
 package main
 
 import (
@@ -57,7 +60,7 @@ var presets = []preset{
 	{Name: "kindred-dark", Theme: "dark", Stylesheet: "kindred.css"},
 }
 
-var sheets = []string{"tokens.css", "base.css", "motion.css", "controls.css", "theme.css", "inspector.css"}
+var sheets = []string{"tokens.css", "base.css", "motion.css", "controls.css", "theme.css", "shell.css", "inspector.css"}
 
 func main() {
 	out := flag.String("out", "gallery-out", "output directory")
@@ -96,6 +99,12 @@ func run(out, fontDir string) error {
 			return err
 		}
 		if err := writePage(filepath.Join(dir, "index.html"), p, "All components", registry); err != nil {
+			return err
+		}
+		if err := writeShellPage(filepath.Join(dir, "shell.html"), p, false); err != nil {
+			return err
+		}
+		if err := writeShellPage(filepath.Join(dir, "shell-full.html"), p, true); err != nil {
 			return err
 		}
 		for _, s := range registry {
@@ -185,7 +194,7 @@ func writePage(path string, p preset, title string, ss []section) error {
 		}
 		fmt.Fprintf(f, `<a href="../%s/index.html"%s>%s</a>`, q.Name, cur, q.Name)
 	}
-	io.WriteString(f, `<hr>`)
+	io.WriteString(f, `<hr><a href="shell.html">Shell (full page)</a><a href="shell-full.html">Shell (full-width sheet)</a><hr>`)
 	for _, s := range registry {
 		fmt.Fprintf(f, `<a href="%s.html">%s</a>`, s.ID, html.EscapeString(s.Title))
 	}

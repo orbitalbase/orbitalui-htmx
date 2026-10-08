@@ -9,7 +9,7 @@ import (
 // The runtime and every stylesheet ship in Files, so a host serving the
 // embedded assets gets the whole contract.
 func TestFilesShipRuntimeAndStyles(t *testing.T) {
-	for _, name := range []string{"tokens.css", "base.css", "motion.css", "theme.css", "controls.css", "inspector.css", "inspector.js", "menu.js", "orbital-ui.js"} {
+	for _, name := range []string{"tokens.css", "base.css", "motion.css", "theme.css", "controls.css", "inspector.css", "inspector.js", "menu.js", "orbital-ui.js", "shell.css", "theme.js"} {
 		if _, err := fs.Stat(Files, name); err != nil {
 			t.Errorf("%s is not embedded: %v", name, err)
 		}
