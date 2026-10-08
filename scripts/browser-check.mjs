@@ -339,6 +339,192 @@ async function runVariant(name, path, {full = true, host = false} = {}) {
             });
         }
 
+        // ── shell: palette, toast, theme switch, mobile sidebar ────────────────
+        // Served on /shell with the same variant query (?csp=1 / ?host=1): the
+        // shell runtime is plain DOM delegation, so it must behave identically
+        // under standard Alpine, Alpine's CSP build and beside a host runtime.
+        const shellPath = '/shell' + (path.includes('csp=1') ? '?csp=1' : host ? '?host=1' : '');
+        const chord = async (k, code, keyCode, modifiers) => {
+            for (const type of ['keyDown', 'keyUp']) await b.send('Input.dispatchKeyEvent', {type, key: k, code, windowsVirtualKeyCode: keyCode, modifiers});
+        };
+        const openShell = async () => {
+            await b.send('Page.navigate', {url: base + shellPath});
+            await eventually(() => js('!!(window.OrbitalShell && window.Alpine && document.querySelector("[data-oui-shell]"))'), 'the shell page to start');
+        };
+        const paletteOpen = () => js('document.querySelector("dialog[data-oui-palette]").open');
+        // Records which theme <html> carried when <body> first appeared: what a
+        // pre-paint script must have set, with no flash of the wrong theme.
+        await b.send('Page.addScriptToEvaluateOnNewDocument', {source: `new MutationObserver((_, o) => { if (document.body) { window.__themeAtBody = document.documentElement.getAttribute('data-theme'); o.disconnect(); } }).observe(document, {childList: true, subtree: true});`});
+        await b.resize(1280);
+        await openShell();
+        await js('localStorage.clear()');
+
+        await check('shell renders the frame, sidebar items and a closed palette', async () => {
+            expect(await js('!!document.querySelector(".ui-shell__sidebar .ui-nav__link[aria-current=page]") && !!document.querySelector(".ui-nav__count") && !!document.querySelector(".ui-nav__pct")'), 'sidebar items missing');
+            expect(await js('getComputedStyle(document.querySelector(".ui-topbar__burger")).display === "none"'), 'burger visible at desktop width');
+            expect(!(await paletteOpen()), 'palette open at load');
+            expect(await js('document.querySelector("[data-oui-shell]").dataset.navOpen') === 'false', 'nav open at load');
+        });
+
+        await check('Ctrl+K opens the palette: combobox focused, static rows listed, first row active', async () => {
+            await chord('k', 'KeyK', 75, 2);
+            await eventually(paletteOpen, 'palette open');
+            const input = '#command-palette-input';
+            expect(await js('document.activeElement.id') === 'command-palette-input', `focus is on ${await focused()}`);
+            expect(await js(`document.querySelector("${input}").getAttribute("role")`) === 'combobox', 'input is not a combobox');
+            await eventually(() => js('document.querySelectorAll("#command-palette-list [role=option]").length === 3'), 'three suggestions');
+            expect(await js(`document.querySelector("${input}").getAttribute("aria-activedescendant")`) === 'command-palette-opt-0', 'first row is not the active descendant');
+            expect(await js('document.querySelector("#command-palette-opt-0").getAttribute("aria-selected")') === 'true', 'first row not selected');
+        });
+
+        await check('typing filters static rows, merges the endpoint results and arrows move the active row', async () => {
+            await type('rep');
+            await eventually(() => js('document.querySelectorAll("#command-palette-list [role=option]").length === 2'), 'static + endpoint rows')
+                .catch(async e => { throw new Error(`${e.message}; rows=${await js('[...document.querySelectorAll("#command-palette-list [role=option]")].map(e => e.textContent).join("|")')}`); });
+            expect(await js('document.querySelector("#command-palette-opt-0").textContent.includes("Reports") && document.querySelector("#command-palette-opt-0 mark").textContent.toLowerCase() === "rep"'), 'static row not first or not highlighted');
+            expect(await js('document.querySelector("#command-palette-opt-1").textContent.includes("Report archive 2025")'), 'endpoint row missing');
+            await key('ArrowDown', 'ArrowDown', 40);
+            expect(await js('document.querySelector("#command-palette-input").getAttribute("aria-activedescendant")') === 'command-palette-opt-1', 'ArrowDown did not move the active descendant');
+            expect(await js('document.querySelector("#command-palette-opt-1").getAttribute("aria-selected")') === 'true', 'row 1 not selected');
+            await key('ArrowUp', 'ArrowUp', 38);
+            expect(await js('document.querySelector("#command-palette-input").getAttribute("aria-activedescendant")') === 'command-palette-opt-0', 'ArrowUp did not move back');
+            await key('ArrowDown', 'ArrowDown', 40);
+        });
+
+        await check('Enter follows the active endpoint row', async () => {
+            await key('Enter', 'Enter', 13);
+            await eventually(() => js('location.pathname === "/shell/target" && location.search === "?to=archive"'), 'navigation to the archive target');
+            await eventually(() => js('!!document.getElementById("target")'), 'target page');
+        });
+
+        await check('Escape closes the palette and focus returns to the opener', async () => {
+            await openShell();
+            await click('.ui-topbar-search');
+            await eventually(paletteOpen, 'palette open from the topbar button');
+            expect(await js('document.activeElement.id') === 'command-palette-input', 'input not focused');
+            await key('Escape', 'Escape', 27);
+            await eventually(async () => !(await paletteOpen()), 'palette closed');
+            expect(await js('document.activeElement.classList.contains("ui-topbar-search")'), `focus did not return to the search button (on ${await focused()})`);
+        });
+
+        await check('a query with no match shows the empty message; Ctrl+K toggles it shut', async () => {
+            await chord('k', 'KeyK', 75, 2);
+            await eventually(paletteOpen, 'palette open');
+            await type('zzzz');
+            await eventually(() => js('!!document.querySelector("#command-palette-list .ui-palette__none")'), 'empty message');
+            expect(await js('document.querySelector("#command-palette-input").getAttribute("aria-expanded")') === 'false', 'aria-expanded stayed true with no rows');
+            await chord('k', 'KeyK', 75, 2);
+            await eventually(async () => !(await paletteOpen()), 'palette to close on the second Ctrl+K');
+        });
+
+        await check('palette results never follow javascript: hrefs or form actions', async () => {
+            await chord('k', 'KeyK', 75, 2);
+            await eventually(paletteOpen, 'palette open');
+            await type('unsafe');
+            await eventually(() => js('document.querySelectorAll("#command-palette-list [role=option]").length === 2'), 'two unsafe rows');
+            expect(await js('[...document.querySelectorAll("#command-palette-list [role=option] a")].every(a => a.getAttribute("href") === "#")'), 'an unsafe href reached the DOM');
+            await key('ArrowDown', 'ArrowDown', 40);
+            await key('Enter', 'Enter', 13);
+            await key('ArrowUp', 'ArrowUp', 38);
+            await key('Enter', 'Enter', 13);
+            expect(await js('window.__ouiPwned === undefined && !document.querySelector("dialog[data-oui-palette] form")'), 'an unsafe target ran or a form was built');
+            if (await paletteOpen()) {
+                await key('Escape', 'Escape', 27);
+                await eventually(async () => !(await paletteOpen()), 'palette closed');
+            }
+        });
+
+        await check('an HX-Trigger toast appears with its icon and the right live semantics, then auto-dismisses', async () => {
+            await js('document.querySelector("[data-toast-stack]").setAttribute("data-lifetime", "700")');
+            await click('#fire-success');
+            await eventually(() => js('!!document.querySelector(".ui-toast--success")'), 'success toast');
+            expect(await js('document.querySelector(".ui-toast--success").getAttribute("role")') === 'status', 'success toast is not role=status');
+            expect(await js('document.querySelector("[data-toast-stack]").getAttribute("aria-live")') === 'polite', 'stack is not aria-live=polite');
+            expect(await js('document.querySelector(".ui-toast--success .ui-toast__title").textContent') === 'Saved', 'title not set');
+            expect(await js('!!document.querySelector(".ui-toast--success .ui-toast__icon svg")'), 'icon missing');
+            await eventually(() => js('!document.querySelector(".ui-toast--success")'), 'auto-dismiss', 3000);
+        });
+
+        await check('auto-dismiss pauses while the toast is hovered', async () => {
+            await click('#fire-success');
+            await eventually(() => js('!!document.querySelector(".ui-toast--success")'), 'success toast');
+            const [x, y] = await center('.ui-toast--success');
+            await b.send('Input.dispatchMouseEvent', {type: 'mouseMoved', x, y});
+            await sleep(1300);
+            expect(await js('!!document.querySelector(".ui-toast--success")'), 'toast dismissed while hovered');
+            await b.send('Input.dispatchMouseEvent', {type: 'mouseMoved', x: 5, y: 5});
+            await eventually(() => js('!document.querySelector(".ui-toast--success")'), 'dismissal after the pointer left', 3000);
+        });
+
+        await check('a danger toast is role=alert, stays put, and its close button removes it', async () => {
+            await click('#fire-danger');
+            await eventually(() => js('!!document.querySelector(".ui-toast--danger")'), 'danger toast');
+            expect(await js('document.querySelector(".ui-toast--danger").getAttribute("role")') === 'alert', 'danger toast is not role=alert');
+            await sleep(1200);
+            expect(await js('!!document.querySelector(".ui-toast--danger")'), 'danger toast auto-dismissed');
+            await click('.ui-toast--danger .ui-toast__close');
+            await eventually(() => js('!document.querySelector(".ui-toast--danger")'), 'close button to remove the toast');
+        });
+
+        await check('a string payload is the message; the server-rendered toast has its own close button', async () => {
+            await click('#fire-string');
+            await eventually(() => js('[...document.querySelectorAll(".ui-toast__msg")].some(e => e.textContent === "Plain message")'), 'string toast');
+            await click('.ui-toast:not(.ui-toast--success):not(.ui-toast--danger) .ui-toast__close');
+            await eventually(() => js('![...document.querySelectorAll(".ui-toast__msg")].some(e => e.textContent === "Plain message")'), 'string toast closed');
+            expect(await js('window.OrbitalShell.toast({tone: "ai", message: "From script", auto: false}) instanceof HTMLElement'), 'OrbitalShell.toast did not return the toast');
+            await eventually(() => js('!!document.querySelector(".ui-toast--ai")'), 'script toast');
+        });
+
+        await check('theme.js runs before the stylesheets and the first theme follows the system', async () => {
+            expect(await js('(() => { const s = document.querySelector("script[src$=\\"theme.js\\"]"); return !!s && !s.defer && !s.async && s.compareDocumentPosition(document.querySelector("link[rel=stylesheet]")) & Node.DOCUMENT_POSITION_FOLLOWING; })()'), 'theme.js is not a blocking script ahead of the stylesheets');
+            await b.send('Emulation.setEmulatedMedia', {features: [{name: 'prefers-color-scheme', value: 'dark'}]});
+            await js('localStorage.clear()');
+            await openShell();
+            expect(await js('window.__themeAtBody') === 'dark', `data-theme was ${await js('window.__themeAtBody')} when <body> appeared`);
+            expect(await js('document.documentElement.dataset.themePreference') === 'system', 'preference is not system');
+            expect(await js('document.querySelector("[data-oui-theme-switch] input:checked").value') === 'system', 'switch does not show system');
+            await b.send('Emulation.setEmulatedMedia', {features: [{name: 'prefers-color-scheme', value: 'light'}]});
+            await eventually(() => js('document.documentElement.dataset.theme === "light"'), 'live follow of the system change');
+        });
+
+        await check('the theme switch applies, persists and survives a reload without a flash', async () => {
+            await click('[data-oui-theme-switch] input[value=dark]');
+            await eventually(() => js('document.documentElement.dataset.theme === "dark"'), 'dark theme applied');
+            expect(await js('localStorage.getItem("oui-theme")') === 'dark', 'preference not persisted');
+            expect(await js('getComputedStyle(document.querySelector(".ui-shell")).backgroundColor') !== await js('(() => { const el = document.createElement("div"); el.style.background = "#f6f7f9"; document.body.append(el); const c = getComputedStyle(el).backgroundColor; el.remove(); return c; })()'), 'the canvas did not change colour');
+            await openShell();
+            expect(await js('window.__themeAtBody') === 'dark', `reload painted ${await js('window.__themeAtBody')} first`);
+            expect(await js('document.querySelector("[data-oui-theme-switch] input:checked").value') === 'dark', 'switch does not reflect the stored preference');
+            await click('[data-oui-theme-switch] input[value=light]');
+            await eventually(() => js('document.documentElement.dataset.theme === "light" && localStorage.getItem("oui-theme") === "light"'), 'light pinned');
+            await b.send('Emulation.setEmulatedMedia', {features: [{name: 'prefers-color-scheme', value: 'dark'}]});
+            await sleep(150);
+            expect(await js('document.documentElement.dataset.theme') === 'light', 'an explicit light choice followed the system');
+            await b.send('Emulation.setEmulatedMedia', {features: [{name: 'prefers-color-scheme', value: 'light'}]});
+        });
+
+        await check('at phone width the burger opens the off-canvas sidebar and the scrim closes it', async () => {
+            await b.resize(390, 800);
+            await openShell();
+            expect(await js('getComputedStyle(document.querySelector(".ui-shell__sidebar")).visibility') === 'hidden', 'sidebar visible while closed');
+            expect(await js('document.querySelector(".ui-shell__sidebar").inert'), 'closed sidebar is not inert');
+            const size = await js('(() => { const r = document.querySelector(".ui-topbar__burger").getBoundingClientRect(); return [r.width, r.height]; })()');
+            expect(size[0] >= 44 && size[1] >= 44, `burger is ${size} (needs a 44px target)`);
+            await click('.ui-topbar__burger');
+            await eventually(() => js('getComputedStyle(document.querySelector(".ui-shell__sidebar")).visibility === "visible" && !document.querySelector(".ui-shell__sidebar").inert'), 'sidebar to open');
+            expect(await js('document.querySelector(".ui-topbar__burger").getAttribute("aria-expanded")') === 'true', 'aria-expanded not true');
+            expect(await js('document.activeElement.closest(".ui-shell__sidebar") !== null'), `focus is on ${await focused()}, not in the sidebar`);
+            await eventually(() => js('document.querySelector(".ui-shell__sidebar").getBoundingClientRect().left >= -1'), 'sidebar to slide in');
+            await clickAt(370, 500);
+            await eventually(() => js('document.querySelector("[data-oui-shell]").dataset.navOpen === "false"'), 'scrim click to close');
+            expect(await js('document.activeElement.classList.contains("ui-topbar__burger")'), `focus is on ${await focused()}, not the burger`);
+            await click('.ui-topbar__burger');
+            await eventually(() => js('document.querySelector("[data-oui-shell]").dataset.navOpen === "true"'), 'reopen');
+            await key('Escape', 'Escape', 27);
+            await eventually(() => js('document.querySelector("[data-oui-shell]").dataset.navOpen === "false"'), 'Escape to close');
+            await b.resize(1280);
+        });
+
         await check('no script errors or CSP violations on the page', async () => {
             expect(b.errors.length === 0, b.errors.join('\n'));
         });
