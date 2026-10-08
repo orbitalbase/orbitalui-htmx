@@ -356,23 +356,14 @@
 }
 
 /* ───────── Dark mode. A full flip of the primitives and base semantics. ───────── */
-/* Soft tones follow the host's colours: each -soft tint is a mix of
-   its tone's base colour, so a host overrides --oui-brand (etc.) and the
-   tints, selected chips, nav current item and AI fills follow without a
-   second override. Light mixes the base into --oui-surface at strengths that
-   match the opaque 50-steps above (so a tint on the canvas keeps its pale
-   look); dark mixes into transparent, a little stronger, so tints blend with
-   and read on every dark surface, raised ones included.
-   Browsers without color-mix keep the opaque steps. */
+/* Soft tones. Light: each -soft tint is its tone's 50 step (set above), so a
+   host that re-points the primitive scale (--oui-brand-50 …) keeps driving
+   its tints. Dark: each tint is a translucent mix of the tone's base colour,
+   so a host overrides --oui-brand (etc.) once and the tints, selected chips,
+   nav current item and AI fills follow, reading on surface, canvas and raised
+   panels alike. Browsers without color-mix keep the opaque steps. */
 @supports (color: color-mix(in oklab, black, transparent)) {
   :where(:root) {
-    --oui-brand-soft: color-mix(in oklab, var(--oui-brand) 8%, var(--oui-surface));
-    --oui-accent-soft: color-mix(in oklab, var(--oui-accent) 8%, var(--oui-surface));
-    --oui-info-soft: color-mix(in oklab, var(--oui-info) 6%, var(--oui-surface));
-    --oui-success-soft: color-mix(in oklab, var(--oui-success) 7%, var(--oui-surface));
-    --oui-warning-soft: color-mix(in oklab, var(--oui-warning) 8%, var(--oui-surface));
-    --oui-danger-soft: color-mix(in oklab, var(--oui-danger) 6%, var(--oui-surface));
-    --oui-ai-soft: color-mix(in oklab, var(--oui-ai) 8%, var(--oui-surface));
     --oui-ai-surface: linear-gradient(120deg, color-mix(in oklab, var(--oui-brand-soft) 40%, var(--oui-ai-soft)), var(--oui-ai-soft) 52%, color-mix(in oklab, var(--oui-accent-soft) 40%, var(--oui-ai-soft)));
   }
   :root[data-theme="dark"] {
