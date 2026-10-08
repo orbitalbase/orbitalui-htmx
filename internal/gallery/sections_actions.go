@@ -90,6 +90,7 @@ func badgesBody() templ.Component {
 		group("StatusBadge (pill, dot)", status...), group("StatusBadge, no dot", statusNoDot...), group("StatusBadge subtle", statusSubtle...),
 		group("Badge", badge...), group("Badge with dot", badgeDot...), group("Badge hollow dot", badgeHollow...),
 		group("Badge muted", badgeMuted...), group("Badge mono", badgeMono...), group("Badge with icon", badgeIcon...),
+		group("Badge dot tint (--oui-badge-dot)", wrap(`<span style="--oui-badge-dot: var(--oui-accent)">`, `</span>`, c.Badge(c.ToneBrand, "Dot tinted apart from the text", c.BadgeOpts{Dot: true}))),
 		group("In a sentence", raw(`<span>Posted by `), c.Badge(c.ToneBrand, "Talent", c.BadgeOpts{Dot: true}), raw(` for `), c.Badge(c.ToneAccent, "Hiring", c.BadgeOpts{Dot: true}), raw(`</span>`)),
 	)
 }
@@ -122,6 +123,13 @@ func cardsBody() templ.Component {
 			cell("Padded (20px gutter on the card)", c.Card(c.CardOpts{Title: "Padded", Subtitle: "Header, body and footer share one inset", Padded: true, Actions: act, Footer: c.Text("Footer")}, lorem(1))),
 			cell("Bare + Padded (no body wrapper, host class lays it out)", c.Card(c.CardOpts{Bare: true, Padded: true, Class: "g-row"}, seq(c.Avatar("Ada Lovelace", c.AvatarOpts{Px: 40}), c.Text("A plain padded surface, laid out by its own class.")))),
 			cell("subtitle + actions (--oui-card-header-align: center)", c.Card(c.CardOpts{Title: "Offers", Subtitle: "3 open, 1 expiring today", Actions: act, Class: "g-card-center"}, lorem(1))),
+		),
+		groupGrid("Standalone CardHeader",
+			cell("CardHeader inside Bare + Padded", c.Card(c.CardOpts{Bare: true, Padded: true}, seq(
+				c.CardHeader(c.CardHeaderOpts{Icon: "building", Title: "Acme Ltd", Subtitle: "Company", Actions: act}),
+				c.Text("The host lays out the rest of the card."),
+			))),
+			cell("Bare card with a host flex-row class stays a row", c.Card(c.CardOpts{Bare: true, Padded: true, Class: "g-row"}, seq(c.Text("One"), c.Text("Two"), c.Text("Three")))),
 		),
 		groupGrid("Edge tone (2px left edge)",
 			cell("brand", c.Card(c.CardOpts{Title: "Talent", Edge: c.ToneBrand}, lorem(1))),

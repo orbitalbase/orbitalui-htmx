@@ -6,6 +6,7 @@ package components
 
 import (
 	"strconv"
+	"strings"
 
 	"github.com/a-h/templ"
 )
@@ -21,6 +22,15 @@ type FieldOpts struct {
 	Suggested bool
 	// SuggestedTitle is the tag's hover title (default "Suggested").
 	SuggestedTitle string
+	// ErrorAlert adds role="alert" to the error paragraph. It is off by
+	// default on purpose: a live region announces text that is inserted
+	// after load, but an error that is already in the page when it first
+	// renders (a server-rendered form re-shown after a failed submit) is
+	// read by the control's aria-describedby instead, and role="alert" on
+	// many errors at once would make a screen reader read them all over
+	// each other. Set it for an error that appears in place after an htmx
+	// swap or an inline validation, where the user should hear it once.
+	ErrorAlert bool
 }
 
 // FieldErrorID returns the stable id of the error paragraph LabelledField
@@ -30,6 +40,27 @@ type FieldOpts struct {
 //	@components.FieldInput(components.FieldInputOpts{
 //		ID: "j-date", AriaDescribedBy: components.FieldErrorID("j-date"), ...})
 func FieldErrorID(htmlFor string) string { return htmlFor + "-error" }
+
+// FieldHelpID returns the id of the help paragraph LabelledField renders for
+// a control (htmlFor + "-help"). The paragraph carries it whenever Help is
+// set and htmlFor is not empty.
+func FieldHelpID(htmlFor string) string { return htmlFor + "-help" }
+
+// FieldDescribedBy returns the aria-describedby value for a control inside
+// LabelledField: the help id, then the error id, only for the paragraphs the
+// field will render ("" when it has neither). Pass the same opts and htmlFor:
+//
+//	AriaDescribedBy: components.FieldDescribedBy("j-date", opts)
+func FieldDescribedBy(htmlFor string, o FieldOpts) string {
+	var ids []string
+	if o.Help != "" {
+		ids = append(ids, FieldHelpID(htmlFor))
+	}
+	if o.Error != "" {
+		ids = append(ids, FieldErrorID(htmlFor))
+	}
+	return strings.Join(ids, " ")
+}
 
 // fieldClass builds the wrapper classes.
 func fieldClass(o FieldOpts) string {
@@ -64,6 +95,9 @@ type FieldInputOpts struct {
 	Max   string
 	Step  string
 	Class string // extra classes appended to .field-control
+	// Numeric sets the figure face (mono, tabular numerals) on a text-type
+	// input such as an amount typed as text; type="number" has it already.
+	Numeric bool
 	// Icon is a leading icon-set name ("search", "mail", …). Icon, Prefix or
 	// Suffix wrap the input in a .field-input shell that draws the ring, so
 	// the affixes sit inside the control; without them the bare <input> is
@@ -101,6 +135,9 @@ func fieldControlClass(o FieldInputOpts) string {
 	}
 	if o.Suggested {
 		c += " field-control--suggested"
+	}
+	if o.Numeric {
+		c += " num"
 	}
 	if o.Class != "" {
 		c += " " + o.Class
@@ -191,8 +228,12 @@ type FieldSelectOpts struct {
 	Invalid         bool
 	AriaDescribedBy string
 	Suggested       bool // assistant-filled value (AI ring)
-	Class           string
-	Attrs           templ.Attributes
+	// PlaceholderDisabled renders the placeholder option disabled, so a
+	// required select cannot be left on it by re-choosing it. It still shows
+	// as the initial selection while Selected is empty.
+	PlaceholderDisabled bool
+	Class               string
+	Attrs               templ.Attributes
 }
 
 func fieldSelectClass(o FieldSelectOpts) string {

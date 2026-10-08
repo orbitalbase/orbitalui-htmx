@@ -70,55 +70,7 @@ templ Card(opts CardOpts, body templ.Component) {
 			<a class="ui-card__link" href={ opts.Href } aria-label={ opts.LinkLabel }></a>
 		}
 		if opts.Title != "" {
-			<header class="ui-card__header">
-				<div class="ui-card__heading">
-					if opts.Icon != "" {
-						<span class="ui-card__icon" aria-hidden="true">
-							@Icon(opts.Icon)
-						</span>
-					}
-					<div class="ui-card__titles">
-						if opts.Eyebrow != "" {
-							<p class="ui-card__eyebrow">{ opts.Eyebrow }</p>
-						}
-						<div class="ui-card__title-row">
-							if opts.HeadingLevel == 3 {
-								<h3
-									class="ui-card__title"
-									if opts.ID != "" {
-										id={ cardHeadingID(opts) }
-									}
-								>
-									@cardTitleText(opts)
-								</h3>
-							} else {
-								<h2
-									class="ui-card__title"
-									if opts.ID != "" {
-										id={ cardHeadingID(opts) }
-									}
-								>
-									@cardTitleText(opts)
-								</h2>
-							}
-							if opts.Badge != nil {
-								@opts.Badge
-							}
-						</div>
-						if opts.Subtitle != "" {
-							<p class="ui-card__subtitle">{ opts.Subtitle }</p>
-						}
-						if opts.Description != "" {
-							<p class="ui-card__description">{ opts.Description }</p>
-						}
-					</div>
-				</div>
-				if opts.Actions != nil {
-					<div class="ui-card__actions">
-						@opts.Actions
-					</div>
-				}
-			</header>
+			@CardHeader(cardHeaderOf(opts))
 		}
 		if body != nil && opts.Bare {
 			@body
@@ -135,8 +87,71 @@ templ Card(opts CardOpts, body templ.Component) {
 	</section>
 }
 
-// cardTitleText renders the title, as the stretched link when Href is set.
-templ cardTitleText(opts CardOpts) {
+// CardHeader is the header block Card draws from its options, usable on
+// its own inside a Bare or Padded card (or any .ui-card) whose body the host
+// lays out itself. It renders the same ui-card__* markup:
+//
+//	@components.Card(components.CardOpts{Bare: true, Padded: true}, content())
+//
+// where content() starts with
+//
+//	@components.CardHeader(components.CardHeaderOpts{
+//		Icon: "building", Title: "Acme Ltd", Subtitle: "Company", Actions: edit(),
+//	})
+templ CardHeader(opts CardHeaderOpts) {
+	<header class="ui-card__header">
+		<div class="ui-card__heading">
+			if opts.Icon != "" {
+				<span class="ui-card__icon" aria-hidden="true">
+					@Icon(opts.Icon)
+				</span>
+			}
+			<div class="ui-card__titles">
+				if opts.Eyebrow != "" {
+					<p class="ui-card__eyebrow">{ opts.Eyebrow }</p>
+				}
+				<div class="ui-card__title-row">
+					if opts.HeadingLevel == 3 {
+						<h3
+							class="ui-card__title"
+							if opts.HeadingID != "" {
+								id={ opts.HeadingID }
+							}
+						>
+							@cardHeaderTitle(opts)
+						</h3>
+					} else {
+						<h2
+							class="ui-card__title"
+							if opts.HeadingID != "" {
+								id={ opts.HeadingID }
+							}
+						>
+							@cardHeaderTitle(opts)
+						</h2>
+					}
+					if opts.Badge != nil {
+						@opts.Badge
+					}
+				</div>
+				if opts.Subtitle != "" {
+					<p class="ui-card__subtitle">{ opts.Subtitle }</p>
+				}
+				if opts.Description != "" {
+					<p class="ui-card__description">{ opts.Description }</p>
+				}
+			</div>
+		</div>
+		if opts.Actions != nil {
+			<div class="ui-card__actions">
+				@opts.Actions
+			</div>
+		}
+	</header>
+}
+
+// cardHeaderTitle renders the title, as the stretched link when Href is set.
+templ cardHeaderTitle(opts CardHeaderOpts) {
 	if opts.Href != "" {
 		<a class="ui-card__link" href={ opts.Href }>{ opts.Title }</a>
 	} else {

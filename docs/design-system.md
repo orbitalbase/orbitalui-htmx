@@ -269,6 +269,70 @@ applies its border and halo treatment to `.oui-control` only (host-native
 controls that keep a real border); `.field-control` reads
 `--control-focus-border` itself in `theme.css`.
 
+## Kit finish (v1.8)
+
+The last gaps that kept small Kindred pieces alive. Everything is additive;
+every token's default leaves Ledger and Cosec rendering as before.
+
+### Tokens
+
+| Token | Default | Use |
+| --- | --- | --- |
+| `--oui-control-pad-x` | `0.75rem` | horizontal text inset of `.field-control` and the shell affixes (Kindred: `calc(0.75rem - 1px)` to offset the transparent 1px border) |
+| `--oui-control-ring-inset` | empty (ring outside) | set to `inset` and the 1px field ring is drawn inside the box (`inset 0 0 0 1px`); see the clipping note below |
+| `--oui-tab-height-phone` | `2.75rem` | height of `TabBar` / `TabNav` items at 42rem and below |
+| `--oui-textarea-min-height` | `5.5rem` | `min-height` of a textarea field |
+| `--oui-textarea-resize` | `vertical` | `resize` of a non-autogrow textarea (autogrow stays `none`) |
+| `--oui-chip-suggested-ring` | `--oui-ai` at 50% | ring colour of a suggested chip |
+| `--oui-chip-suggested-halo` | `--oui-ai` at 28% | the 3px halo colour of a suggested chip once chosen |
+| `--oui-chip-spark-checked` | `--oui-ai` | colour of the spark on a checked chip (it used to inherit the chip text) |
+| `--oui-badge-dot` | `currentColor` | colour of a `Badge` dot or hollow ring, apart from the text |
+
+### Options and components
+
+- `FieldOpts.ErrorAlert`, `FieldHelpID(htmlFor)` and `FieldDescribedBy(htmlFor, opts)`: the help paragraph now
+  has the id `{htmlFor}-help` (when `Help` is set and `htmlFor` is not empty);
+  `FieldDescribedBy` returns `"{id}-help {id}-error"` for the paragraphs the
+  field renders, to pass as the control's `AriaDescribedBy`. Fields without
+  Help or Error render unchanged.
+- Error role rule: the error paragraph has **no** `role="alert"` by default. A
+  form shown again after a failed submit already carries its errors in the
+  page, and the control's `aria-describedby` makes a screen reader read them
+  with the control; `role="alert"` on several errors at once would read them
+  all over each other. Set `ErrorAlert` only for an error that is inserted in
+  place after load (an htmx swap, inline validation), where it should be heard
+  once.
+- `FieldInputOpts.Numeric`: the figure face (`.field-control.num`, mono and
+  tabular numerals) on a text input; it now wins over `font: inherit`.
+- `FieldSelectOpts.PlaceholderDisabled`: a disabled placeholder option, for
+  required selects.
+- `ChipGroupOpts.SuggestedTitle`: the spark's hover title (default
+  "Suggested"). Chip tick and spark are 12px, the legend has no bottom margin
+  (the chip row follows directly) and ChipGroup is rendered only by Kindred.
+- `DataItemWith(label, DataItemOpts{Wide, Field})`: `Field` becomes
+  `data-field` on the value (the host hook to highlight a value an agent just
+  changed); `DataItem` and `DataItemWide` keep their markup. Wide items now
+  span every column of `Columns: 2` and `3` lists, as they did in grid layout.
+- `StatePanelOpts.TitleTag`: `"h2"` (default) or `"h3"`.
+- `CardHeader(CardHeaderOpts)`: the same `ui-card__*` header markup `Card`
+  draws from options (it now calls it), for use inside a Bare or Padded card.
+- Bug fixes: a suggested field with an icon or affix drew the AI ring on both
+  the shell and the input (the `.field.is-suggested .field-control` rule
+  out-ranked the shell's reset); only the shell rings now. A `Bare` card no
+  longer forces `flex-direction: column`, so a host `display:flex` class on it
+  lays out as a row. The shared Icon svg is `flex: none`, so it does not shrink
+  in a flex row (any rule that sets its flex still wins).
+
+### Ring position and clipping
+
+`--oui-control-ring-inset: inset` moves the 1px field ring inside the box, for
+a control that sits flush in a scroll container or card with `overflow:
+hidden`, where an outside ring (and the 4px focus halo) is clipped at the
+edge. The hover, focus, invalid and suggested rings all follow it. The focus
+halo stays outside; inside a clipping container it is clipped, and the inset
+ring is the visible focus cue, so pair it with a container that has a little
+inner padding if a halo matters.
+
 ## App shell and runtime contracts (v2 shell)
 
 Files: `assets/shell.css` (frame, topbar, sidebar extras, palette, toasts),

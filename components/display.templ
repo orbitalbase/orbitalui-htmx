@@ -59,17 +59,29 @@ templ DataList(opts DescriptionListOpts) {
 
 // DataItem is one label/value row of a DataList; its children are the value.
 templ DataItem(label string) {
-	<div class="ui-dl__row">
-		<dt>{ label }</dt>
-		<dd>{ children... }</dd>
-	</div>
+	@DataItemWith(label, DataItemOpts{}) {
+		{ children... }
+	}
 }
 
 // DataItemWide is a DataItem that spans every column of a multi-column list.
 templ DataItemWide(label string) {
-	<div class="ui-dl__row ui-dl__row--wide">
+	@DataItemWith(label, DataItemOpts{Wide: true}) {
+		{ children... }
+	}
+}
+
+// DataItemWith is DataItem with options: Wide spans every column and Field
+// is rendered as data-field on the value element, the hook a host script
+// uses to highlight a value an agent just changed.
+templ DataItemWith(label string, opts DataItemOpts) {
+	<div class={ joinClass("ui-dl__row", modifier(opts.Wide, "ui-dl__row--wide")) }>
 		<dt>{ label }</dt>
-		<dd>{ children... }</dd>
+		<dd
+			if opts.Field != "" {
+				data-field={ opts.Field }
+			}
+		>{ children... }</dd>
 	</div>
 }
 

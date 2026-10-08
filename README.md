@@ -92,6 +92,18 @@ parity"): `ButtonOpts.TrailingIcon` (and `IconRight` now draws on the right),
 `--oui-tab-count-active-bg/-fg`, and a cancelable `oui:palette-submit` event on
 the command palette dialog (`detail.item`, `detail.query`, `detail.row`).
 
+### Kit finish
+
+`--oui-control-pad-x`, `--oui-control-ring-inset`, `--oui-tab-height-phone`,
+`--oui-textarea-min-height` / `-resize`, `--oui-chip-suggested-ring` / `-halo`,
+`--oui-chip-spark-checked` and `--oui-badge-dot` tune the remaining Kindred
+differences; defaults keep existing hosts unchanged. New options:
+`FieldOpts.ErrorAlert`, `FieldDescribedBy` (help gets the id `{id}-help`),
+`FieldInputOpts.Numeric`, `FieldSelectOpts.PlaceholderDisabled`,
+`ChipGroupOpts.SuggestedTitle`, `DataItemWith` (`Wide`, `Field`),
+`StatePanelOpts.TitleTag` and the standalone `CardHeader`. See
+`docs/design-system.md`, "Kit finish".
+
 ## Use
 
 ```go

@@ -15,4 +15,4 @@
   box-shadow: var(--oui-ring-error, none);
 }
 /* The browser-detected invalid state on a focused .field-control. */
-.field-control:user-invalid:focus { box-shadow: 0 0 0 1px var(--oui-danger, var(--oui-error-500)), var(--oui-ring-error, none); }
+.field-control:user-invalid:focus { box-shadow: var(--oui-control-ring-inset,) 0 0 0 1px var(--oui-danger, var(--oui-error-500)), var(--oui-ring-error, none); }

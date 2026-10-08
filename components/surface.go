@@ -112,6 +112,30 @@ func cardClass(o CardOpts) string {
 		modifier(o.Interactive || o.Href != "", "ui-card--interactive"), modifier(o.Href != "", "ui-card--link"), o.Class)
 }
 
+// CardHeaderOpts configures CardHeader; the fields mean what they do on
+// CardOpts. HeadingID is the id of the heading element (what a card's
+// aria-labelledby points at); HeadingLevel 3 renders an h3 (default h2); Href
+// makes the title the card's stretched link.
+type CardHeaderOpts struct {
+	Title        string
+	Subtitle     string
+	Description  string
+	Icon         string
+	Eyebrow      string
+	Badge        templ.Component
+	Actions      templ.Component
+	Href         templ.SafeURL
+	HeadingLevel int
+	HeadingID    string
+}
+
+// cardHeaderOf maps the header-related CardOpts onto CardHeaderOpts.
+func cardHeaderOf(o CardOpts) CardHeaderOpts {
+	return CardHeaderOpts{Title: o.Title, Subtitle: o.Subtitle, Description: o.Description, Icon: o.Icon,
+		Eyebrow: o.Eyebrow, Badge: o.Badge, Actions: o.Actions, Href: o.Href,
+		HeadingLevel: o.HeadingLevel, HeadingID: cardHeadingID(o)}
+}
+
 // CardSectionOpts configures CardSection.
 //
 //	Divided — a hairline above the section, to separate stacked sections.

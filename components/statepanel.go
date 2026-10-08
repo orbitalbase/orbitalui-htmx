@@ -17,8 +17,12 @@ type StatePanelOpts struct {
 	Icon    string // icon-set name (icons.go); "" hides it
 	Compact bool   // in-card variant: no heading element, left-aligned, denser
 	Orb     bool   // idle AI orb instead of the icon
-	Actions templ.Component
-	Class   string // extra classes (e.g. a width cap)
+	// TitleTag is the heading element of a non-compact panel: "h2" (the
+	// default) or "h3" for a panel nested under a card's h2. Anything else
+	// falls back to "h2".
+	TitleTag string
+	Actions  templ.Component
+	Class    string // extra classes (e.g. a width cap)
 }
 
 // statePanelClass joins the base + modifier + extra classes.
@@ -33,3 +37,6 @@ func busyAttr(loading bool) string {
 	}
 	return "false"
 }
+
+// statePanelH3 reports whether the title renders as an h3.
+func statePanelH3(o StatePanelOpts) bool { return o.TitleTag == "h3" }

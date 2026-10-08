@@ -176,11 +176,11 @@
 /* Rectangle. */
 .ui-badge { gap: 0.3125rem; height: 1.25rem; padding: 0 0.4375rem; border-radius: var(--oui-radius-xs); }
 .ui-badge > svg { width: 0.75rem; height: 0.75rem; flex: 0 0 auto; }
-.ui-badge__dot { width: 0.375rem; height: 0.375rem; flex: 0 0 auto; border-radius: 50%; background: currentColor; }
+.ui-badge__dot { width: 0.375rem; height: 0.375rem; flex: 0 0 auto; border-radius: 50%; background: var(--oui-badge-dot, currentColor); }
 .ui-badge--mono { font-family: var(--oui-font-numeric); font-size: 0.71875rem; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
 .ui-badge--muted { color: var(--oui-text-quaternary); background: var(--oui-surface-2); box-shadow: inset 0 0 0 1px var(--oui-line); }
 .ui-badge--muted .ui-badge__dot { background: var(--oui-ink-4); }
-.ui-badge--hollow .ui-badge__dot { background: transparent; box-shadow: inset 0 0 0 1.5px currentColor; }
+.ui-badge--hollow .ui-badge__dot { background: transparent; box-shadow: inset 0 0 0 1.5px var(--oui-badge-dot, currentColor); }
 
 .ui-count {
   display: inline-flex;
@@ -298,12 +298,12 @@
   width: 100%;
   min-width: 0;
   min-height: var(--oui-control-height);
-  padding: 0 0.75rem;
+  padding: 0 var(--oui-control-pad-x, 0.75rem);
   color: var(--oui-text-primary);
   background: var(--oui-surface);
   border: 1px solid transparent;
   border-radius: var(--oui-radius-sm);
-  box-shadow: var(--oui-field-ring, 0 0 0 1px var(--oui-line-2)), 0 1px 1px var(--oui-sh-1);
+  box-shadow: var(--oui-field-ring, var(--oui-control-ring-inset,) 0 0 0 1px var(--oui-line-2)), 0 1px 1px var(--oui-sh-1);
   font: inherit;
   font-size: var(--oui-text-body);
   line-height: var(--oui-leading-body);
@@ -314,21 +314,21 @@
    hairline of elevation: hover darkens the ring, focus takes the action
    colour (--control-focus-border overrides it) and a 3px halo. The 1px border
    stays, transparent, so metrics match a bordered control. */
-.field-control:hover { box-shadow: 0 0 0 1px var(--oui-ink-4), 0 1px 1px var(--oui-sh-1); }
-.field-control:focus { outline: none; box-shadow: 0 0 0 1px var(--control-focus-border, var(--oui-action-ring)), 0 0 0 4px var(--oui-focus-halo-color); }
-.field-control:disabled { color: var(--oui-text-quaternary); background: var(--oui-surface-2); box-shadow: 0 0 0 1px var(--oui-line); cursor: not-allowed; }
+.field-control:hover { box-shadow: var(--oui-control-ring-inset,) 0 0 0 1px var(--oui-ink-4), 0 1px 1px var(--oui-sh-1); }
+.field-control:focus { outline: none; box-shadow: var(--oui-control-ring-inset,) 0 0 0 1px var(--control-focus-border, var(--oui-action-ring)), 0 0 0 4px var(--oui-focus-halo-color); }
+.field-control:disabled { color: var(--oui-text-quaternary); background: var(--oui-surface-2); box-shadow: var(--oui-control-ring-inset,) 0 0 0 1px var(--oui-line); cursor: not-allowed; }
 .field-control--invalid,
 .field-control[aria-invalid="true"],
 .field-control--invalid:hover,
-.field-control[aria-invalid="true"]:hover { box-shadow: 0 0 0 1px var(--oui-danger), 0 1px 1px var(--oui-sh-1); }
+.field-control[aria-invalid="true"]:hover { box-shadow: var(--oui-control-ring-inset,) 0 0 0 1px var(--oui-danger), 0 1px 1px var(--oui-sh-1); }
 .field-control--invalid:focus,
 .field-control[aria-invalid="true"]:focus,
-.field-control:user-invalid:focus { box-shadow: 0 0 0 1px var(--oui-danger), var(--oui-ring-error); }
+.field-control:user-invalid:focus { box-shadow: var(--oui-control-ring-inset,) 0 0 0 1px var(--oui-danger), var(--oui-ring-error); }
 /* Assistant-filled values carry the AI tint until the user edits them. */
 .field-control--suggested,
-.field.is-suggested .field-control { box-shadow: 0 0 0 1px var(--oui-ai-200), 0 1px 1px var(--oui-sh-1); }
+.field.is-suggested .field-control:not(.field-input > .field-control) { box-shadow: var(--oui-control-ring-inset,) 0 0 0 1px var(--oui-ai-200), 0 1px 1px var(--oui-sh-1); }
 .field-control--suggested:focus,
-.field.is-suggested .field-control:focus { box-shadow: 0 0 0 1px var(--control-focus-border, var(--oui-action-ring)), 0 0 0 4px var(--oui-focus-halo-color); }
+.field.is-suggested .field-control:not(.field-input > .field-control):focus { box-shadow: var(--oui-control-ring-inset,) 0 0 0 1px var(--control-focus-border, var(--oui-action-ring)), 0 0 0 4px var(--oui-focus-halo-color); }
 .field-control:-webkit-autofill { -webkit-text-fill-color: var(--oui-text-primary); box-shadow: 0 0 0 40px var(--oui-surface) inset; }
 
 .search-field { position: relative; display: flex; align-items: center; min-width: 0; }
@@ -366,7 +366,7 @@
 .tab__count { padding: 0.125rem 0.3125rem; color: var(--oui-text-secondary); background: var(--oui-surface-3); border-radius: var(--oui-radius-full); font-size: var(--oui-text-micro); font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; }
 .tab--active .tab__count, .tab-bar a[aria-current="true"] .tab__count { color: var(--oui-tab-count-active-fg, var(--oui-action-ink)); background: var(--oui-tab-count-active-bg, var(--oui-action-soft)); }
 .tab-bar a > svg { width: 1rem; height: 1rem; flex: 0 0 auto; }
-@media (max-width: 42rem) { .tab-bar a { height: 2.75rem; } }
+@media (max-width: 42rem) { .tab-bar a { height: var(--oui-tab-height-phone, 2.75rem); } }
 
 .segmented { display: inline-flex; align-items: center; gap: 2px; max-width: 100%; padding: 3px; background: var(--oui-surface-2); border-radius: var(--oui-radius-md); box-shadow: inset 0 0 0 1px var(--oui-line); }
 .segmented__item { display: inline-flex; align-items: center; justify-content: center; gap: 0.375rem; min-height: var(--oui-control-height-sm); padding: 0 0.75rem; color: var(--oui-text-quaternary); border-radius: var(--oui-radius-sm); font-size: var(--oui-text-label); font-weight: 500; line-height: 1; white-space: nowrap; text-decoration: none; transition: color var(--oui-dur-1) var(--oui-ease-out), background-color var(--oui-dur-1) var(--oui-ease-out), box-shadow var(--oui-dur-1) var(--oui-ease-out); }
@@ -565,12 +565,12 @@ a.kpi-tile:focus-visible { outline: none; box-shadow: var(--oui-shadow-1), var(-
   position: relative;
   display: flex;
   min-width: 0;
-  flex-direction: column;
   color: var(--oui-text-primary);
   background: var(--oui-surface);
   border-radius: var(--oui-radius-md);
   box-shadow: var(--oui-shadow-1), var(--ui-card-edge);
 }
+:where(.ui-card:not(.ui-card--bare)) { flex-direction: column; }
 .ui-card__header { display: flex; align-items: var(--oui-card-header-align, flex-start); justify-content: space-between; gap: var(--oui-space-3); padding: var(--oui-space-4) var(--oui-space-5) 0; }
 .ui-card__heading { display: flex; align-items: center; gap: 0.625rem; min-width: 0; }
 .ui-card__titles { display: grid; min-width: 0; gap: 1px; }
@@ -682,6 +682,7 @@ a.kpi-tile:focus-visible { outline: none; box-shadow: var(--oui-shadow-1), var(-
 .ui-dl--cols-1 { grid-template-columns: minmax(0, 1fr); }
 .ui-dl--cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .ui-dl--cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.ui-dl--cols-2 > .ui-dl__row--wide, .ui-dl--cols-3 > .ui-dl__row--wide { grid-column: 1 / -1; }
 @media (max-width: 42rem) { .ui-dl--grid, .ui-dl--cols-2, .ui-dl--cols-3 { grid-template-columns: minmax(0, 1fr); } }
 
 /* ───────────────────────── Avatars ───────────────────────── */
@@ -1293,7 +1294,7 @@ ul.ui-rows--cards, nav.ui-rows--cards > .ui-rows__list { grid-template-columns: 
 /* ───────────────────────── Native control baseline ───────────────────────── */
 /* Checkboxes, radios, ranges and progress take the host's action colour. */
 :where(:root) { accent-color: var(--oui-action-bg); }
-textarea.field-control { min-height: 5.5rem; padding-block: 0.5625rem; line-height: var(--oui-leading-body); resize: vertical; }
+textarea.field-control { min-height: var(--oui-textarea-min-height, 5.5rem); padding-block: 0.5625rem; line-height: var(--oui-leading-body); resize: var(--oui-textarea-resize, vertical); }
 /* Autogrow: the browser sizes the box where field-sizing exists; the
    orbital-ui.js fallback sets the height elsewhere. */
 textarea.field-control[data-autogrow] { max-height: 24rem; resize: none; field-sizing: content; }
@@ -1303,6 +1304,7 @@ select.field-control:disabled { cursor: not-allowed; }
 .field-control::-webkit-calendar-picker-indicator { opacity: 0.55; cursor: pointer; }
 .field-control::-webkit-calendar-picker-indicator:hover { opacity: 0.9; }
 /* Numbers read as figures: mono, tabular, no spinners. */
+.field-control.num,
 .field-control[type="number"] { font-family: var(--oui-font-numeric); font-variant-numeric: tabular-nums; -moz-appearance: textfield; appearance: textfield; }
 .field-control[type="number"]::-webkit-outer-spin-button,
 .field-control[type="number"]::-webkit-inner-spin-button { margin: 0; -webkit-appearance: none; }
@@ -1809,16 +1811,16 @@ a.ui-timeline__title:focus-visible { outline: none; border-radius: var(--oui-rad
   background: var(--oui-surface);
   border: 1px solid transparent;
   border-radius: var(--oui-radius-sm);
-  box-shadow: var(--oui-field-ring, 0 0 0 1px var(--oui-line-2)), 0 1px 1px var(--oui-sh-1);
+  box-shadow: var(--oui-field-ring, var(--oui-control-ring-inset,) 0 0 0 1px var(--oui-line-2)), 0 1px 1px var(--oui-sh-1);
   transition: border-color var(--oui-dur-1) var(--oui-ease-out), box-shadow var(--oui-dur-1) var(--oui-ease-out);
 }
-.field-input:hover { box-shadow: 0 0 0 1px var(--oui-ink-4), 0 1px 1px var(--oui-sh-1); }
-.field-input:focus-within { box-shadow: 0 0 0 1px var(--control-focus-border, var(--oui-action-ring)), 0 0 0 4px var(--oui-focus-halo-color); }
-.field-input.is-invalid, .field-input.is-invalid:hover { box-shadow: 0 0 0 1px var(--oui-danger), 0 1px 1px var(--oui-sh-1); }
-.field-input.is-invalid:focus-within { box-shadow: 0 0 0 1px var(--oui-danger), var(--oui-ring-error); }
-.field-input.is-suggested { box-shadow: 0 0 0 1px var(--oui-ai-200), 0 1px 1px var(--oui-sh-1); }
-.field-input.is-suggested:focus-within { box-shadow: 0 0 0 1px var(--control-focus-border, var(--oui-action-ring)), 0 0 0 4px var(--oui-focus-halo-color); }
-.field-input.is-disabled { background: var(--oui-surface-2); box-shadow: 0 0 0 1px var(--oui-line); }
+.field-input:hover { box-shadow: var(--oui-control-ring-inset,) 0 0 0 1px var(--oui-ink-4), 0 1px 1px var(--oui-sh-1); }
+.field-input:focus-within { box-shadow: var(--oui-control-ring-inset,) 0 0 0 1px var(--control-focus-border, var(--oui-action-ring)), 0 0 0 4px var(--oui-focus-halo-color); }
+.field-input.is-invalid, .field-input.is-invalid:hover { box-shadow: var(--oui-control-ring-inset,) 0 0 0 1px var(--oui-danger), 0 1px 1px var(--oui-sh-1); }
+.field-input.is-invalid:focus-within { box-shadow: var(--oui-control-ring-inset,) 0 0 0 1px var(--oui-danger), var(--oui-ring-error); }
+.field-input.is-suggested { box-shadow: var(--oui-control-ring-inset,) 0 0 0 1px var(--oui-ai-200), 0 1px 1px var(--oui-sh-1); }
+.field-input.is-suggested:focus-within { box-shadow: var(--oui-control-ring-inset,) 0 0 0 1px var(--control-focus-border, var(--oui-action-ring)), 0 0 0 4px var(--oui-focus-halo-color); }
+.field-input.is-disabled { background: var(--oui-surface-2); box-shadow: var(--oui-control-ring-inset,) 0 0 0 1px var(--oui-line); }
 .field-input > .field-control,
 .field-input > .field-control:hover,
 .field-input > .field-control:focus,
@@ -1828,8 +1830,8 @@ a.ui-timeline__title:focus-visible { outline: none; border-radius: var(--oui-rad
 .field-input.has-suffix > .field-control { padding-right: 0.375rem; }
 .field-input__icon { display: grid; flex: 0 0 auto; margin-left: 0.6875rem; color: var(--oui-fg-tertiary); pointer-events: none; }
 .field-input__icon svg { width: 1rem; height: 1rem; }
-.field-input__affix { flex: 0 0 auto; padding: 0 0 0 0.75rem; color: var(--oui-text-quaternary); font-family: var(--oui-font-numeric); font-size: var(--oui-text-label); user-select: none; }
-.field-input__affix--post { padding: 0 0.75rem 0 0; }
+.field-input__affix { flex: 0 0 auto; padding: 0 0 0 var(--oui-control-pad-x, 0.75rem); color: var(--oui-text-quaternary); font-family: var(--oui-font-numeric); font-size: var(--oui-text-label); user-select: none; }
+.field-input__affix--post { padding: 0 var(--oui-control-pad-x, 0.75rem) 0 0; }
 .field-input.has-icon > .field-input__affix { padding-left: 0.5rem; }
 
 /* ───────────────────────── Select chevron element ───────────────────────── */
@@ -1845,10 +1847,14 @@ a.ui-timeline__title:focus-visible { outline: none; border-radius: var(--oui-rad
 .ui-suggested { display: inline-flex; align-items: center; gap: 0.1875rem; height: 1.125rem; padding: 0 0.375rem 0 0.3125rem; color: var(--oui-ai-ink); background: var(--oui-ai-gradient-soft); border-radius: var(--oui-radius-full); box-shadow: inset 0 0 0 1px var(--oui-ai-200); font-size: var(--oui-text-micro); font-weight: 600; line-height: 1; white-space: nowrap; }
 .ui-suggested__icon { width: 0.75rem; height: 0.75rem; color: var(--oui-ai); }
 
+/* The shared Icon svg does not shrink in a flex row; any rule that sets its
+   flex still wins (zero specificity). */
+:where(svg[viewBox="0 0 24 24"][stroke="currentColor"][fill="none"]) { flex: none; }
+
 /* ───────────────────────── Chip group ───────────────────────── */
 .ui-chip-group { min-width: 0; margin: 0; padding: 0; border: 0; }
 /* The legend is a field label (.field-label sets its type and spacing). */
-.ui-chip-group__legend { padding: 0; }
+.ui-chip-group__legend { margin-bottom: 0; padding: 0; }
 .ui-chip-group__list { display: flex; flex-wrap: wrap; gap: 0.375rem; }
 .ui-choice-chip { position: relative; display: inline-flex; }
 .ui-choice-chip__input { position: absolute; inset: 0; margin: 0; opacity: 0; pointer-events: none; }
@@ -1886,9 +1892,12 @@ a.ui-timeline__title:focus-visible { outline: none; border-radius: var(--oui-rad
 .ui-choice-chip__input:disabled + .ui-choice-chip__body { opacity: 0.45; cursor: not-allowed; }
 .ui-choice-chip__input:focus-visible + .ui-choice-chip__body { box-shadow: var(--oui-focus-ring); }
 .ui-choice-chip__spark { display: inline-flex; margin-right: -0.1875rem; color: var(--oui-ai); }
-.ui-choice-chip__input:checked + .ui-choice-chip__body .ui-choice-chip__spark { color: inherit; }
-.ui-choice-chip.is-suggested .ui-choice-chip__body { background: var(--oui-ai-gradient-soft), var(--oui-surface); box-shadow: 0 0 0 1px var(--oui-ai-200); }
-.ui-choice-chip.is-suggested .ui-choice-chip__input:checked + .ui-choice-chip__body { background: var(--oui-action-bg); box-shadow: 0 0 0 1px var(--oui-action-bg), 0 0 0 3px var(--oui-ai-200); }
+/* Tick and spark are 12px marks; on a checked chip the spark keeps the AI
+   hue (--oui-chip-spark-checked) instead of inheriting the chip's text. */
+.ui-choice-chip__body :is(.ui-choice-chip__tick, .ui-choice-chip__spark) svg { width: 0.75rem; height: 0.75rem; }
+.ui-choice-chip__input:checked + .ui-choice-chip__body .ui-choice-chip__spark { color: var(--oui-chip-spark-checked, var(--oui-ai)); }
+.ui-choice-chip.is-suggested .ui-choice-chip__body { background: var(--oui-ai-gradient-soft), var(--oui-surface); box-shadow: 0 0 0 1px var(--oui-chip-suggested-ring, color-mix(in oklab, var(--oui-ai) 50%, transparent)); }
+.ui-choice-chip.is-suggested .ui-choice-chip__input:checked + .ui-choice-chip__body { background: var(--oui-action-bg); box-shadow: 0 0 0 1px var(--oui-action-bg), 0 0 0 3px var(--oui-chip-suggested-halo, color-mix(in oklab, var(--oui-ai) 28%, transparent)); }
 .ui-chip-group:disabled .ui-choice-chip__body { opacity: 0.45; cursor: not-allowed; }
 @media (prefers-reduced-motion: reduce) {
   .ui-choice-chip__body { transition: none; }
