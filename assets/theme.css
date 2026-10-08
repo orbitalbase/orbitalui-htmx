@@ -1464,10 +1464,14 @@ select.field-control:disabled { cursor: not-allowed; }
 @media (max-width: 42rem) {
   /* A row's trailing value and actions drop under its copy instead of
      squeezing the title into a sliver. */
-  .ui-row:has(> .ui-row__trail > :not(.ui-row__chevron)) { flex-wrap: wrap; }
-  .ui-row:has(> .ui-row__trail > :not(.ui-row__chevron)) > .ui-row__copy { flex-basis: calc(100% - 3.25rem); }
-  .ui-row:has(> .ui-row__trail > :not(.ui-row__chevron)) > .ui-row__trail { width: 100%; justify-content: flex-start; padding-left: 3.125rem; }
-  .ui-rows--plain .ui-row > .ui-row__trail, .ui-row:not(:has(> .ui-row__leading)) > .ui-row__trail { padding-left: 0; }
+  /* The dropped trail lines up with the copy (icon + gap) and keeps a
+     chevron on the far edge. :where() keeps these rules at low specificity
+     so a row without a leading icon resets the indent to zero. */
+  .ui-row:where(:has(> .ui-row__trail > :not(.ui-row__chevron))) { flex-wrap: wrap; }
+  .ui-row:where(:has(> .ui-row__trail > :not(.ui-row__chevron))) > .ui-row__copy { flex-basis: calc(100% - 3.25rem); }
+  .ui-row:where(:has(> .ui-row__trail > :not(.ui-row__chevron))) > .ui-row__trail { width: 100%; justify-content: flex-start; padding-left: calc(2.25rem + var(--oui-space-3)); }
+  .ui-row:where(:has(> .ui-row__trail > :not(.ui-row__chevron))) > .ui-row__trail > .ui-row__chevron { margin-left: auto; }
+  .ui-row:not(:has(> :is(.ui-row__leading, .ui-row__icon))) > .ui-row__trail { padding-left: 0; }
   .ui-card__header { flex-wrap: wrap; }
   .ui-decision__actions > :is(.ui-button, form) { flex: 1 1 100%; }
   .ui-decision__actions > form > .ui-button { flex: 1 1 auto; }

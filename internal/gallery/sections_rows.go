@@ -30,6 +30,7 @@ func rowSet(opts c.ActionListOpts, below bool) templ.Component {
 		c.ActionRow(c.ActionRowOpts{Title: "Share transfer register", Meta: "Needs a second approver before it can be filed", Icon: "scale", IconTone: c.ToneWarning, Href: "/b", Value: "€ 12,400.00"}),
 		c.ActionRow(c.ActionRowOpts{Title: "Assistant draft", Meta: "Prepared from the uploaded articles", Icon: "spark", IconTone: c.ToneAI, Href: "/c", Current: true}),
 		c.ActionRow(c.ActionRowOpts{Title: "A very long row title that never fits on one line and must wrap instead of squeezing the trailing column into nothing", Meta: "Meta line that is also long enough to be truncated on desktop and wrapped on a phone screen", Icon: "folder", IconTone: c.ToneInfo, Href: "/d"}),
+		c.ActionRow(c.ActionRowOpts{Title: "Row without an icon", Meta: "Its value drops flush to the copy on a phone", Href: "/e", Value: "MYR 350"}),
 		c.ActionRow(c.ActionRowOpts{Title: "Static row with actions", Meta: "No link; controls live on the trailing edge", Icon: "mail", IconTone: c.ToneDanger,
 			Trailing: seq(c.Button(c.ButtonVariantSecondary, c.ButtonSizeSM, c.ButtonOpts{Label: "Resend"}), c.Button(c.ButtonVariantQuiet, c.ButtonSizeSM, c.ButtonOpts{Label: "Revoke"}))}),
 		extra,

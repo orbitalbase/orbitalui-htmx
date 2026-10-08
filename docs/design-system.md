@@ -94,7 +94,8 @@ application means aliasing its own names to the semantic layer
   `--oui-line`, `-2`, `-3`. The older `--oui-bg-*`, `--oui-text-*`,
   `--oui-border-*` and `--oui-fg-*` names resolve onto these.
 - **Elevation.** `--oui-shadow-1/2/3` are ring plus layered shadow;
-  `--oui-shadow-inset` is the highlight. `--oui-shadow-xs..xl` are aliases.
+  `--oui-shadow-inset` is the highlight. `--oui-shadow-xs..xl` are the v1
+  scale kept ring-less (shadow only) for hosts that pair them with borders.
   Focus: `--oui-focus-ring` (canvas gap plus action ring) and
   `--oui-focus-halo` for inputs. Also `--oui-glass` and `--oui-scrim`.
 - **Radius** xs 6, sm 8, md 12, lg 16, xl 22 (`2xl` = 22). **Type scale**
