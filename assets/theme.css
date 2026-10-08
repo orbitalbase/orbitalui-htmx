@@ -160,7 +160,7 @@
 :is(.ui-status--success, .ui-badge--success) { --ui-tone: var(--oui-success); --ui-tone-ink: var(--oui-success-ink); --ui-tone-soft: var(--oui-success-soft); }
 :is(.ui-status--warning, .ui-badge--warning) { --ui-tone: var(--oui-warning); --ui-tone-ink: var(--oui-warning-ink); --ui-tone-soft: var(--oui-warning-soft); }
 :is(.ui-status--danger, .ui-badge--danger) { --ui-tone: var(--oui-danger); --ui-tone-ink: var(--oui-danger-ink); --ui-tone-soft: var(--oui-danger-soft); }
-:is(.ui-status--ai, .ui-badge--ai) { --ui-tone: var(--oui-ai); --ui-tone-ink: var(--oui-ai-ink); --ui-tone-soft: var(--oui-ai-soft); background: var(--oui-ai-gradient-soft); }
+:is(.ui-status--ai, .ui-badge--ai) { --ui-tone: var(--oui-ai); --ui-tone-ink: var(--oui-ai-ink); --ui-tone-soft: var(--oui-ai-soft); background: var(--oui-ai-surface); }
 @supports (color: color-mix(in srgb, black, transparent)) {
   :is(.ui-status, .ui-badge):is([class*="--brand"], [class*="--accent"], [class*="--info"], [class*="--success"], [class*="--warning"], [class*="--danger"], [class*="--ai"]) {
     box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ui-tone) 20%, transparent);
@@ -228,7 +228,7 @@
 .ui-alert--danger { --tone: var(--oui-danger); --tone-ink: var(--oui-danger-ink); --tone-soft: var(--oui-danger-soft); }
 .ui-alert--brand { --tone: var(--oui-brand); --tone-ink: var(--oui-brand-ink); --tone-soft: var(--oui-brand-soft); }
 .ui-alert--accent { --tone: var(--oui-accent); --tone-ink: var(--oui-accent-ink); --tone-soft: var(--oui-accent-soft); }
-.ui-alert--ai { --tone: var(--oui-ai); --tone-ink: var(--oui-ai-ink); --tone-soft: var(--oui-ai-soft); background: var(--oui-ai-gradient-soft); }
+.ui-alert--ai { --tone: var(--oui-ai); --tone-ink: var(--oui-ai-ink); --tone-soft: var(--oui-ai-soft); background: var(--oui-ai-surface); }
 .ui-alert__close { position: absolute; top: 0.5rem; right: 0.5rem; display: grid; width: 1.5rem; height: 1.5rem; place-items: center; color: var(--oui-text-quaternary); background: transparent; border: 0; border-radius: var(--oui-radius-xs); cursor: pointer; transition: background-color var(--oui-dur-1) var(--oui-ease-out), color var(--oui-dur-1) var(--oui-ease-out); }
 .ui-alert__close:hover { color: var(--oui-text-primary); background: var(--oui-line-3); background: color-mix(in srgb, var(--tone) 14%, transparent); }
 .ui-alert__close:focus-visible { outline: none; box-shadow: var(--oui-focus-ring); }
