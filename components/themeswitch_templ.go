@@ -9,7 +9,7 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 // ThemeSwitch is the sun / monitor / moon control. The server renders
-// "system" checked; orbital-ui.js checks the stored preference on load.
+// "system" checked; shell.js checks the stored preference on load.
 func ThemeSwitch(opts ThemeSwitchOpts) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context

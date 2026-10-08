@@ -171,7 +171,7 @@ func TestChatComposerAndCues(t *testing.T) {
 // Both shell scripts must reach hosts that serve assets.Files, and the
 // pre-paint script must stay an external, blocking-friendly file.
 func TestShellRuntimeContract(t *testing.T) {
-	js, err := os.ReadFile("../assets/orbital-ui.js")
+	js, err := os.ReadFile("../assets/shell.js")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -180,7 +180,7 @@ func TestShellRuntimeContract(t *testing.T) {
 		`document.addEventListener("toast"`, "aria-activedescendant", "OrbitalTheme",
 	} {
 		if !strings.Contains(string(js), needle) {
-			t.Errorf("orbital-ui.js is missing %s", needle)
+			t.Errorf("shell.js is missing %s", needle)
 		}
 	}
 	theme, err := os.ReadFile("../assets/theme.js")

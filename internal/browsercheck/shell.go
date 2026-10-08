@@ -19,7 +19,7 @@ func with(comp templ.Component, children ...templ.Component) templ.Component {
 }
 
 // shellHead mirrors a host's <head>: theme.js synchronously before the
-// stylesheets, orbital-ui.js before Alpine. variant selects the same three
+// stylesheets, orbital-ui.js and shell.js before Alpine. variant selects the same three
 // builds as the component page (?csp=1, ?host=1).
 func shellHead(w http.ResponseWriter, r *http.Request, title string) templ.Component {
 	alpine := "/vendor/alpine.min.js"
@@ -34,7 +34,7 @@ func shellHead(w http.ResponseWriter, r *http.Request, title string) templ.Compo
 	return raw(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>` + title + `</title>
 <script src="/static/theme.js"></script>
 <link rel="stylesheet" href="/static/tokens.css"><link rel="stylesheet" href="/static/motion.css"><link rel="stylesheet" href="/static/controls.css"><link rel="stylesheet" href="/static/theme.css"><link rel="stylesheet" href="/static/shell.css">
-<script src="/vendor/htmx.min.js" defer></script>` + hostScript + `<script src="/static/menu.js" defer></script><script src="/static/orbital-ui.js" defer></script><script src="` + alpine + `" defer></script>
+<script src="/vendor/htmx.min.js" defer></script>` + hostScript + `<script src="/static/menu.js" defer></script><script src="/static/orbital-ui.js" defer></script><script src="/static/shell.js" defer></script><script src="` + alpine + `" defer></script>
 </head><body>`)
 }
 

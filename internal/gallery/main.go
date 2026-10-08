@@ -13,7 +13,7 @@
 // Section pages carry no orbital-ui.js or Alpine: overlays are pinned open
 // statically (an open <dialog> would otherwise be promoted to a real modal).
 // shell.html and shell-full.html are whole AppShell pages that do load
-// orbital-ui.js and menu.js, so the burger, scrim, palette (press Ctrl/Cmd K)
+// orbital-ui.js, shell.js and menu.js, so the burger, scrim, palette (press Ctrl/Cmd K)
 // and menus work.
 package main
 
@@ -76,7 +76,7 @@ func run(out, fontDir string) error {
 	if err := os.MkdirAll(filepath.Join(out, "assets"), 0o755); err != nil {
 		return err
 	}
-	for _, name := range append(append([]string{}, sheets...), "orbital-ui.js", "menu.js", "inspector.js") {
+	for _, name := range append(append([]string{}, sheets...), "orbital-ui.js", "shell.js", "menu.js", "inspector.js") {
 		b, err := fs.ReadFile(assets.Files, name)
 		if err != nil {
 			return err

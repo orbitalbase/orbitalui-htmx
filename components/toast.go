@@ -1,6 +1,6 @@
 // Toasts (toast.templ): a fixed notification region plus the toast itself.
 // Server-rendered toasts (a flash message) go inside ToastRegion's children;
-// client-raised ones come from the runtime in assets/orbital-ui.js.
+// client-raised ones come from the runtime in assets/shell.js.
 //
 // Runtime contract (all plain DOM, so it works under Alpine's CSP build):
 //

@@ -340,6 +340,21 @@ async function runVariant(name, path, {full = true, host = false} = {}) {
             });
         }
 
+        // ── component runtime alone: orbital-ui.js without shell.js ────────────
+        // Hosts with their own toast / palette system load only the component
+        // runtime; the shell runtime must not be pulled in, and a toast trigger
+        // addressed to it must be a no-op, not an error.
+        await check('orbital-ui.js without shell.js: no OrbitalShell, and an HX-Trigger toast does nothing', async () => {
+            await b.send('Page.navigate', {url: base + path});
+            await eventually(() => js('!!(window.OrbitalUI && window.Alpine)'), 'the component page to start');
+            b.errors.length = 0;
+            expect(await js('typeof window.OrbitalShell') === 'undefined', 'window.OrbitalShell exists without shell.js');
+            await js('htmx.ajax("POST", "/shell/toast", {target: "#confirm-out", swap: "none"})');
+            await new Promise(r => setTimeout(r, 400));
+            expect(await js('document.querySelector("[data-toast-stack], .ui-toast") === null'), 'a toast was rendered without shell.js');
+            expect(b.errors.length === 0, b.errors.join('\n'));
+        });
+
         // ── shell: palette, toast, theme switch, mobile sidebar ────────────────
         // Served on /shell with the same variant query (?csp=1 / ?host=1): the
         // shell runtime is plain DOM delegation, so it must behave identically

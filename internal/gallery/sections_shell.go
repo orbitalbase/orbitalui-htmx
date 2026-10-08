@@ -29,7 +29,7 @@ const shellCSS = `<style>
 
 func init() {
 	register(section{ID: "shell-parts", Title: "Shell parts", Note: "Sidebar items (icon, leading avatar, count, percent, done, tones, dense, add), sidebar user with the open account menu, topbar search and the New menu. The full frame is the Shell page in the left nav.", Body: shellPartsBody()})
-	register(section{ID: "palette", Title: "Command palette", Note: "Open state, pinned in a stage (the runtime opens it with the keyboard shortcut). Results are rendered by orbital-ui.js; this markup mirrors its output.", Body: paletteBody()})
+	register(section{ID: "palette", Title: "Command palette", Note: "Open state, pinned in a stage (the runtime opens it with the keyboard shortcut). Results are rendered by shell.js; this markup mirrors its output.", Body: paletteBody()})
 	register(section{ID: "toasts", Title: "Toasts", Note: "Every tone, with and without a title, and a long message. ToastRegion is fixed to the viewport corner; here the toasts sit in the flow.", Body: toastsBody()})
 	register(section{ID: "theme-switch", Title: "Theme switch", Note: "Sun / monitor / moon, built on SegmentedChoice; assets/theme.js applies the choice before first paint.", Body: seq(
 		group("ThemeSwitch", cell("default", c.ThemeSwitch(c.ThemeSwitchOpts{})), cell("sm", c.ThemeSwitch(c.ThemeSwitchOpts{Size: "sm", StorageKey: "gallery-theme"}))),

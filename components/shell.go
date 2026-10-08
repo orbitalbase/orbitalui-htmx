@@ -6,7 +6,7 @@
 // The sidebar items are the existing .ui-nav__* family (SidebarNav's look)
 // extended with Count / Percent / Done / Leading / Tone, so a data-driven
 // SidebarNav and a hand-composed SidebarMenu look identical. Behaviour (burger,
-// scrim, Escape, inert while closed) lives in assets/orbital-ui.js and is
+// scrim, Escape, inert while closed) lives in assets/shell.js and is
 // plain DOM delegation, so it runs under Alpine's CSP build and alongside a
 // host runtime. Styles are in assets/shell.css.
 package components

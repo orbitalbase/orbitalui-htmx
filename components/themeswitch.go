@@ -6,7 +6,7 @@
 // data-theme="light"|"dark" on <html> (and color-scheme) before first paint,
 // and follows prefers-color-scheme and other tabs while the preference is
 // "system". The switch is a SegmentedChoice (sun / monitor / moon); the
-// runtime in orbital-ui.js syncs it with window.OrbitalTheme.
+// runtime in shell.js syncs it with window.OrbitalTheme.
 //
 //	<script src="/static/theme.js"></script>                           <!-- default key "oui-theme" -->
 //	<script src="/static/theme.js" data-storage-key="myapp-theme"></script>
