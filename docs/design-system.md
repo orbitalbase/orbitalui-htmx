@@ -15,6 +15,8 @@ paper-like elevation and dense-but-readable 14px controls.
 | `assets/motion.css` | Optional: `.ui-enter-up`, `.ui-stagger`, `.ui-press`, `.ui-shimmer`, `.ui-magic-fill`, `.ui-caret`, `.ui-typing`, orb states, ring and meter draw-in, view-transition helpers. Reduced-motion safe. |
 | `assets/theme.css` | Default styles for every `ui-*`, `field-*`, `tab-*`, `kpi-*`, `pager__*` and table class. |
 | `assets/shell.css` | Optional: `AppShell` frame, topbar, sidebar item extras, `CommandPalette` and toast styles. Import after `theme.css`. |
+| `assets/orbital-ui.js` | Component runtime: dialog, drawer, entity picker, server-driven closes, 422 swaps. Load before Alpine. |
+| `assets/shell.js` | Optional shell runtime (`window.OrbitalShell`): off-canvas sidebar, command palette, toasts, ThemeSwitch sync. Pairs with `shell.css`. Independent of `orbital-ui.js`; any position relative to Alpine. |
 | `assets/theme.js` | Optional: external pre-paint theme script for `<head>` (see "Theme script and light pinning"). |
 | `assets/controls.css` | Inside-the-control focus treatment for library and host fields. |
 | `assets/inspector.css`, `inspector.js` | The docked record inspector. |
@@ -82,8 +84,22 @@ application means aliasing its own names to the semantic layer
   `info`, `success`, `warning`, `danger`, `neutral` and `ai` has `--oui-{tone}`,
   `-2` (strong or hover), `-soft` (tint), `-ink` (text on the tint) and
   `--oui-on-{tone}` (text on the solid colour). `ai` also has
-  `--oui-ai-gradient`, `--oui-ai-gradient-soft` and `--oui-ai-glow`.
-  Components read these, never hex.
+  `--oui-ai-gradient`, `--oui-ai-gradient-soft`, `--oui-ai-surface` and
+  `--oui-ai-glow`. Components read these, never hex.
+- **Soft-tone contract: override the base tone; soft tints follow.** Each
+  `-soft` tint is a `color-mix(in oklab, ...)` of the tone's base colour, so a
+  host re-points `--oui-brand` (or `--oui-info`, ...) and the tints, selected
+  chips, nav current item and AI fills follow without a second override. In
+  light the base is mixed into `--oui-surface` (about 6-8%, matching the former
+  opaque 50-steps); in dark it is mixed into transparent (about 15-20%) so the
+  tint blends with every dark surface, raised ones included. The mixes resolve
+  on `:root`, so override the base tone there (and under the dark selector for
+  dark). A host that wants a hand-picked tint still sets `--oui-{tone}-soft`
+  directly. Browsers without `color-mix` keep the opaque 50-steps.
+- **Quiet AI fill.** `.ui-status--ai`, `.ui-badge--ai` and `.ui-alert--ai`
+  paint `--oui-ai-surface`: the AI tint with only a hint of the brand and
+  accent at the ends, so the badge reads as a soft tint with the AI ink. A host
+  that wants the louder look sets `--oui-ai-surface: var(--oui-ai-gradient-soft)`.
 - **Primary action.** `--oui-action-bg`, `-bg-hover`, `-fg`, `-ring`, `-soft`
   and `-ink` default to the brand tone. Buttons, selected chips, segmented
   and tab selection, meters and checklists read them. An ink-led identity sets
@@ -145,7 +161,18 @@ in the gallery.
 ## App shell and runtime contracts (v2 shell)
 
 Files: `assets/shell.css` (frame, topbar, sidebar extras, palette, toasts),
-`assets/theme.js` (pre-paint theme), `assets/orbital-ui.js` (shell runtime).
+`assets/theme.js` (pre-paint theme), `assets/shell.js` (shell runtime; split out
+of `orbital-ui.js`, which now holds the component runtime only).
+
+**`shell.js` load contract.** Any position relative to Alpine; independent of
+`orbital-ui.js` (load either, both or neither); plain DOM delegation, so it is
+CSP-safe. Toast, palette, theme-switch and shell markup only works when
+`shell.js` is loaded. `ToastRegion` / `Toast` server-rendered markup and the
+`ThemeSwitch` radios degrade gracefully without it, but a server toast then
+stays visible and its close button does nothing, so load `shell.js` whenever
+those components render. A host with its own toast system can load
+`orbital-ui.js` alone: `window.OrbitalShell` is absent and an
+`HX-Trigger: {"toast": ...}` event is ignored.
 Components: `shell.templ`, `palette.templ`, `toast.templ`, `themeswitch.templ`,
 `chatcomposer.templ`. Nothing here names a product: brand, navigation, palette
 content and menus are slots or data supplied by the host.
@@ -352,7 +379,7 @@ responsive drawer behaviour and routes.
 | Server-rendered primitives, fields, rows, navigation, tables and state surfaces | None beyond Go/templ; HTMX attributes only when used | Native HTML remains the fallback for links and forms. |
 | `Inspector` | Serve and load the external `assets/inspector.js` and `assets/inspector.css` | Does not require Alpine or inline scripts; host supplies CSP policy and asset URLs. |
 | `ModalShell`, `ConfirmButton`, `Drawer`, and `EntityPicker` | Alpine plus `assets/orbital-ui.js`, loaded before Alpine | No inline scripts. The runtime installs `window.OrbitalUI` and the `window.LedgerUI` names the markup calls, and stays inert when a host already provides `window.LedgerUI`. Server-driven close: `HX-Trigger: closeDialog` / `drawerClose`; 422 responses swap inline errors. |
-| `AppShell` sidebar, `CommandPalette`, `ToastRegion` / `HX-Trigger` toasts, `ThemeSwitch` | `assets/orbital-ui.js` (any position relative to Alpine); `assets/theme.js` in `<head>` for the pre-paint theme | Plain DOM delegation: no Alpine, no eval, no inline script or style, so it runs under `script-src 'self'` and beside a host `window.LedgerUI`. The palette fetches its endpoint with same-origin `fetch`. |
+| `AppShell` sidebar, `CommandPalette`, `ToastRegion` / `HX-Trigger` toasts, `ThemeSwitch` | `assets/shell.js` (any position relative to Alpine, independent of `orbital-ui.js`); `assets/theme.js` in `<head>` for the pre-paint theme | Plain DOM delegation: no Alpine, no eval, no inline script or style, so it runs under `script-src 'self'` and beside a host `window.LedgerUI`. The palette fetches its endpoint with same-origin `fetch`. |
 | `BalanceTool` | None for server-rendered totals; Alpine plus the host lines editor for live recalculation | Server totals remain authoritative; the host owns live editor integration. |
 | Dismissible `Alert`, `SuggestionChip` and `EntityPicker` states | Alpine.js; `theme.css` hides `[x-cloak]` until Alpine starts | Expressions are emitted in markup; CSP compatibility depends on the host's Alpine build and policy. |
 
