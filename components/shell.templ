@@ -1,0 +1,211 @@
+package components
+
+// AppShell renders the frame: sidebar, scrim, sheet with topbar and main.
+// The host owns <html>, <head> (stylesheets, theme.js, scripts) and <body>;
+// render AppShell directly inside <body>.
+//
+//	@components.AppShell(components.AppShellOpts{
+//		Brand:       brand(),
+//		Sidebar:     nav(),
+//		Footer:      components.SidebarUser(components.SidebarUserOpts{Name: "Ada Lovelace"}, accountMenu()),
+//		Breadcrumbs: []components.Crumb{{Label: "Home", Href: "/"}, {Label: "Reports"}},
+//		Actions:     actions(),
+//		Overlays:    overlays(), // CommandPalette, ToastRegion
+//	}, page)
+templ AppShell(opts AppShellOpts, main templ.Component) {
+	<a class="skip-link" href="#content">Skip to content</a>
+	<div class={ shellClass(opts) } data-oui-shell data-nav-open="false">
+		<aside id={ shellSidebarID(opts) } class="ui-shell__sidebar ui-vt-sidebar" aria-label={ shellSidebarLabel(opts) }>
+			<div class="ui-shell__sidebar-head">
+				if opts.Brand != nil {
+					@opts.Brand
+				}
+				<button type="button" class="ui-shell__sidebar-close" data-shell-close aria-label="Close menu">
+					@Icon("close")
+				</button>
+			</div>
+			<div class="ui-shell__sidebar-scroll">
+				if opts.Sidebar != nil {
+					@opts.Sidebar
+				}
+			</div>
+			if opts.Footer != nil {
+				<div class="ui-shell__sidebar-foot">
+					@opts.Footer
+				</div>
+			}
+		</aside>
+		<div class="ui-shell__scrim" data-shell-scrim aria-hidden="true"></div>
+		<div class="ui-shell__sheet ui-vt-main">
+			<header class="ui-topbar">
+				<button type="button" class="ui-topbar__burger" data-shell-open aria-controls={ shellSidebarID(opts) } aria-expanded="false" aria-label="Open menu">
+					@Icon("menu", "ui-topbar__burger-icon")
+				</button>
+				<div class="ui-topbar__crumbs">
+					if opts.Crumbs != nil {
+						@opts.Crumbs
+					} else if len(opts.Breadcrumbs) > 0 {
+						@BreadcrumbsWith(opts.Breadcrumbs, BreadcrumbsOpts{CollapseOnPhone: true})
+					}
+				</div>
+				if opts.Actions != nil {
+					<div class="ui-topbar__actions">
+						@opts.Actions
+					</div>
+				}
+			</header>
+			<main id="content" class="ui-shell__main" tabindex="-1">
+				if opts.FullWidth {
+					if main != nil {
+						@main
+					}
+				} else {
+					<div class="ui-shell__page">
+						if main != nil {
+							@main
+						}
+					</div>
+				}
+			</main>
+		</div>
+	</div>
+	if opts.Overlays != nil {
+		@opts.Overlays
+	}
+}
+
+// SidebarMenu is the sidebar's navigation landmark; put SidebarSections in it.
+// SidebarNav is the data-driven equivalent (same .ui-nav look); use SidebarMenu
+// when items need Count, Percent, Done or Leading.
+templ SidebarMenu(label string) {
+	<nav class="ui-nav ui-nav--shell" aria-label={ label }>
+		{ children... }
+	</nav>
+}
+
+// SidebarSection groups SidebarItems under an optional uppercase label.
+templ SidebarSection(opts SidebarSectionOpts) {
+	<section
+		class={ joinClass("ui-nav__section", opts.Class) }
+		if opts.Label != "" {
+			aria-labelledby={ sidebarSectionID(opts) }
+		}
+	>
+		if opts.Label != "" {
+			<h2 id={ sidebarSectionID(opts) } class="ui-nav__heading">
+				<span class="ui-nav__heading-label">{ opts.Label }</span>
+			</h2>
+		}
+		<ul class="ui-nav__list" role="list">
+			{ children... }
+		</ul>
+	</section>
+}
+
+// SidebarItem is one row of a SidebarSection.
+templ SidebarItem(opts SidebarItemOpts) {
+	<li>
+		<a
+			class={ sidebarItemClass(opts) }
+			href={ opts.Href }
+			title={ opts.Label }
+			if opts.Key != "" {
+				data-nav-key={ opts.Key }
+			}
+			if opts.Active {
+				aria-current="page"
+			}
+		>
+			if opts.Leading != nil {
+				<span class="ui-nav__lead">
+					@opts.Leading
+				</span>
+			} else if opts.Add {
+				<span class="ui-nav__add" aria-hidden="true">
+					@Icon(sidebarAddIcon(opts), "ui-nav__add-icon")
+				</span>
+			} else if opts.Icon != "" {
+				@Icon(opts.Icon, "ui-nav__icon")
+			}
+			<span class="ui-nav__label">{ opts.Label }</span>
+			if opts.Count > 0 {
+				if sidebarCountLabel(opts) != "" {
+					<span class="ui-nav__count" aria-label={ sidebarCountLabel(opts) }>{ sidebarCount(opts.Count) }</span>
+				} else {
+					<span class="ui-nav__count">{ sidebarCount(opts.Count) }</span>
+				}
+			}
+			if opts.Done {
+				<span class="ui-nav__done" role="img" aria-label={ sidebarDoneLabel(opts) } title={ sidebarDoneLabel(opts) }>
+					@Icon("check", "ui-nav__done-icon")
+				</span>
+			} else if opts.Percent != nil {
+				<span class="ui-nav__pct">{ sidebarPercent(*opts.Percent) }</span>
+			}
+		</a>
+	</li>
+}
+
+// SidebarUser is the sidebar footer: the signed-in user's avatar and name as a
+// menu trigger that opens upward. menu is the panel (MenuHeader, ThemeSwitch,
+// MenuLink items, a sign-out form). Dismissal comes from assets/menu.js.
+templ SidebarUser(opts SidebarUserOpts, menu templ.Component) {
+	@Menu(MenuOpts{Placement: "top", Label: sidebarUserLabel(opts), TriggerClass: "ui-sidebar-user", Class: "ui-sidebar-user-menu", Open: opts.Open}, sidebarUserTrigger(opts), menu)
+}
+
+templ sidebarUserTrigger(opts SidebarUserOpts) {
+	if opts.Avatar != nil {
+		@opts.Avatar
+	} else {
+		@Avatar(opts.Name, AvatarOpts{Size: AvatarSM})
+	}
+	<span class="ui-sidebar-user__name">{ opts.Name }</span>
+	<span class="ui-sidebar-user__more" aria-hidden="true">
+		@Icon("more")
+	</span>
+}
+
+// TopbarSearch is the topbar's search field look-alike: a button that opens
+// the CommandPalette (data-palette-open), with the shortcut as key caps.
+templ TopbarSearch(opts TopbarSearchOpts) {
+	<button
+		type="button"
+		class={ joinClass("ui-topbar-search", opts.Class) }
+		data-palette-open={ opts.Target }
+		aria-haspopup="dialog"
+		aria-label={ topbarSearchLabel(opts) }
+	>
+		@Icon("search", "ui-topbar-search__icon")
+		<span class="ui-topbar-search__text">{ topbarSearchPlaceholder(opts) }</span>
+		if keys := topbarSearchKeys(opts); len(keys) > 0 {
+			<span class="ui-topbar-search__kbd" aria-hidden="true">
+				@KbdGroup(keys...)
+			</span>
+		}
+	</button>
+}
+
+// TopbarNewMenu is the "New" creation menu: a button with an icon that opens
+// panel (MenuLink, MenuLabel, MenuSeparator or forms).
+templ TopbarNewMenu(opts TopbarNewMenuOpts, panel templ.Component) {
+	@Menu(MenuOpts{Align: "end", Label: opts.Label, Class: joinClass("ui-topbar-new", opts.Class), TriggerClass: "ui-button ui-button--secondary ui-button--sm ui-topbar-new__btn"}, topbarNewTrigger(opts), panel)
+}
+
+templ topbarNewTrigger(opts TopbarNewMenuOpts) {
+	@Icon(topbarNewIcon(opts))
+	<span class="ui-topbar-new__label">{ opts.Label }</span>
+	<span class="ui-topbar-new__chevron" aria-hidden="true">
+		@Icon("chevron-down")
+	</span>
+}
+
+// MenuRow is a menu-panel row with a muted label on the left and a control on
+// the right — a ThemeSwitch in an account menu, a density toggle.
+templ MenuRow(label string, control templ.Component) {
+	<div class="ui-menu__row">
+		<span class="ui-menu__row-label">{ label }</span>
+		if control != nil {
+			@control
+		}
+	</div>
+}

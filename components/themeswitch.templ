@@ -1,0 +1,17 @@
+package components
+
+// ThemeSwitch is the sun / monitor / moon control. The server renders
+// "system" checked; orbital-ui.js checks the stored preference on load.
+templ ThemeSwitch(opts ThemeSwitchOpts) {
+	@SegmentedChoice([]SegChoice{
+		{Value: "light", Label: "Light", Icon: "sun", IconOnly: true},
+		{Value: "system", Label: "System", Icon: "monitor", IconOnly: true},
+		{Value: "dark", Label: "Dark", Icon: "moon", IconOnly: true},
+	}, "system", SegmentedChoiceOpts{
+		Name:      "oui-theme",
+		AriaLabel: themeAriaLabel(opts),
+		Size:      opts.Size,
+		Class:     opts.Class,
+		Attrs:     templ.Attributes{"data-oui-theme-switch": "", "data-storage-key": themeStorageKey(opts)},
+	})
+}

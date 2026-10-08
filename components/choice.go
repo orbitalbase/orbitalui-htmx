@@ -4,6 +4,8 @@
 // out of the box; the visual state is CSS only (:checked, :has(:checked)).
 package components
 
+import "github.com/a-h/templ"
+
 // ChipOption is one chip in a ChipGroup.
 type ChipOption struct {
 	Value     string
@@ -61,11 +63,13 @@ type SegChoice struct {
 //	AriaLabel — accessible name of the group (required for a11y).
 //	Size — "" (30px) or "sm" (26px).
 //	Class — extra classes on the group.
+//	Attrs — extra attributes spread onto the group (data hooks).
 type SegmentedChoiceOpts struct {
 	Name      string
 	AriaLabel string
 	Size      string
 	Class     string
+	Attrs     templ.Attributes
 }
 
 var segChoiceCounts = [...]string{"ui-seg-choice--n2", "ui-seg-choice--n3", "ui-seg-choice--n4", "ui-seg-choice--n5", "ui-seg-choice--n6"}

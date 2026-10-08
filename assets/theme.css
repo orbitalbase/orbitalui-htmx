@@ -1910,3 +1910,65 @@ a.ui-timeline__title:focus-visible { outline: none; border-radius: var(--oui-rad
 .oui-suggestion-chip:disabled,
 .oui-suggestion-chip[aria-disabled="true"] { color: var(--oui-text-disabled); background: var(--oui-surface-2); box-shadow: none; opacity: 0.6; cursor: not-allowed; pointer-events: none; }
 .ui-choice-chip__label { min-width: 0; }
+
+/* ───────────────────────── Chat composer ───────────────────────── */
+.ui-composer { width: 100%; max-width: 47.5rem; margin: 0 auto; }
+.ui-composer__box {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0.75rem 0.625rem 0.5rem 1rem;
+  background: var(--oui-surface);
+  border-radius: var(--oui-radius-xl);
+  box-shadow: var(--oui-shadow-2);
+  transition: box-shadow var(--oui-dur-2) var(--oui-ease-out);
+}
+.ui-composer__box:focus-within { box-shadow: var(--oui-ai-glow), 0 0 0 1px var(--oui-surface) inset; }
+.ui-composer__input {
+  display: block;
+  width: 100%;
+  min-height: 1.5rem;
+  max-height: 13.75rem;
+  padding: 0;
+  margin: 0;
+  overflow-y: auto;
+  color: var(--oui-text-primary);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  font: inherit;
+  font-size: var(--oui-text-body-l);
+  line-height: 1.5rem;
+  outline: 0;
+  resize: none;
+  field-sizing: content;
+}
+.ui-composer__input:focus, .ui-composer__input:focus-visible { box-shadow: none; outline: 0; }
+.ui-composer__input::placeholder { color: var(--oui-text-placeholder); }
+.ui-composer__bar { display: flex; align-items: center; gap: 4px; margin-left: -0.5rem; }
+.ui-composer__spacer { flex: 1; }
+.ui-composer__send {
+  position: relative;
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  color: var(--oui-action-fg);
+  background: var(--oui-action-bg);
+  border: 0;
+  border-radius: var(--oui-radius-md);
+  box-shadow: var(--oui-shadow-inset), 0 1px 2px var(--oui-sh-3);
+  cursor: pointer;
+  transition: opacity var(--oui-dur-2) var(--oui-ease-out), transform var(--oui-dur-1) var(--oui-ease-spring), box-shadow var(--oui-dur-2) var(--oui-ease-out), background-color var(--oui-dur-1) var(--oui-ease-out);
+}
+.ui-composer__send svg { width: 1.0625rem; height: 1.0625rem; }
+.ui-composer__send:hover { background: var(--oui-action-bg-hover); }
+.ui-composer__send:active { transform: scale(0.94); }
+.ui-composer__send:focus-visible { outline: none; box-shadow: var(--oui-focus-ring); }
+/* An empty box dims the send button. */
+.ui-composer:not(.is-busy):has(.ui-composer__input:placeholder-shown) .ui-composer__send { opacity: 0.32; box-shadow: none; }
+.ui-composer__hint { margin: 0.5rem 0 0; color: var(--oui-text-quaternary); font-size: var(--oui-text-caption); line-height: var(--oui-leading-caption); text-align: center; }
+@media (max-width: 42rem) { .ui-composer__send { width: var(--oui-control-height-lg); height: var(--oui-control-height-lg); } }
+@media (prefers-reduced-motion: reduce) { .ui-composer__box, .ui-composer__send { transition: none; } .ui-composer__send:active { transform: none; } }

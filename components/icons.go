@@ -142,6 +142,14 @@ var iconPaths = map[string]string{
 	"workflow": "M4.5 4.5h6v4.5h-6zM13.5 15h6v4.5h-6zM7.5 9v3.75a2.25 2.25 0 0 0 2.25 2.25h3.75",
 	// Sidebar — the collapse toggle for the navigation panel.
 	"sidebar": "M3.75 4.5h16.5v15H3.75zM9.75 4.5v15",
+	// Shell and feedback glyphs: burger, theme switch, toast tones.
+	"menu":           "M4 7h16M4 12h16M4 17h16",
+	"sun":            "M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z M12 2.5v2m0 15v2M4.6 4.6l1.4 1.4m12 12 1.4 1.4M2.5 12h2m15 0h2M4.6 19.4 6 18m12-12 1.4-1.4",
+	"moon":           "M20.5 13.2A8.5 8.5 0 1 1 10.8 3.5a6.8 6.8 0 0 0 9.7 9.7z",
+	"monitor":        "M3.5 4.5h17v11.5h-17z M8.5 20h7M12 16v4",
+	"circle-check":   "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z M8.5 12.2l2.4 2.4 4.6-4.9",
+	"circle-x":       "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z M9 9l6 6m0-6-6 6",
+	"triangle-alert": "M12 3.5 21.5 20h-19z M12 10v4.5m0 2.5h.01",
 }
 
 // fallbackIcon is rendered for unknown icon names — a neutral circle so a
