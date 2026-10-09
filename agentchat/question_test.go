@@ -3,6 +3,7 @@ package agentchat
 import (
 	"encoding/json"
 	"reflect"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -51,7 +52,7 @@ func TestParseQuestionsRejections(t *testing.T) {
 		"not json":                `[`,
 		"no questions":            `{"questions":[]}`,
 		"empty label":             `{"questions":[{"key":"a","label":" ","type":"text"}]}`,
-		"unknown type":            `{"questions":[{"key":"a","label":"A","type":"date"}]}`,
+		"unknown type":            `{"questions":[{"key":"a","label":"A","type":"time"}]}`,
 		"duplicate key":           `{"questions":[` + two + `,{"key":"a","label":"A2","type":"text"}]}`,
 		"choice without options":  `{"questions":[{"key":"a","label":"A","type":"select"}]}`,
 		"one option":              `{"questions":[{"key":"a","label":"A","type":"select","options":["x"]}]}`,
@@ -61,6 +62,9 @@ func TestParseQuestionsRejections(t *testing.T) {
 		"buttons beside another":  `{"questions":[{"key":"a","label":"A","type":"buttons","options":["x","y"]},{"key":"b","label":"B","type":"text"}]}`,
 		"value outside options":   `{"questions":[{"key":"a","label":"A","type":"select","options":["x","y"],"value":"z"}]}`,
 		"list on single choice":   `{"questions":[{"key":"a","label":"A","type":"select","options":["x","y"],"value":["x","y"]}]}`,
+		"free text for date":      `{"questions":[{"key":"a","label":"A","type":"date","value":"next Friday"}]}`,
+		"unpadded date":           `{"questions":[{"key":"a","label":"A","type":"date","value":"2026-2-3"}]}`,
+		"impossible date":         `{"questions":[{"key":"a","label":"A","type":"date","value":"2026-02-30"}]}`,
 		"text for number":         `{"questions":[{"key":"a","label":"A","type":"number","value":"lots"}]}`,
 		"negative number":         `{"questions":[{"key":"a","label":"A","type":"number","value":-1}]}`,
 		"object value":            `{"questions":[{"key":"a","label":"A","type":"text","value":{"x":1}}]}`,
@@ -99,12 +103,13 @@ func TestParseQuestionsSnapsAndValidatesPrefill(t *testing.T) {
 		{"key":"skills","label":"Skills","type":"multiselect","options":["Go","SQL"],"value":["go","SQL"]},
 		{"key":"min","label":"Minimum","type":"number","value":5000},
 		{"key":"company","label":"Company","type":"text","value":"Acme"},
+		{"key":"start","label":"Start","type":"date","value":" 2026-10-09 "},
 		{"key":"blank","label":"Blank","type":"text","value":null}]}`, QuestionSchema{})
 	if err != nil {
 		t.Fatal(err)
 	}
 	qs := card.Questions
-	if qs[0].Value != "Hybrid" || !reflect.DeepEqual(qs[1].Values, []string{"Go", "SQL"}) || qs[2].Value != "5000" || qs[3].Value != "Acme" || qs[4].Value != "" {
+	if qs[0].Value != "Hybrid" || !reflect.DeepEqual(qs[1].Values, []string{"Go", "SQL"}) || qs[2].Value != "5000" || qs[3].Value != "Acme" || qs[4].Value != "2026-10-09" || qs[5].Value != "" {
 		t.Fatalf("prefill not normalised: %+v", qs)
 	}
 }
@@ -125,6 +130,10 @@ func TestQuestionToolSchema(t *testing.T) {
 	key = q["items"].(map[string]any)["properties"].(map[string]any)["key"].(map[string]any)
 	if q["maxItems"] != 3 || !reflect.DeepEqual(key["enum"], []string{"role", "name"}) {
 		t.Errorf("limited schema: maxItems=%v key=%v", q["maxItems"], key)
+	}
+	types := props["questions"].(map[string]any)["items"].(map[string]any)["properties"].(map[string]any)["type"].(map[string]any)["enum"].([]string)
+	if !slices.Contains(types, TypeDate) {
+		t.Errorf("the type enum lacks date: %v", types)
 	}
 	if _, err := json.Marshal(limited); err != nil {
 		t.Errorf("the schema must be JSON: %v", err)

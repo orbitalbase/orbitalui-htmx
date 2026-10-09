@@ -10,6 +10,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 )
 
 const (
@@ -28,6 +29,7 @@ const (
 	TypeNumber      = "number"
 	TypeText        = "text"
 	TypeTextarea    = "textarea"
+	TypeDate        = "date"
 )
 
 func isChoice(kind string) bool {
@@ -39,7 +41,8 @@ func isChoice(kind string) bool {
 //	Key — the field name without its q_ prefix.
 //	Type — one of the Type constants.
 //	Value, Values — the agent's suggested answer (Values for multiselect), so
-//	    the user can mostly confirm. Choices snap to the exact option text.
+//	    the user can mostly confirm. Choices snap to the exact option text;
+//	    a date is YYYY-MM-DD.
 type Question struct {
 	Key, Label, Help, Type, Placeholder, Value string
 	Options, Values                            []string
@@ -99,7 +102,8 @@ type rawQuestion struct {
 // Anything outside the schema is an error to report back to the model: an
 // unknown key, a repeated key or option, a choice without 2 to 20 options,
 // a buttons question beside others, or a suggested value that is not one of
-// the options or not a non-negative number. The returned card has no Token.
+// the options, a non-negative number or a YYYY-MM-DD date. The returned card
+// has no Token.
 func ParseQuestions(raw json.RawMessage, s QuestionSchema) (QuestionCard, error) {
 	var in rawCard
 	if err := json.Unmarshal(raw, &in); err != nil {
@@ -122,9 +126,9 @@ func ParseQuestions(raw json.RawMessage, s QuestionSchema) (QuestionCard, error)
 		}
 		seen[q.Key] = true
 		switch q.Type {
-		case TypeButtons, TypeSelect, TypeMultiselect, TypeNumber, TypeText, TypeTextarea:
+		case TypeButtons, TypeSelect, TypeMultiselect, TypeNumber, TypeText, TypeTextarea, TypeDate:
 		default:
-			return QuestionCard{}, errors.New("question type must be buttons, select, multiselect, number, text or textarea")
+			return QuestionCard{}, errors.New("question type must be buttons, select, multiselect, number, text, textarea or date")
 		}
 		if q.Type == TypeButtons && len(in.Questions) != 1 {
 			return QuestionCard{}, errors.New("immediate buttons require a single-question group")
@@ -222,6 +226,11 @@ func setPrefill(q *Question, raw json.RawMessage) error {
 			return fmt.Errorf("value for %q must be a number", q.Key)
 		}
 	}
+	if q.Type == TypeDate {
+		if _, err := time.Parse(time.DateOnly, picked[0]); err != nil {
+			return fmt.Errorf("value for %q must be a YYYY-MM-DD date", q.Key)
+		}
+	}
 	q.Value = picked[0]
 	return nil
 }
@@ -249,14 +258,14 @@ func QuestionToolSchema(s QuestionSchema) map[string]any {
 		"properties": map[string]any{
 			"key":         key,
 			"label":       map[string]any{"type": "string"},
-			"type":        map[string]any{"type": "string", "enum": []string{TypeButtons, TypeSelect, TypeMultiselect, TypeNumber, TypeText, TypeTextarea}},
+			"type":        map[string]any{"type": "string", "enum": []string{TypeButtons, TypeSelect, TypeMultiselect, TypeNumber, TypeText, TypeTextarea, TypeDate}},
 			"options":     map[string]any{"type": "array", "maxItems": maxOptions, "items": map[string]any{"type": "string"}},
 			"help":        map[string]any{"type": "string"},
 			"placeholder": map[string]any{"type": "string"},
 			"required":    map[string]any{"type": "boolean"},
 			"value": map[string]any{
 				"type": []string{"string", "number", "array"}, "items": map[string]any{"type": "string"},
-				"description": "The suggested answer from what you already know, so the user can just confirm. For choices it must be one of the options (an array of options for multiselect).",
+				"description": "The suggested answer from what you already know, so the user can just confirm. For choices it must be one of the options (an array of options for multiselect). For a date it is YYYY-MM-DD.",
 			},
 		},
 	}

@@ -1,6 +1,7 @@
 package agentchat
 
 import (
+	"slices"
 	"strconv"
 	"strings"
 
@@ -8,10 +9,19 @@ import (
 )
 
 // QuestionCardView is what QuestionForm renders: the card and the session
-// its answers belong to.
+// its answers belong to. Hidden fields (a CSRF token) are rendered as hidden
+// inputs in key order, so the card posts them without JavaScript; the card's
+// own session_id, answer_questions and question_token are reserved and skipped.
 type QuestionCardView struct {
 	SessionID string
 	Card      QuestionCard
+	Hidden    map[string]string
+}
+
+func (v QuestionCardView) hiddenKeys() []string {
+	return slices.DeleteFunc(sortedKeys(v.Hidden), func(k string) bool {
+		return k == "session_id" || k == "answer_questions" || k == "question_token"
+	})
 }
 
 func (q Question) isChoice() bool { return isChoice(q.Type) }

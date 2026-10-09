@@ -183,9 +183,11 @@ func (o ComposerOpts) maxLength() string { return strconv.Itoa(o.MaxLength) }
 
 func (o ComposerOpts) counts() bool { return o.Counter && o.MaxLength > 0 }
 
-func (o ComposerOpts) hiddenKeys() []string {
-	keys := make([]string, 0, len(o.Hidden))
-	for k := range o.Hidden {
+func (o ComposerOpts) hiddenKeys() []string { return sortedKeys(o.Hidden) }
+
+func sortedKeys(m map[string]string) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
 		keys = append(keys, k)
 	}
 	slices.Sort(keys)
