@@ -1118,7 +1118,7 @@ async function runAgentChat() {
             await eventually(() => js('!!window.__atSend'), 'the turn to be sent');
             const atSend = await js('window.__atSend');
             expect(atSend.collapsed, 'the card was not collapsed when the turn was sent');
-            expect(atSend.summary === 'Work arrangement: Hybrid · Minimum pay: 5,000 · Start date: 2026-10-09', `summary: ${atSend.summary}`);
+            expect(atSend.summary === 'Work arrangement: Hybrid · Minimum pay: 5,000 · Start date: 9 October 2026', `summary: ${atSend.summary}`);
             await eventually(async () => (await state()).requests.length === before + 1, 'the answers request');
             const req = await lastRequest();
             expect(req.answer_questions[0] === '1' && req.question_token[0] === 'tok-1' && req.q_mode[0] === 'Hybrid' && req.q_min[0] === '5000' && req.q_start[0] === '2026-10-09' && req.session_id[0] === 's-1' && !req.message && req.scope.join() === 'card', `answers request: ${JSON.stringify(req)}`);
