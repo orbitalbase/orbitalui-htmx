@@ -1292,6 +1292,21 @@ async function runAgentChat() {
             expect(await q(panel, 'el.getAttribute("role")') === null && await q(panel, 'el.hasAttribute("aria-modal")') === false, 'a docked panel is a dialog');
         });
 
+        await check('a host stylesheet cannot draw a second focus ring on the composer input; the box keeps the glow', async () => {
+            await js(`(() => { const s = document.createElement("style"); s.id = "hostile"; s.textContent = "textarea:focus, textarea:focus-visible { box-shadow: 0 0 0 4px red; outline: 3px solid red; border: 2px solid red } :focus-visible { outline: 2px solid red; outline-offset: 2px } [type]:focus, input:focus, select:focus { outline: 3px solid red; box-shadow: 0 0 0 4px red }"; document.head.append(s); })()`);
+            const box = F + '.ui-chat-composer__box';
+            const unfocused = await q(box, 'getComputedStyle(el).boxShadow');
+            await click(F + '[data-agentchat-input]');
+            await sleep(300);
+            const input = await q(F + '[data-agentchat-input]', '(() => { const c = getComputedStyle(el); return {focused: document.activeElement === el, outline: c.outlineStyle + " " + c.outlineWidth, shadow: c.boxShadow, border: c.borderTopWidth, bg: c.backgroundColor}; })()');
+            expect(input.focused, 'the input did not take focus');
+            expect(input.outline.startsWith('none') || input.outline.endsWith(' 0px'), `host outline on the input: ${input.outline}`);
+            expect(input.shadow === 'none' && input.border === '0px' && input.bg === 'rgba(0, 0, 0, 0)', `host styles reached the input: ${JSON.stringify(input)}`);
+            const glow = await q(box, 'getComputedStyle(el).boxShadow');
+            expect(glow !== unfocused && glow !== 'none' && !glow.includes('rgb(255, 0, 0)'), `the box lost its focus glow: ${glow}`);
+            await js('document.getElementById("hostile").remove(); document.activeElement.blur()');
+        });
+
         await check('chat buttons carry no browser border or grey face (no reliance on a CSS preflight)', async () => {
             const bad = await js(`[...document.querySelectorAll(".ui-chat button")].filter(b => { const cs = getComputedStyle(b); return cs.borderTopStyle === "outset" || cs.borderTopStyle === "solid" && parseFloat(cs.borderTopWidth) >= 2 || cs.backgroundColor === "rgb(239, 239, 239)" || cs.backgroundColor === "rgb(233, 233, 237)"; }).map(b => b.className || b.outerHTML.slice(0, 60))`);
             expect(bad.length === 0, `default-styled buttons: ${bad.join(', ')}`);
@@ -1313,6 +1328,18 @@ async function runAgentChat() {
             expect(await q('[data-agentchat-composer]', 'el.dataset.state') === 'idle', 'the composer stayed busy');
             const polls = (await state()).resumes;
             expect(polls.length === 2 && polls.every(id => id === 's-r'), `state polls: ${JSON.stringify(polls)}`);
+        });
+
+        await check('an empty chat (short hero and starters) does not overflow the thread at 1440x757 and 390x844', async () => {
+            await b.send('Page.navigate', {url: base + '/agentchat/empty'});
+            await eventually(() => js('!!document.querySelector("[data-agentchat-empty]") && !!window.OrbitalChat'), 'the empty chat page');
+            for (const [w, h] of [[1440, 757], [390, 844]]) {
+                await b.send('Emulation.setDeviceMetricsOverride', {width: w, height: h, deviceScaleFactor: 1, mobile: w < 600});
+                await sleep(500); // the starters finish their stagger-in
+                const m = await js('(() => { const t = document.querySelector("[data-agentchat-thread]"); const e = document.querySelector("[data-agentchat-empty]"); return {scroll: t.scrollHeight, client: t.clientHeight, empty: e.getBoundingClientRect().height, col: document.querySelector("[data-agentchat-col]").getBoundingClientRect().height}; })()');
+                expect(m.scroll <= m.client, `${w}x${h}: the empty thread scrolls (scrollHeight ${m.scroll} > clientHeight ${m.client}; ${JSON.stringify(m)})`);
+            }
+            await b.resize(1280);
         });
 
         await check('no script errors or CSP violations on the chat page', async () => {
