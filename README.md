@@ -9,8 +9,7 @@ The original starter set provides:
 
 - `TextInputField`, `NumberInputControl`, `DropdownField`, `CompactDropdown`,
   `TextAreaControl`, and `CharacterCount`.
-- `HTMXPostForm`, chat messages and threads, summary cards, suggestion chips,
-  assistant avatars, and loading indicators.
+- `HTMXPostForm` (the chat components of this set are deprecated; see Agent chat).
 - `Icon` and `SelectOption`.
 
 The reusable core set extracted from `ledger-agent/internal/ui/components`
@@ -32,20 +31,20 @@ Components that accept `templ.Component` children let the application keep
 ownership of page content and endpoints. Components do not register routes or
 make application data assumptions.
 
-### Chat surfaces
+### Agent chat (agentchat)
 
-`ChatThread` supplies a labelled, polite live log. Compose it with `UserMessage`,
-`AssistantMessage`, and `AssistantAvatar`. For cited answers, task links or other
-server-rendered content, `AssistantMessageContent(templ.Component)` provides the
-same message chrome without converting application-owned content to plain text.
-All plain message text remains escaped by templ.
+The `agentchat` package is the shared agentic chat: an SSE `Stream` writer, the
+thread, composer, starter, card and question-form components, validated
+`ParseQuestions` and a safe Markdown renderer, driven in the browser by
+`assets/agent-chat.js` and styled by `assets/agent-chat.css`. The library owns
+the chat UI and the wire protocol; the app keeps the agent, tools, persistence
+and auth. See `docs/agent-chat.md` for the contract.
 
-`SuggestionSubmitChip(label, name, value)` submits a named value through its
-containing native form. Unlike the Alpine `SuggestionChip`, it needs no runtime
-expression and works without JavaScript under a strict CSP. `HTMXPostForm` can
-append reply fragments to the thread; the host owns endpoints, CSRF, authorization,
-conversation context, loading/error recovery, citations and any actual tool calls.
-These components provide a chat interface, not an agent backend.
+The earlier chat components (`ChatThread`, `SummaryCard`, `SummaryField`,
+`AssistantAvatar`, `AssistantMessage`, `AssistantMessageContent`, `UserMessage`,
+`SuggestionChip`, `SuggestionSubmitChip`, `LoadingSpinner`, `ChatComposer`,
+`TypingIndicator`, `StreamingCaret`) are deprecated in favour of `agentchat`
+and will be removed in a later release.
 
 ### App shell, command palette, toasts and theme (v2 shell)
 
@@ -78,7 +77,6 @@ its close button does nothing), so load it whenever those components render. Ful
 - `ThemeSwitch(ThemeSwitchOpts{StorageKey})` + `assets/theme.js` (pre-paint, external). A light-only app pins `<html data-theme="light">` and skips both. A `<meta name="theme-color" data-light="…" data-dark="…">` follows the active theme.
 - Touch sizing tokens: `--oui-touch-target` (44px hit area), `--oui-topbar-control` (visual size of the phone search/New chips; the hit area stays 44px), `--oui-row-touch` (one min-height for phone nav, menu and palette rows; unset, rows inside AppShell keep desktop heights and SidebarNav/menu rows elsewhere keep 44px).
 - `components.RegisterIcons(map[string]string)` adds host glyphs at init (a registered name overrides a built-in); palette rows may name them in `Icons`. `PaletteForm.QueryField` posts the palette's typed text under that field at submit time. `PaletteItem.Default` / `Promoted` / `QueryLabel` pick the first-selected row, the highlighted look and the "label “typed query”" row.
-- `ChatComposer`, `TypingIndicator`, `StreamingCaret` complete the chat surfaces.
 
 ### Kit parity
 
