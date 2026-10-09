@@ -31,6 +31,7 @@ func resetChatStub() {
 
 func registerAgentChat(mux *http.ServeMux) {
 	mux.HandleFunc("GET /agentchat", agentChatPage)
+	mux.HandleFunc("GET /agentchat/empty", agentChatEmptyPage)
 	mux.HandleFunc("GET /agentchat/resume", agentChatResumePage)
 	mux.HandleFunc("GET /agentchat/resume-state", agentChatResumeState)
 	mux.HandleFunc("POST /agentchat/turn", agentChatTurn)
@@ -224,4 +225,27 @@ func agentChatResumeState(w http.ResponseWriter, r *http.Request) {
 		Token: "tok-r", Questions: []agentchat.Question{{Key: "note", Label: "Anything else?", Type: agentchat.TypeText}},
 	}}))
 	json.NewEncoder(w).Encode(map[string]any{"inflight": false, "thread_html": string(rows), "card_html": string(card)})
+}
+
+// agentChatEmptyPage is a chat that fills the viewport with nothing in the
+// thread but a short hero and starters: the empty state must not scroll. A
+// 100px host header leaves the thread only about 440px, as in a real app.
+func agentChatEmptyPage(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Security-Policy", "script-src 'self'")
+	chat := agentchat.Chat(agentchat.ChatOpts{
+		TurnURL: "/agentchat/turn", Label: "Empty",
+		Header: agentchat.Head(agentchat.HeadOpts{Title: "Assistant"}),
+		Empty: seq(
+			agentchat.Hero(agentchat.HeroOpts{Title: "How can I help?", Body: "Ask anything."}),
+			agentchat.Starters([]agentchat.Starter{{Title: "One", Body: "First", Icon: "spark", Prompt: "1"}, {Title: "Two", Body: "Second", Icon: "target", Prompt: "2"}, {Title: "Three", Body: "Third", Icon: "upload", Prompt: "3"}, {Title: "Four", Body: "Fourth", Icon: "building", Prompt: "4"}}),
+		),
+		Thread:   agentchat.Thread(nil),
+		Composer: agentchat.Composer(agentchat.ComposerOpts{Placeholder: "Message", Hint: "Private", Quick: agentchat.QuickPrompts([]agentchat.Prompt{{Label: "Quick", Prompt: "q"}})}),
+	})
+	render(w, r,
+		raw(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Agent chat empty</title>
+<link rel="stylesheet" href="/static/tokens.css"><link rel="stylesheet" href="/static/motion.css"><link rel="stylesheet" href="/static/controls.css"><link rel="stylesheet" href="/static/theme.css"><link rel="stylesheet" href="/static/agent-chat.css">
+<script src="/static/agent-chat.js" defer></script>
+<style>body{margin:0;height:100vh;box-sizing:border-box;padding-top:100px;display:flex}</style>
+</head><body>`), chat, raw(`</body></html>`))
 }

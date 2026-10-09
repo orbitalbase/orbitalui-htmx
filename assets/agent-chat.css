@@ -22,7 +22,7 @@
 }
 .ui-chat-iconbtn:hover { background: var(--oui-surface-2); color: var(--oui-ink); }
 .ui-chat-iconbtn:active { transform: scale(0.94); }
-.ui-chat-iconbtn:focus-visible, .ui-chat-starter:focus-visible, .ui-chat-quick__btn:focus-visible { outline: 2px solid var(--oui-brand); outline-offset: 2px; }
+.ui-chat-iconbtn:focus-visible, .ui-chat-starter:focus-visible, .ui-chat-quick__btn:focus-visible, .ui-chat-steps__toggle:focus-visible, .ui-chat-newpill:focus-visible { outline: 2px solid var(--oui-brand); outline-offset: 2px; }
 
 /* ---- header --------------------------------------------------------------------------------- */
 .ui-chat-head {
@@ -178,7 +178,8 @@
 .ui-chat-error__text { flex: 1 1 auto; min-width: 0; }
 
 /* ---- empty state: hero and starters -------------------------------------------------------------- */
-.ui-chat-empty { display: flex; flex-direction: column; justify-content: center; gap: 28px; margin: auto 0; padding: 4vh 0 6vh; transition: opacity var(--oui-dur-2), transform var(--oui-dur-2); }
+/* Centred by margin alone: viewport-based padding would make a short thread scroll although the content fits. */
+.ui-chat-empty { display: flex; flex-direction: column; justify-content: center; gap: 28px; margin: auto 0; translate: 0 -1vh; transition: opacity var(--oui-dur-2), transform var(--oui-dur-2); }
 .ui-chat-empty.is-leaving { opacity: 0; transform: translateY(-6px); }
 .ui-chat-hero { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
 .ui-chat-hero__orb { display: inline-flex; margin-bottom: 8px; padding: 14px; }
@@ -243,6 +244,9 @@
   font: inherit; font-size: 15px; line-height: 24px; color: var(--oui-ink); box-shadow: none;
 }
 .ui-chat-input::placeholder { color: var(--oui-ink-4); }
+/* The box shows focus (its :focus-within glow). Host rules such as textarea:focus, [type]:focus or a bare
+   :focus-visible must not draw a second ring on the input, so these out-rank them without !important. */
+.ui-chat .ui-chat-input, .ui-chat .ui-chat-input:is(:hover, :focus, :focus-visible) { border: 0; outline: none; box-shadow: none; background: transparent; }
 .ui-chat-notice { display: flex; align-items: center; gap: 6px; margin: 6px 0 0; font-size: 12px; line-height: 16px; color: var(--oui-ink-3); }
 .ui-chat-notice svg { color: var(--oui-ai); }
 .ui-chat-notice[hidden] { display: none; }
