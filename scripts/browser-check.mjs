@@ -1346,6 +1346,51 @@ async function runAgentChat() {
             await b.resize(1280);
         });
 
+        await check('answer tables keep whole words, scroll inside the answer when too wide, and stay full width when they fit', async () => {
+            await b.send('Page.navigate', {url: base + '/agentchat'});
+            await eventually(() => js('!!(window.OrbitalChat && document.querySelector("#host-full [data-agentchat-messages]"))'), 'the chat page');
+            // The markup RenderMarkdown emits for a GFM table (agentchat/markdown.go).
+            const cell = (tag, t) => `<${tag}>${t}</${tag}>`;
+            const wide = '<tr>' + ['Secretary', 'Accountant', 'Receivables', 'Depreciation', 'Reconciliation', 'Total'].map(t => cell('th', t)).join('') + '</tr>';
+            const row = '<tr>' + ['Secretary', 'Accountant', 'Receivables', 'Depreciation', 'Reconciliation', '1,234.00'].map(t => cell('td', t)).join('') + '</tr>';
+            const narrow = '<tr><th>Account</th><th>Debit</th></tr><tr><td>Cash at bank</td><td>10.00</td></tr>';
+            await js(`(() => {
+                const host = document.querySelector("#host-full [data-agentchat-messages]");
+                const md = document.createElement("div");
+                md.id = "table-probe"; md.className = "ui-chat-md";
+                md.innerHTML = '<div class="ui-chat-table"><table id="t-wide"><thead>${wide}</thead><tbody>${row}</tbody></table></div><div class="ui-chat-table"><table id="t-narrow"><thead></thead><tbody>${narrow}</tbody></table></div>';
+                host.append(md);
+            })()`);
+            const probe = () => js(`(() => {
+                const md = document.getElementById("table-probe");
+                const cells = [...md.querySelectorAll("#t-wide th, #t-wide td")];
+                const wrap = md.querySelector("#t-wide").parentElement, nw = md.querySelector("#t-narrow").parentElement;
+                return {
+                    broken: cells.filter(c => c.scrollWidth > c.clientWidth + 1).map(c => c.textContent),
+                    wrapScrolls: wrap.scrollWidth > wrap.clientWidth, wrapOverflow: getComputedStyle(wrap).overflowX,
+                    wrapW: wrap.getBoundingClientRect().width, colW: md.getBoundingClientRect().width,
+                    narrowTable: md.querySelector("#t-narrow").getBoundingClientRect().width, narrowWrap: nw.clientWidth,
+                    pageOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth,
+                    wordsIntact: cells.every(c => c.getBoundingClientRect().height < 40),
+                };
+            })()`);
+            await b.send('Emulation.setDeviceMetricsOverride', {width: 390, height: 844, deviceScaleFactor: 1, mobile: true});
+            await sleep(300);
+            const phone = await probe();
+            expect(phone.wrapOverflow === 'auto', `the wrapper does not scroll sideways (${phone.wrapOverflow})`);
+            expect(phone.wrapScrolls, 'a wide table does not scroll inside its wrapper at 390px');
+            expect(phone.wrapW <= phone.colW + 1, `the wrapper is wider than the answer (${phone.wrapW} > ${phone.colW})`);
+            expect(phone.broken.length === 0 && phone.wordsIntact, `words are broken mid-word at 390px: ${JSON.stringify(phone)}`);
+            expect(!phone.pageOverflow, 'the page scrolls horizontally at 390px');
+            await b.send('Emulation.setDeviceMetricsOverride', {width: 1440, height: 900, deviceScaleFactor: 1, mobile: false});
+            await sleep(300);
+            const desk = await probe();
+            expect(Math.abs(desk.narrowTable - desk.narrowWrap) <= 1, `a table that fits is not full width at 1440px (${desk.narrowTable} vs ${desk.narrowWrap})`);
+            expect(!desk.pageOverflow, 'the page scrolls horizontally at 1440px');
+            await js('document.getElementById("table-probe").remove()');
+            await b.resize(1280);
+        });
+
         await check('no script errors or CSP violations on the chat page', async () => {
             expect(b.errors.length === 0, b.errors.join('\n'));
         });

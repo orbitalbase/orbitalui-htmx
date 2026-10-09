@@ -81,3 +81,16 @@ func TestMarkdownComponentRendersTheSameHTML(t *testing.T) {
 		t.Errorf("got %q", got)
 	}
 }
+
+func TestMarkdownWrapsTablesInAScrollContainer(t *testing.T) {
+	got := RenderMarkdown("Intro\n\n| Account | <b>Debit</b> |\n| --- | --- |\n| Cash | 1 < 2 |\n\nAfter")
+	if !strings.Contains(got, `<div class="ui-chat-table"><table>`) || !strings.Contains(got, "</table>\n</div>") {
+		t.Fatalf("table is not wrapped: %s", got)
+	}
+	if strings.Count(got, `class="ui-chat-table"`) != 1 || strings.Contains(got, "<b>") || !strings.Contains(got, "1 &lt; 2") {
+		t.Fatalf("table output changed or is unsafe: %s", got)
+	}
+	if !strings.HasSuffix(strings.TrimSpace(got), "<p>After</p>") {
+		t.Fatalf("content after the table lost: %s", got)
+	}
+}
