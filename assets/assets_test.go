@@ -2,6 +2,7 @@ package assets
 
 import (
 	"io/fs"
+	"regexp"
 	"strings"
 	"testing"
 )
@@ -9,7 +10,7 @@ import (
 // The runtime and every stylesheet ship in Files, so a host serving the
 // embedded assets gets the whole contract.
 func TestFilesShipRuntimeAndStyles(t *testing.T) {
-	for _, name := range []string{"tokens.css", "base.css", "motion.css", "theme.css", "controls.css", "inspector.css", "inspector.js", "menu.js", "orbital-ui.js", "shell.js", "shell.css", "theme.js"} {
+	for _, name := range []string{"tokens.css", "base.css", "motion.css", "theme.css", "controls.css", "inspector.css", "inspector.js", "menu.js", "orbital-ui.js", "shell.js", "shell.css", "theme.js", "agent-chat.css", "agent-chat.js"} {
 		if _, err := fs.Stat(Files, name); err != nil {
 			t.Errorf("%s is not embedded: %v", name, err)
 		}
@@ -79,5 +80,26 @@ func TestShellRuntimeIsSeparate(t *testing.T) {
 		if strings.Contains(string(raw), needle) {
 			t.Errorf("orbital-ui.js still references %s", needle)
 		}
+	}
+}
+
+// agent-chat.css is built only from shared tokens: every custom property it
+// reads is defined in tokens.css, and it names no colour of its own.
+func TestAgentChatCSSUsesSharedTokens(t *testing.T) {
+	css, err := fs.ReadFile(Files, "agent-chat.css")
+	if err != nil {
+		t.Fatal(err)
+	}
+	tokens, err := fs.ReadFile(Files, "tokens.css")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, m := range regexp.MustCompile(`var\((--[a-z0-9-]+)`).FindAllStringSubmatch(string(css), -1) {
+		if !strings.Contains(string(tokens), "\n  "+m[1]+":") && !strings.Contains(string(tokens), "\n    "+m[1]+":") {
+			t.Errorf("agent-chat.css reads %s, which tokens.css does not define", m[1])
+		}
+	}
+	if m := regexp.MustCompile(`#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(`).FindString(string(css)); m != "" {
+		t.Errorf("agent-chat.css hard-codes a colour: %s", m)
 	}
 }
