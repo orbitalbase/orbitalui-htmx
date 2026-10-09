@@ -24,12 +24,12 @@ function load() {
 const plain = (value) => JSON.parse(JSON.stringify(value));
 
 const { chat, listeners } = load();
-const { parseSSE, renderMarkdown, foldSteps, captionOf, trimDots } = chat._internals;
+const { parseSSE, renderMarkdown, foldSteps, captionOf, trimDots, newTurnId } = chat._internals;
 
 test("loading the runtime exposes OrbitalChat and wires the page hooks", () => {
   assert.equal(typeof chat.init, "function");
   assert.equal(typeof chat.get, "function");
-  assert.deepEqual(Object.keys(chat._internals).sort(), ["captionOf", "foldSteps", "parseSSE", "renderMarkdown", "trimDots"]);
+  assert.deepEqual(Object.keys(chat._internals).sort(), ["captionOf", "foldSteps", "newTurnId", "parseSSE", "renderMarkdown", "trimDots"]);
   assert.ok(listeners.includes("htmx:afterSettle") && listeners.includes("pageshow"));
 });
 
@@ -98,4 +98,23 @@ test("captionOf flattens markdown and shortens long narration", () => {
   const long = captionOf("word ".repeat(60));
   assert.ok(long.length <= 96 && long.endsWith("…"));
   assert.equal(captionOf("   "), "");
+});
+
+test("newTurnId is a fresh UUID v4, with or without crypto.randomUUID", () => {
+  const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+  const make = (crypto) => {
+    const sandbox = { document: { readyState: "complete", querySelectorAll: () => [], addEventListener() {} }, addEventListener() {}, crypto };
+    sandbox.window = sandbox;
+    vm.createContext(sandbox);
+    vm.runInContext(readFileSync(new URL("./agent-chat.js", import.meta.url), "utf8"), sandbox);
+    return sandbox.OrbitalChat._internals.newTurnId;
+  };
+  const ids = new Set();
+  for (const gen of [newTurnId, make(undefined), make({ getRandomValues: (a) => a.map(() => Math.floor(Math.random() * 256)) }), make({ randomUUID: () => "11111111-2222-4333-8444-555555555555" })]) {
+    const id = gen();
+    assert.match(id, uuid);
+    ids.add(id);
+  }
+  assert.equal(ids.size, 4);
+  assert.notEqual(newTurnId(), newTurnId());
 });

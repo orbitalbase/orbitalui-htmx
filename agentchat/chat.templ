@@ -3,6 +3,10 @@
 // composer and cards, the validated question cards a model can ask, and a safe
 // Markdown renderer. The browser side is assets/agent-chat.js and
 // assets/agent-chat.css; docs/agent-chat.md is the full contract.
+//
+// Every turn the runtime posts carries session_id, message and turn_id. Read
+// r.FormValue("turn_id") as the turn's idempotency key: it is a fresh UUID per
+// turn, and a Retry sends the same id again.
 package agentchat
 
 import c "github.com/orbitalbase/orbitalui-htmx/components"
@@ -62,7 +66,8 @@ templ Chat(o ChatOpts) {
 						</div>
 					</div>
 					<button type="button" class="ui-chat-newpill" data-agentchat-newpill hidden>
-						<span class="ui-chat-newpill__arrow">@c.Icon("arrow-right")</span>
+						<span class="ui-chat-newpill__arrow">@c.Icon("arrow-right")
+</span>
 						New message
 					</button>
 				</div>
@@ -106,7 +111,7 @@ templ Head(o HeadOpts) {
 // Toggle is an icon button that opens or closes the rail or the panel where
 // they slide over the chat. It hides itself where that region is docked.
 templ Toggle(o ToggleOpts) {
-	<button type="button" class={ join("ui-chat-iconbtn", "ui-chat-toggle", "ui-chat-toggle--" + string(o.Dock)) } data-agentchat-toggle={ string(o.Dock) } aria-label={ o.Label } aria-expanded="false">
+	<button type="button" class={ join("ui-chat-iconbtn", "ui-chat-toggle", "ui-chat-toggle--"+string(o.Dock)) } data-agentchat-toggle={ string(o.Dock) } aria-label={ o.Label } aria-expanded="false">
 		@c.Icon(o.icon())
 	</button>
 }
@@ -115,30 +120,42 @@ templ Toggle(o ToggleOpts) {
 // joins it, and stays aria-busy until the turn is done.
 templ Thread(msgs []Message) {
 	<div class="ui-chat-msgs" role="log" aria-live="polite" aria-relevant="additions" aria-label="Conversation" data-agentchat-messages>
-		for _, m := range msgs {
-			switch m.Role {
-				case RoleUser:
-					@userRow(m.Text, rowAttrs(m.ID))
-				case RoleNote:
-					@noteRow(m.Title, m.Text, rowAttrs(m.ID))
-				case RoleStopped:
-					@stoppedRow(rowAttrs(m.ID))
-				case RoleAnswered:
-					@answeredRow(m.Text, rowAttrs(m.ID))
-				default:
-					if m.Content != nil {
-						@assistantRow(AssistantOpts{Content: m.Content, Steps: m.Steps}, rowAttrs(m.ID))
-					} else {
-						@assistantRow(AssistantOpts{Content: Markdown(m.Text), Steps: m.Steps}, rowAttrs(m.ID))
-					}
-			}
-		}
+		@Rows(msgs)
 	</div>
+}
+
+// Rows renders the messages as bare rows, without the log wrapper that Thread
+// adds. It is the shape the runtime swaps into the existing log, so a state
+// endpoint renders it for thread_html.
+templ Rows(msgs []Message) {
+	for _, m := range msgs {
+		switch m.Role {
+			case RoleUser:
+				@userRow(m.Text, m.Context, rowAttrs(m.ID))
+			case RoleNote:
+				@noteRow(m.Title, m.Text, rowAttrs(m.ID))
+			case RoleStopped:
+				@stoppedRow(rowAttrs(m.ID))
+			case RoleAnswered:
+				@answeredRow(m.Text, rowAttrs(m.ID))
+			default:
+				if m.Content != nil {
+					@assistantRow(AssistantOpts{Content: m.Content, Steps: m.Steps}, rowAttrs(m.ID))
+				} else {
+					@assistantRow(AssistantOpts{Content: Markdown(m.Text), Steps: m.Steps}, rowAttrs(m.ID))
+				}
+		}
+	}
 }
 
 // UserMessage is a user row: a right-aligned bubble of plain text.
 templ UserMessage(text string) {
-	@userRow(text, nil)
+	@userRow(text, nil, nil)
+}
+
+// UserMessageWith is UserMessage with a context slot above the bubble.
+templ UserMessageWith(text string, context templ.Component) {
+	@userRow(text, context, nil)
 }
 
 // AssistantMessage is a finished assistant row: the orb beside the body, with
@@ -162,9 +179,18 @@ templ AnsweredMessage(summary string) {
 	@answeredRow(summary, nil)
 }
 
-templ userRow(text string, attrs templ.Attributes) {
+templ userRow(text string, context templ.Component, attrs templ.Attributes) {
 	<article class="ui-chat-msg ui-chat-msg--user" aria-label="You said" { attrs... }>
-		<div class="ui-chat-bubble" data-agentchat-bubble>{ text }</div>
+		if context != nil {
+			<div class="ui-chat-user">
+				<div class="ui-chat-user__context" data-agentchat-user-context>
+					@context
+				</div>
+				<div class="ui-chat-bubble" data-agentchat-bubble>{ text }</div>
+			</div>
+		} else {
+			<div class="ui-chat-bubble" data-agentchat-bubble>{ text }</div>
+		}
 	</article>
 }
 
@@ -257,7 +283,7 @@ templ answeredRow(summary string, attrs templ.Attributes) {
 // icons, orbs and classes.
 templ templates() {
 	<template data-agentchat-tpl="user">
-		@userRow("", nil)
+		@userRow("", nil, nil)
 	</template>
 	<template data-agentchat-tpl="assistant">
 		@pendingRow(false)
@@ -307,12 +333,17 @@ templ Composer(o ComposerOpts) {
 				}
 				data-agentchat-input
 			>{ o.Value }</textarea>
+			if o.Notice != nil {
+				<div class="ui-chat-notice" data-agentchat-notice>
+					@o.Notice
+				</div>
+			}
 			<div class="ui-chat-composer__bar">
 				if o.Tools != nil {
 					@o.Tools
 				}
 				<span class="ui-chat-composer__spacer"></span>
-				if o.MaxLength > 0 {
+				if o.counts() {
 					<span class="ui-chat-count num" data-agentchat-count>{ "0 / " + o.maxLength() }</span>
 				}
 				<button type="submit" class="ui-chat-send ui-press" data-agentchat-send aria-label="Send message">
@@ -341,10 +372,10 @@ templ Composer(o ComposerOpts) {
 }
 
 // QuickPrompts are small buttons above the composer; each sends its Prompt as
-// the user's message.
+// the user's message, or raises agentchat:starter when it has an Action.
 templ QuickPrompts(items []Prompt) {
 	for _, p := range items {
-		<button type="button" class="ui-chat-quick__btn ui-press" data-agentchat-prompt={ p.Prompt }>
+		<button type="button" class="ui-chat-quick__btn ui-press" { trigger(p.Prompt, p.Action)... }>
 			if p.Icon != "" {
 				@c.IconSized(p.Icon, 12)
 			}
@@ -366,11 +397,12 @@ templ Hero(o HeroOpts) {
 	</div>
 }
 
-// Starters are cards in the empty state; each sends its Prompt as the user's message.
+// Starters are cards in the empty state; each sends its Prompt as the user's
+// message, or raises agentchat:starter when it has an Action.
 templ Starters(items []Starter) {
 	<div class="ui-chat-starters ui-stagger">
 		for _, s := range items {
-			<button type="button" class="ui-chat-starter ui-press" data-agentchat-prompt={ s.Prompt }>
+			<button type="button" class="ui-chat-starter ui-press" { trigger(s.Prompt, s.Action)... }>
 				if s.Icon != "" {
 					<span class={ s.iconClass() }>
 						@c.Icon(s.Icon)
@@ -459,7 +491,7 @@ templ QuestionForm(v QuestionCardView) {
 }
 
 templ questionField(card QuestionCard, q Question) {
-	switch {
+	switch  {
 		case q.isChoice():
 			@c.ChipGroup(q.chips(), c.ChipGroupOpts{Name: "q_" + q.Key, Multiple: q.Type == TypeMultiselect, Legend: q.Label, Help: q.Help, Required: q.Required})
 		case q.Type == TypeNumber:

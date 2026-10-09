@@ -35,6 +35,8 @@ type Step struct {
 //
 //	ID — optional; rendered as data-message-id on the row.
 //	Text — the user's text, the note text, or the answered summary.
+//	Context — user rows only; a small slot above the bubble, right-aligned (a
+//	    hand-off chip such as "From the invoice page"). The app styles its content.
 //	Content — the assistant body, rendered by the app; nil renders Markdown(Text).
 //	Steps — assistant only; shown behind the folded "N steps" toggle.
 //	Title — the note title.
@@ -43,6 +45,7 @@ type Message struct {
 	Role    Role
 	Text    string
 	Content templ.Component
+	Context templ.Component
 	Steps   []Step
 	Title   string
 }
@@ -125,7 +128,7 @@ const (
 //
 //	Dock — the region it opens and closes.
 //	Label — the accessible name.
-//	Icon — an icon-set name; default "list" for the rail and "sidebar" for the panel.
+//	Icon — an icon-set name; default "history" for the rail and "panel-right" for the panel.
 type ToggleOpts struct {
 	Dock  Dock
 	Label string
@@ -137,9 +140,9 @@ func (o ToggleOpts) icon() string {
 	case o.Icon != "":
 		return o.Icon
 	case o.Dock == DockRail:
-		return "list"
+		return "history"
 	}
-	return "sidebar"
+	return "panel-right"
 }
 
 // AssistantOpts configures AssistantMessage: Content is the app-rendered body
@@ -154,7 +157,10 @@ type AssistantOpts struct {
 //	Name — the textarea's field name (default "message").
 //	Label — its accessible name (default "Message").
 //	Placeholder, Value — hint text and prefilled text.
-//	MaxLength — when positive, caps the text and shows a character count.
+//	MaxLength — when positive, caps the text (the maxlength attribute).
+//	Counter — also shows "n / MaxLength" in the bar; needs MaxLength.
+//	Notice — a slot inside the box under the textarea (a line such as "Press
+//	    Enter to send this"); the runtime removes it once the user edits or sends.
 //	Hint — a muted line under the box, after the key hints.
 //	Tools — a slot at the bar's left (an attach button, a Toggle).
 //	Quick — a slot above the box for QuickPrompts; hidden while a turn runs.
@@ -163,8 +169,9 @@ type AssistantOpts struct {
 type ComposerOpts struct {
 	Name, Label, Placeholder, Value string
 	MaxLength                       int
+	Counter                         bool
 	Hint                            string
-	Tools, Quick                    templ.Component
+	Tools, Quick, Notice            templ.Component
 	Hidden                          map[string]string
 	Attrs                           templ.Attributes
 }
@@ -173,6 +180,8 @@ func (o ComposerOpts) name() string  { return or(o.Name, "message") }
 func (o ComposerOpts) label() string { return or(o.Label, "Message") }
 
 func (o ComposerOpts) maxLength() string { return strconv.Itoa(o.MaxLength) }
+
+func (o ComposerOpts) counts() bool { return o.Counter && o.MaxLength > 0 }
 
 func (o ComposerOpts) hiddenKeys() []string {
 	keys := make([]string, 0, len(o.Hidden))
@@ -183,18 +192,29 @@ func (o ComposerOpts) hiddenKeys() []string {
 	return keys
 }
 
-// Prompt is a quick prompt button: Prompt is sent as the user's message.
+// Prompt is a quick prompt button: Prompt is sent as the user's message. With
+// Action set it sends nothing; the runtime dispatches agentchat:starter instead.
 type Prompt struct {
-	Label, Prompt, Icon string
+	Label, Prompt, Action, Icon string
 }
 
-// Starter is a card in the empty state. Prompt is sent as the user's message.
+// Starter is a card in the empty state. Prompt is sent as the user's message;
+// with Action set it sends nothing and the runtime dispatches agentchat:starter
+// with that action name (an upload, a dialog) for the app to handle.
 //
 //	Eyebrow — a small line above the title; Body — a line below it.
 //	Icon — an icon-set name; Tone — ToneBrand (default) or ToneAccent tints it.
 type Starter struct {
-	Eyebrow, Title, Body, Prompt, Icon string
-	Tone                               c.Tone
+	Eyebrow, Title, Body, Prompt, Action, Icon string
+	Tone                                       c.Tone
+}
+
+// trigger is the attribute pair that makes a starter or quick prompt do its job.
+func trigger(prompt, action string) templ.Attributes {
+	if action != "" {
+		return templ.Attributes{"data-agentchat-action": action}
+	}
+	return templ.Attributes{"data-agentchat-prompt": prompt}
 }
 
 func (s Starter) iconClass() string {

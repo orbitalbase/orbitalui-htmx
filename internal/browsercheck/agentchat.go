@@ -20,16 +20,19 @@ var chatStub struct {
 	requests []url.Values // every turn, in order
 	cancels  int          // Stop presses that reached the server
 	failed   bool         // the "fail" message has failed once
+	resumes  []string     // session ids the resume page polled with
 }
 
 func resetChatStub() {
 	chatStub.Lock()
 	defer chatStub.Unlock()
-	chatStub.requests, chatStub.cancels, chatStub.failed = nil, 0, false
+	chatStub.requests, chatStub.cancels, chatStub.failed, chatStub.resumes = nil, 0, false, nil
 }
 
 func registerAgentChat(mux *http.ServeMux) {
 	mux.HandleFunc("GET /agentchat", agentChatPage)
+	mux.HandleFunc("GET /agentchat/resume", agentChatResumePage)
+	mux.HandleFunc("GET /agentchat/resume-state", agentChatResumeState)
 	mux.HandleFunc("POST /agentchat/turn", agentChatTurn)
 	mux.HandleFunc("POST /agentchat/cancel", func(w http.ResponseWriter, r *http.Request) {
 		chatStub.Lock()
@@ -41,7 +44,7 @@ func registerAgentChat(mux *http.ServeMux) {
 		chatStub.Lock()
 		defer chatStub.Unlock()
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]any{"requests": chatStub.requests, "cancels": chatStub.cancels})
+		json.NewEncoder(w).Encode(map[string]any{"requests": chatStub.requests, "cancels": chatStub.cancels, "resumes": chatStub.resumes})
 	})
 }
 
@@ -65,22 +68,22 @@ func agentChatPage(w http.ResponseWriter, r *http.Request) {
 			Leading: agentchat.Toggle(agentchat.ToggleOpts{Dock: agentchat.DockRail, Label: "Show chats"}),
 			Meta:    agentchat.Toggle(agentchat.ToggleOpts{Dock: agentchat.DockPanel, Label: "Show details"}),
 		}),
-		Rail:  raw(`<a href="/agentchat" id="rail-link">Earlier chat</a>`),
-		Panel: raw(`<div class="ui-chat-panel__body" id="panel-body">Details</div>`),
+		Rail:  raw(`<a href="/agentchat" id="rail-link">Earlier chat</a> <a href="/agentchat?older=1" id="rail-link2">Older chat</a>`),
+		Panel: raw(`<div class="ui-chat-panel__body" id="panel-body"><button type="button" id="panel-a">First</button> <button type="button" id="panel-b" data-agentchat-autofocus>Second</button></div>`),
 		Thread: agentchat.Thread([]agentchat.Message{
 			{Role: agentchat.RoleAssistant, Text: "Welcome back."},
 			{Role: agentchat.RoleAssistant, Content: proposal},
 		}),
-		Composer: agentchat.Composer(agentchat.ComposerOpts{Placeholder: "Message", MaxLength: 200, Hidden: map[string]string{"scope": "all"}}),
+		Composer: agentchat.Composer(agentchat.ComposerOpts{Placeholder: "Message", MaxLength: 200, Counter: true, Hidden: map[string]string{"scope": "all"}}),
 	})
 	compact := agentchat.Chat(agentchat.ChatOpts{
 		TurnURL: "/agentchat/turn", Variant: agentchat.VariantPanel, Label: "Quick ask",
 		Empty: seq(
 			agentchat.Hero(agentchat.HeroOpts{Title: "How can I help?", Body: "Ask anything."}),
-			agentchat.Starters([]agentchat.Starter{{Title: "Say hello", Prompt: "hello", Icon: "spark"}}),
+			agentchat.Starters([]agentchat.Starter{{Title: "Import", Action: "import", Icon: "upload"}, {Title: "Say hello", Prompt: "hello", Icon: "spark"}}),
 		),
 		Thread:   agentchat.Thread(nil),
-		Composer: agentchat.Composer(agentchat.ComposerOpts{Placeholder: "Ask"}),
+		Composer: agentchat.Composer(agentchat.ComposerOpts{Placeholder: "Ask", Hidden: map[string]string{"csrf": "c1"}, Notice: raw("Press Enter to send this")}),
 	})
 	render(w, r,
 		raw(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Agent chat browser check</title>
@@ -179,4 +182,46 @@ func agentChatAuthorize(w http.ResponseWriter, r *http.Request) {
 	agentchat.SetNote(w, "Payment authorised")
 	receipt := agentchat.Card(agentchat.CardOpts{Label: "Receipt", Body: raw(`<p id="receipt">Authorised RM 1,200</p>`)})
 	render(w, r, receipt)
+}
+
+// agentChatResumePage is a page rendered while a turn is still running: the
+// runtime polls the state endpoint, then swaps in the finished rows and card.
+func agentChatResumePage(w http.ResponseWriter, r *http.Request) {
+	chatStub.Lock()
+	chatStub.resumes = nil
+	chatStub.Unlock()
+	w.Header().Set("Content-Security-Policy", "script-src 'self'")
+	chat := agentchat.Chat(agentchat.ChatOpts{
+		TurnURL: "/agentchat/turn", StateURL: "/agentchat/resume-state", SessionID: "s-r", InFlight: true, Label: "Resumed",
+		Thread:   agentchat.Thread([]agentchat.Message{{Role: agentchat.RoleUser, Text: "Pending question", Context: raw(`<span id="from-chip">From the invoice page</span>`)}}),
+		Composer: agentchat.Composer(agentchat.ComposerOpts{Placeholder: "Message"}),
+	})
+	render(w, r,
+		raw(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Agent chat resume</title>
+<link rel="stylesheet" href="/static/tokens.css"><link rel="stylesheet" href="/static/motion.css"><link rel="stylesheet" href="/static/controls.css"><link rel="stylesheet" href="/static/theme.css"><link rel="stylesheet" href="/static/agent-chat.css">
+<script src="/static/agent-chat.js" defer></script>
+<style>body{margin:0}.host{display:flex;height:640px}</style>
+</head><body><div class="host">`), chat, raw(`</div></body></html>`))
+}
+
+// agentChatResumeState reports the turn as running once, then finished with
+// bare rows (agentchat.Rows) and a card, the shape thread_html must have.
+func agentChatResumeState(w http.ResponseWriter, r *http.Request) {
+	chatStub.Lock()
+	chatStub.resumes = append(chatStub.resumes, r.URL.Query().Get("session_id"))
+	n := len(chatStub.resumes)
+	chatStub.Unlock()
+	w.Header().Set("Content-Type", "application/json")
+	if n < 2 {
+		json.NewEncoder(w).Encode(map[string]any{"inflight": true})
+		return
+	}
+	rows, _ := templ.ToGoHTML(r.Context(), agentchat.Rows([]agentchat.Message{
+		{Role: agentchat.RoleUser, Text: "Pending question", Context: raw(`<span id="from-chip">From the invoice page</span>`)},
+		{Role: agentchat.RoleAssistant, Text: "Resumed **answer**."},
+	}))
+	card, _ := templ.ToGoHTML(r.Context(), agentchat.QuestionForm(agentchat.QuestionCardView{SessionID: "s-r", Card: agentchat.QuestionCard{
+		Token: "tok-r", Questions: []agentchat.Question{{Key: "note", Label: "Anything else?", Type: agentchat.TypeText}},
+	}}))
+	json.NewEncoder(w).Encode(map[string]any{"inflight": false, "thread_html": string(rows), "card_html": string(card)})
 }

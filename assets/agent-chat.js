@@ -16,6 +16,7 @@
   const OFFLINE_ERROR = "Couldn't reach the agent. Check your connection and try again.";
   const DROPPED_ERROR = "The connection dropped before the reply finished.";
   const NEAR_BOTTOM = 96;
+  const FOCUSABLE = 'a[href], button:not(:disabled), input:not([type=hidden]):not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])';
 
   /* ---- pure helpers (exposed on OrbitalChat._internals for tests) ---------------------------------- */
 
@@ -144,6 +145,19 @@
     return out;
   }
 
+  // A fresh id per turn, for the app's idempotency key.
+  function newTurnId() {
+    const crypto = global.crypto;
+    if (crypto && crypto.randomUUID) return crypto.randomUUID();
+    const bytes = new Uint8Array(16);
+    if (crypto && crypto.getRandomValues) crypto.getRandomValues(bytes);
+    else for (let i = 0; i < 16; i++) bytes[i] = Math.floor(Math.random() * 256);
+    bytes[6] = (bytes[6] & 0x0f) | 0x40;
+    bytes[8] = (bytes[8] & 0x3f) | 0x80;
+    const hex = [...bytes].map((b) => b.toString(16).padStart(2, "0")).join("");
+    return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+  }
+
   const groupNumber = (v) => {
     const n = Number(v.replace(/[,\s]/g, ""));
     return v.trim() !== "" && Number.isFinite(n) ? n.toLocaleString("en-US", { maximumFractionDigits: 6 }) : v;
@@ -180,8 +194,10 @@
     const count = $("count");
     const headOrb = root.querySelector("[data-agentchat-orb] .ui-orb");
 
-    const st = { sessionId: root.dataset.sessionId || "", busy: false, abort: null, stick: true, last: null, turn: null, resume: null, statusText: "Ready", notes: [] };
-    const emit = (name, detail) => root.dispatchEvent(new CustomEvent(`agentchat:${name}`, { bubbles: true, detail }));
+    const st = { sessionId: root.dataset.sessionId || "", busy: false, held: 0, abort: null, stick: true, last: null, turn: null, resume: null, statusText: "Ready", notes: [] };
+    // Returns false when a listener cancelled the event.
+    const emit = (name, detail, cancelable = false) => root.dispatchEvent(new CustomEvent(`agentchat:${name}`, { bubbles: true, cancelable, detail }));
+    const working = () => st.busy || st.held > 0;
     const template = (name) => root.querySelector(`template[data-agentchat-tpl="${name}"]`).content.firstElementChild.cloneNode(true);
 
     /* scrolling */
@@ -204,7 +220,6 @@
         scrollEnd({ smooth: true, force: true });
       });
     }
-    if (global.ResizeObserver) new global.ResizeObserver(() => scrollEnd()).observe(col);
     scrollEnd({ force: true });
 
     /* header status, orb, composer state */
@@ -228,16 +243,21 @@
       headOrb.classList.add(state);
     }
 
+    // The chat is busy while a turn runs (Stop offered) or while the app holds it for its own work (nothing to stop).
+    function renderBusy() {
+      form.dataset.state = st.busy ? "busy" : st.held ? "held" : "idle";
+      form.inert = !st.busy && st.held > 0;
+      root.classList.toggle("is-busy", working());
+      if (sendButton) {
+        sendButton.setAttribute("aria-label", st.busy ? "Stop" : "Send message");
+        sendButton.title = st.busy ? "Stop" : "";
+      }
+      setOrb(working() ? "is-thinking" : "is-idle");
+      if (!working()) setStatus("Ready");
+    }
     function setBusy(busy) {
       st.busy = busy;
-      form.dataset.state = busy ? "busy" : "idle";
-      root.classList.toggle("is-busy", busy);
-      if (sendButton) {
-        sendButton.setAttribute("aria-label", busy ? "Stop" : "Send message");
-        sendButton.title = busy ? "Stop" : "";
-      }
-      setOrb(busy ? "is-thinking" : "is-idle");
-      if (!busy) setStatus("Ready");
+      renderBusy();
     }
 
     function autogrow() {
@@ -252,9 +272,15 @@
       autogrow();
       updateCount();
     }
+    // The composer notice ("Press Enter to send this") goes once the user edits or sends.
+    const dropNotice = () => {
+      const notice = $("notice");
+      if (notice) notice.remove();
+    };
     input.addEventListener("input", () => {
       autogrow();
       updateCount();
+      dropNotice();
     });
 
     /* thread building */
@@ -283,13 +309,17 @@
       return row;
     }
 
-    function appendNote(title, text) {
-      const note = template("note");
-      note.classList.add("ui-pop-in");
+    function setNote(note, title, text) {
       note.querySelector("[data-agentchat-note-title]").textContent = title;
       const body = note.querySelector("[data-agentchat-note-text]");
       body.textContent = text || "";
       body.hidden = !text;
+    }
+
+    function appendNote(title, text) {
+      const note = template("note");
+      note.classList.add("ui-pop-in");
+      setNote(note, title, text);
       messages.append(note);
       return note;
     }
@@ -327,11 +357,14 @@
     }
 
     /* the turn */
+    const composerFields = () => [...new FormData(form)].filter(([key, value]) => typeof value === "string" && key !== input.name && key !== "session_id");
+
     async function send(payload, { retry = false } = {}) {
-      if (st.busy) return;
+      if (working()) return;
       st.last = payload;
       hideEmpty();
       payload.notes = st.notes.splice(0);
+      dropNotice();
       if (!retry) {
         payload.transcript = transcriptOf(null);
         payload.userRow = payload.text === undefined ? null : appendUser(payload.text);
@@ -347,6 +380,11 @@
       const body = new URLSearchParams();
       body.set("session_id", st.sessionId);
       for (const [key, value] of payload.entries || []) body.append(key, value);
+      // The composer's own fields (a CSRF token, a submission id) ride on every turn; the turn's own fields win.
+      for (const [key, value] of composerFields()) if (!body.has(key)) body.append(key, value);
+      // Retrying a turn reuses its id (the payload is the turn); every new turn has a fresh one.
+      if (!payload.turnId) payload.turnId = newTurnId();
+      body.set("turn_id", payload.turnId);
       if (payload.text !== undefined) body.set(input.name || "message", payload.text);
       if (root.hasAttribute("data-agentchat-transcript")) body.set("transcript", JSON.stringify(payload.transcript));
       if (payload.notes.length) body.set("notes", JSON.stringify(payload.notes));
@@ -711,7 +749,7 @@
     }
 
     function submitTurnForm(f, submitter) {
-      if (st.busy) return;
+      if (working()) return;
       if (!(submitter && submitter.formNoValidate) && !f.reportValidity()) return;
       const data = new FormData(f, submitter || undefined);
       f.querySelectorAll("[data-agentchat-group]").forEach((el) => data.set(el.name, el.value.replace(/[,\s]/g, "")));
@@ -810,34 +848,92 @@
     form.addEventListener("submit", (event) => {
       event.preventDefault();
       if (st.busy) return stop();
+      if (working()) return;
       const text = input.value.trim();
       if (!text) return;
-      const entries = [...new FormData(form)].filter(([key, value]) => typeof value === "string" && key !== input.name && key !== "session_id");
-      send({ text, entries, form, clear: true });
+      send({ text, entries: [], form, clear: true });
     });
 
     input.addEventListener("keydown", (event) => {
       if (event.key !== "Enter" || event.shiftKey || event.isComposing || event.keyCode === 229) return;
       event.preventDefault();
-      if (!st.busy) form.requestSubmit();
+      if (!working()) form.requestSubmit();
     });
 
     /* prompts, steps toggle and the docks */
-    function setDock(name, open) {
+    // The rail and panel dock on wide screens and slide over below that; the stylesheet decides which, so
+    // "sliding over" is read from the computed position. Only a slide-over is a modal dialog.
+    const dockEl = (name) => $(name);
+    const slideOver = (name) => {
+      const el = dockEl(name);
+      return !!el && global.getComputedStyle(el).position === "absolute";
+    };
+    const isOpen = (name) => root.classList.contains(`is-${name}-open`);
+    const focusables = (el) => [...el.querySelectorAll(FOCUSABLE)].filter((x) => x.getClientRects().length);
+    let returnFocus = null;
+
+    function syncDock(name) {
+      const el = dockEl(name);
+      if (!el) return;
+      if (isOpen(name) && slideOver(name)) {
+        el.setAttribute("role", "dialog");
+        el.setAttribute("aria-modal", "true");
+      } else {
+        el.removeAttribute("role");
+        el.removeAttribute("aria-modal");
+      }
+    }
+
+    function setDock(name, open, opener) {
+      const was = isOpen(name);
       root.classList.toggle(`is-${name}-open`, open);
       root.querySelectorAll(`[data-agentchat-toggle="${name}"]`).forEach((b) => b.setAttribute("aria-expanded", String(open)));
+      syncDock(name);
+      const el = dockEl(name);
+      if (!el || !slideOver(name) || open === was) return;
+      if (open) {
+        // One slide-over at a time.
+        const other = name === "rail" ? "panel" : "rail";
+        if (isOpen(other) && slideOver(other)) setDock(other, false);
+        returnFocus = opener || document.activeElement;
+        requestAnimationFrame(() => {
+          const target = el.querySelector("[data-agentchat-autofocus]") || focusables(el)[0];
+          if (target) target.focus();
+          else {
+            el.tabIndex = -1;
+            el.focus();
+          }
+        });
+      } else if (returnFocus && returnFocus.isConnected) {
+        returnFocus.focus();
+        returnFocus = null;
+      }
     }
     const closeDocks = () => {
       setDock("rail", false);
       setDock("panel", false);
     };
+    if (global.ResizeObserver) {
+      const observer = new global.ResizeObserver(() => {
+        scrollEnd();
+        syncDock("rail");
+        syncDock("panel");
+      });
+      observer.observe(col);
+      observer.observe(root);
+    }
 
     root.addEventListener("click", (event) => {
       const target = event.target;
       if (!target.closest) return;
+      const action = target.closest("[data-agentchat-action]");
+      if (action) {
+        emit("starter", { action: action.getAttribute("data-agentchat-action") }, true);
+        return;
+      }
       const prompt = target.closest("[data-agentchat-prompt]");
       if (prompt) {
-        if (!st.busy) send({ text: prompt.getAttribute("data-agentchat-prompt"), entries: [], form });
+        if (!working()) send({ text: prompt.getAttribute("data-agentchat-prompt"), entries: [], form });
         return;
       }
       const toggle = target.closest("[data-agentchat-steps-toggle]");
@@ -851,13 +947,36 @@
       const dock = target.closest("[data-agentchat-toggle]");
       if (dock) {
         const name = dock.getAttribute("data-agentchat-toggle");
-        setDock(name, !root.classList.contains(`is-${name}-open`));
+        setDock(name, !isOpen(name), dock);
         return;
       }
       if (target.closest("[data-agentchat-scrim]")) closeDocks();
     });
     root.addEventListener("keydown", (event) => {
-      if (event.key === "Escape" && (root.classList.contains("is-rail-open") || root.classList.contains("is-panel-open"))) closeDocks();
+      if (event.key === "Escape" && (isOpen("rail") || isOpen("panel"))) {
+        closeDocks();
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const name = ["panel", "rail"].find((n) => isOpen(n) && slideOver(n));
+      if (!name) return;
+      // Tab stays inside an open slide-over.
+      const el = dockEl(name);
+      const items = focusables(el);
+      if (!items.length) {
+        event.preventDefault();
+        return;
+      }
+      const first = items[0];
+      const last = items[items.length - 1];
+      const inside = el.contains(document.activeElement);
+      if (event.shiftKey && (!inside || document.activeElement === first)) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (!inside || document.activeElement === last)) {
+        event.preventDefault();
+        first.focus();
+      }
     });
 
     /* a turn this page did not start */
@@ -913,8 +1032,36 @@
         return send({ text: String(text), entries, form });
       },
       stop,
+      // Adds a note row for work the app runs itself (an upload). Returns {update(title, text), working(on), remove()}.
+      note(title, text) {
+        const el = appendNote(title, text);
+        scrollEnd({ smooth: true, force: true });
+        return {
+          update: (nextTitle, nextText) => setNote(el, nextTitle, nextText),
+          working: (on = true) => el.classList.toggle("is-working", !!on),
+          remove: () => el.remove(),
+        };
+      },
+      // Replaces the card slot (empty html clears it).
+      setCard,
+      // Sets the session id; the address bar changes only when url is given.
+      setSession: (id, url) => applySession({ session_id: id, url }),
+      // Makes the chat busy while the app works: the composer is inert and no Stop is offered. Call the
+      // returned release() when done. status is the header text meanwhile.
+      hold(status) {
+        st.held += 1;
+        renderBusy();
+        setStatus(status || "Working…");
+        let released = false;
+        return () => {
+          if (released) return;
+          released = true;
+          st.held -= 1;
+          renderBusy();
+        };
+      },
       get busy() {
-        return st.busy;
+        return working();
       },
     };
     controllers.set(root, controller);
@@ -943,7 +1090,7 @@
   global.OrbitalChat = {
     init,
     get: (root) => controllers.get(root) || init(root),
-    _internals: { parseSSE, renderMarkdown, foldSteps, captionOf, trimDots },
+    _internals: { parseSSE, renderMarkdown, foldSteps, captionOf, trimDots, newTurnId },
   };
 
   if (typeof document !== "undefined") {

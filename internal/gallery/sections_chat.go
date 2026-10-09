@@ -27,7 +27,7 @@ func agentChatBody() templ.Component {
 		}},
 		{Role: agentchat.RoleAnswered, Text: "Work arrangement: Remote · Minimum pay: 9,000"},
 		{Role: agentchat.RoleNote, Title: "Draft saved", Text: "Product Designer, version 1"},
-		{Role: agentchat.RoleUser, Text: "Actually, stop. I changed my mind."},
+		{Role: agentchat.RoleUser, Text: "Actually, stop. I changed my mind.", Context: handoffChip("From the roles page →")},
 		{Role: agentchat.RoleAssistant, Text: "Okay, pausing here."},
 		{Role: agentchat.RoleStopped},
 	})
@@ -41,7 +41,7 @@ func agentChatBody() templ.Component {
 		},
 	}})
 	composer := agentchat.Composer(agentchat.ComposerOpts{
-		Placeholder: "Message your agent…", MaxLength: 8000, Hint: "drafts stay private until you publish",
+		Placeholder: "Message your agent…", MaxLength: 8000, Counter: true, Notice: seq(c.IconSized("ai", 12), c.Kbd("↵"), raw(" to send this to your agent")), Hint: "drafts stay private until you publish",
 		Quick: agentchat.QuickPrompts([]agentchat.Prompt{{Label: "Explore trade-offs", Prompt: "x", Icon: "ai"}, {Label: "Find gaps", Prompt: "y", Icon: "search"}}),
 		Tools: agentchat.Toggle(agentchat.ToggleOpts{Dock: agentchat.DockPanel, Label: "Show details"}),
 	})
@@ -58,7 +58,7 @@ func agentChatBody() templ.Component {
 			agentchat.Starters([]agentchat.Starter{
 				{Title: "Find my next role", Body: "Describe the work you want.", Icon: "target", Prompt: "a"},
 				{Title: "Hire for a role", Body: "Describe who you need.", Icon: "briefcase", Prompt: "b", Tone: c.ToneAccent},
-				{Eyebrow: "Import", Title: "Bring my CV", Body: "Upload a CV to fill your profile.", Icon: "upload", Prompt: "c"},
+				{Eyebrow: "Import", Title: "Bring my CV", Body: "Upload a CV to fill your profile.", Icon: "upload", Action: "import"},
 				{Title: "Set up a company", Icon: "building", Prompt: "d", Tone: c.ToneAccent},
 			}),
 		),
@@ -84,6 +84,7 @@ func agentChatBody() templ.Component {
 		groupStack("Empty state: hero and starters", chatFrame(empty)),
 		groupStack("Panel variant", wrap(`<div class="g-chatframe g-chatframe--narrow">`, `</div>`, compact)),
 		groupStack("Live step list while a turn runs (active and done)", wrap(`<div class="g-panel">`, `</div>`, liveSteps())),
+		groupStack("App-run work: a working note (controller.note)", wrap(`<div class="g-panel"><div class="g-stack">`, `</div></div>`, workingNote("Reading cv.pdf…", "Pulling out your roles, skills and preferences."), workingNote("Profile imported", ""))),
 		groupStack("Card shell with an action form", wrap(`<div class="g-panel">`, `</div>`, action)),
 	)
 }
@@ -99,3 +100,16 @@ func liveSteps() templ.Component {
 		`<li class="ui-chat-step is-active">` + mark + `<span class="ui-chat-step__text"><span class="ui-chat-step__label"><span>Ranking matches…</span></span></span></li></ol>` +
 		`<div class="ui-chat-msg__body ui-chat-md is-provisional">Three matches so far<span class="ui-caret"></span></div></div></div>`)
 }
+
+// workingNote is the note row the runtime builds for controller.note: the
+// first is in progress (working(true)), the second finished.
+func workingNote(title, text string) templ.Component {
+	icon, _ := templ.ToGoHTML(context.Background(), c.IconSized("document", 14))
+	class, body := "ui-chat-note is-working", `<p data-agentchat-note-text>`+text+`</p>`
+	if text == "" {
+		class, body = "ui-chat-note", `<p data-agentchat-note-text hidden></p>`
+	}
+	return raw(`<div class="` + class + `"><span class="ui-chat-note__icon">` + string(icon) + `</span><div class="ui-chat-note__body"><strong>` + title + `</strong>` + body + `</div></div>`)
+}
+
+func handoffChip(label string) templ.Component { return c.Badge(c.ToneBrand, label, c.BadgeOpts{}) }
