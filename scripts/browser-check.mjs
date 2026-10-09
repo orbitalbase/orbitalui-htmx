@@ -114,12 +114,10 @@ async function startChrome() {
 const {stop, base} = await startServer();
 const results = [];
 
-// Runs the checks for one page variant in a fresh Chrome. `full` selects the
-// whole suite; the host variant runs only the delegation checks.
-async function runVariant(name, path, {full = true, host = false} = {}) {
-    let b;
+// Starts Chrome, retrying once: a cold runner occasionally never writes the port file.
+async function launchChrome() {
     try {
-        b = await startChrome().catch(e => {
+        return await startChrome().catch(e => {
             console.error(`Chrome did not start (${e.message}); retrying once`);
             return startChrome();
         });
@@ -127,6 +125,11 @@ async function runVariant(name, path, {full = true, host = false} = {}) {
         console.error(`could not start Chrome (${chromePath()}): ${e.message}`);
         process.exit(1);
     }
+}
+
+// Page evaluation, real pointer and keyboard input, and result recording for
+// one browser; `name` prefixes every check label.
+function drive(b, name) {
     const js = async expr => {
         const r = await b.send('Runtime.evaluate', {expression: expr, returnByValue: true, awaitPromise: true});
         if (r.exceptionDetails) throw new Error(r.exceptionDetails.exception?.description || r.exceptionDetails.text);
@@ -141,18 +144,26 @@ async function runVariant(name, path, {full = true, host = false} = {}) {
         for (const type of ['keyDown', 'keyUp']) await b.send('Input.dispatchKeyEvent', {type, key: k, code, windowsVirtualKeyCode: keyCode});
     };
     const type = text => b.send('Input.insertText', {text});
-    const focused = () => js('document.activeElement && (document.activeElement.id || document.activeElement.className)');
-    // Wait until htmx has finished swapping and settling, so freshly swapped
-    // markup is processed before the next interaction.
-    const htmxIdle = () => eventually(() => js('!document.querySelector(".htmx-request, .htmx-swapping, .htmx-settling, .htmx-added")'), 'htmx to settle');
-    // Wait for the drawer's slide-in to finish so pointer targets stop moving.
-    const drawerSettled = () => eventually(() => js('["matrix(1,0,0,1,0,0)", "none"].includes(getComputedStyle(document.querySelector("#drw .drawer-panel")).transform.replace(/\\s/g, ""))'), 'drawer to settle');
     const check = async (label, fn) => {
         const full = `[${name}] ${label}`;
         try { await fn(); results.push(['ok', full]); console.log(`ok   ${full}`); }
         catch (e) { results.push(['FAIL', full]); console.log(`FAIL ${full}\n     ${e.message}`); }
     };
     const expect = (cond, msg) => { if (!cond) throw new Error(msg); };
+    return {js, center, clickAt, click, key, type, check, expect};
+}
+
+// Runs the checks for one page variant in a fresh Chrome. `full` selects the
+// whole suite; the host variant runs only the delegation checks.
+async function runVariant(name, path, {full = true, host = false} = {}) {
+    const b = await launchChrome();
+    const {js, center, clickAt, click, key, type, check, expect} = drive(b, name);
+    const focused = () => js('document.activeElement && (document.activeElement.id || document.activeElement.className)');
+    // Wait until htmx has finished swapping and settling, so freshly swapped
+    // markup is processed before the next interaction.
+    const htmxIdle = () => eventually(() => js('!document.querySelector(".htmx-request, .htmx-swapping, .htmx-settling, .htmx-added")'), 'htmx to settle');
+    // Wait for the drawer's slide-in to finish so pointer targets stop moving.
+    const drawerSettled = () => eventually(() => js('["matrix(1,0,0,1,0,0)", "none"].includes(getComputedStyle(document.querySelector("#drw .drawer-panel")).transform.replace(/\\s/g, ""))'), 'drawer to settle');
 
     try {
         await b.send('Page.navigate', {url: base + path});
@@ -976,10 +987,228 @@ async function runVariant(name, path, {full = true, host = false} = {}) {
     }
 }
 
+// Drives the agentic chat (agentchat.Chat, assets/agent-chat.js) against the
+// stub agent at /agentchat: two roots on one page, served under
+// `script-src 'self'`, so the runtime must work without eval or inline script.
+async function runAgentChat() {
+    const b = await launchChrome();
+    const {js, click, key, type, check, expect} = drive(b, 'agentchat');
+    const F = '#host-full ';
+    const C = '#host-compact ';
+    const q = (sel, expr) => js(`(() => { const el = document.querySelector(${JSON.stringify(sel)}); return el ? ${expr} : null; })()`);
+    // The last match: rows of different tags share one thread, so :last-of-type cannot pick "the newest reply".
+    const ql = (sel, expr) => js(`(() => { const el = [...document.querySelectorAll(${JSON.stringify(sel)})].at(-1); return el ? ${expr} : null; })()`);
+    const qt = sel => ql(sel, 'el.textContent.trim()');
+    const count = sel => js(`document.querySelectorAll(${JSON.stringify(sel)}).length`);
+    const text = sel => q(sel, 'el.textContent.trim()');
+    const state = () => js('fetch("/agentchat/state").then(r => r.json())');
+    const lastRequest = async () => (await state()).requests.at(-1);
+    const send = async (root, message) => {
+        await click(`${root}[data-agentchat-input]`);
+        await type(message);
+        await key('Enter', 'Enter', 13);
+    };
+    const idle = root => eventually(() => js(`document.querySelector(${JSON.stringify(root + '[data-agentchat-composer]')}).dataset.state === "idle"`), 'the composer to go idle', 10000);
+
+    try {
+        await b.send('Page.navigate', {url: base + '/agentchat'});
+        await eventually(() => js('!!(window.OrbitalChat && document.querySelector("#host-full [data-agentchat-composer]"))'), 'the chat page');
+        await js('(() => { window.__events = []; for (const n of ["session", "step", "done", "error", "action", "send", "summarize"]) document.addEventListener("agentchat:" + n, e => window.__events.push([n, e.detail])); })()');
+
+        await check('both roots bind, ship the contract markup, carry no global ids and run under script-src \'self\'', async () => {
+            expect((await js('fetch(location.href).then(r => r.headers.get("content-security-policy"))')) === "script-src 'self'", 'CSP header missing');
+            expect(await js('[...document.querySelectorAll("[data-agentchat]")].every(r => OrbitalChat.get(r) && OrbitalChat.get(r).busy === false) && document.querySelectorAll("[data-agentchat]").length === 2'), 'a root did not bind');
+            const own = ['authorize', 'refuse', 'panel-body', 'rail-link']; // the stub's own markup
+            expect(await js(`[...document.querySelectorAll("[data-agentchat] [id]")].map(e => e.id).filter(id => !${JSON.stringify(own)}.includes(id)).length`) === 0, 'a chat element carries a global id');
+            expect(await q(F + '.ui-chat-thread', 'getComputedStyle(el).overflowY') === 'auto', 'the thread does not scroll');
+            expect(await q(F + '[data-agentchat-messages]', 'el.getAttribute("role") + el.getAttribute("aria-live")') === 'logpolite', 'the thread is not a polite log');
+            expect(await q(F + '[data-agentchat-input]', 'el.getAttribute("aria-label")') === 'Message', 'the composer textarea has no accessible name');
+            expect(await text(F + '[data-agentchat-count]') === '0 / 200', 'character counter');
+        });
+
+        await check('an action card refuses inline (422 keeps the card and re-enables the button), then swaps to the receipt and queues a note', async () => {
+            await click(F + '#refuse button');
+            await eventually(() => q(F + '[data-agentchat-card-error]', 'el.textContent'), 'the inline error');
+            expect(await text(F + '[data-agentchat-card-error]') === 'The proposal is already closed.', 'refusal text');
+            expect(await js('[...document.querySelectorAll("#host-full #authorize button, #host-full #refuse button")].every(b => !b.disabled)'), 'buttons stayed disabled after an error');
+            expect(await q(F + '#refuse', 'el.hasAttribute("aria-busy")') === false, 'the form stayed busy');
+            await click(F + '#authorize button');
+            await eventually(() => q(F + '#receipt', 'true'), 'the receipt');
+            expect(await count(F + '#authorize') === 0 && await count(F + '[data-agentchat-card]') === 1, 'the card was not replaced by the receipt');
+            expect(await text(F + '.ui-chat-note [data-agentchat-note-title]') === 'Payment authorised', 'note row');
+            const ev = await js('window.__events.filter(e => e[0] === "action").map(e => e[1].note)');
+            expect(ev.join() === 'Payment authorised', `agentchat:action notes ${ev}`);
+        });
+
+        await check('Enter sends: the reply streams in progressively, then done.html replaces it', async () => {
+            await send(F, 'hello there');
+            await eventually(() => count(F + '.ui-chat-msg--user'), 'the user row');
+            expect(await qt(F + '.ui-chat-msg--user .ui-chat-bubble') === 'hello there', 'user bubble text');
+            expect(await q(F + '[data-agentchat-input]', 'el.value') === '', 'the composer was not cleared');
+            expect(await js('document.querySelector("#host-full [data-agentchat]").classList.contains("is-busy")'), 'root is not busy');
+            const seen = [];
+            let busy = null;
+            await eventually(async () => {
+                const t = await q(F + '.ui-chat-msg.is-pending [data-agentchat-body].is-provisional', 'el.textContent') || '';
+                if (t && !seen.includes(t)) {
+                    seen.push(t);
+                    if (!busy) busy = await js(`(() => { const r = document.querySelector("#host-full .ui-chat-msg.is-pending"); const b = r.querySelector("[data-agentchat-body]"); return {busy: r.getAttribute("aria-busy"), hidden: b.getAttribute("aria-hidden"), caret: !!b.querySelector(".ui-caret"), stop: document.querySelector("#host-full [data-agentchat-send]").getAttribute("aria-label")}; })()`);
+                }
+                return t.includes('answer.');
+            }, 'the streamed text', 10000);
+            expect(seen.length >= 2 && seen[0].length < seen.at(-1).length, `text did not stream progressively: ${JSON.stringify(seen)}`);
+            expect(seen.at(-1).replace('​', '') .startsWith('Here is your provisional answer.'), `provisional text: ${seen.at(-1)}`);
+            expect(busy && busy.busy === 'true' && busy.hidden === 'true' && busy.caret && busy.stop === 'Stop', `streaming row state: ${JSON.stringify(busy)}`);
+            await eventually(() => count(F + '.ui-chat-msg.is-pending').then(n => n === 0), 'the reply to settle', 10000);
+            const reply = F + '.ui-chat-msg--assistant ';
+            expect(await qt(reply + '[data-agentchat-body]') === 'Final server answer.', `final text: ${await qt(reply + '[data-agentchat-body]')}`);
+            expect(await ql(reply + '[data-agentchat-body]', 'el.querySelectorAll("strong").length === 1 && !el.classList.contains("is-provisional") && !el.querySelector(".ui-caret") && !el.hasAttribute("aria-hidden")'), 'the server html did not replace the provisional text');
+            expect(await ql(F + '.ui-chat-msg--assistant', '!el.hasAttribute("aria-busy")'), 'aria-busy stayed after done');
+            await idle(F);
+        });
+
+        await check('the turn request carries session, composer fields, the transcript and the queued note', async () => {
+            const req = (await state()).requests[0];
+            expect(req.message[0] === 'hello there' && req.session_id[0] === '' && req.scope[0] === 'all', `fields: ${JSON.stringify(req)}`);
+            expect(JSON.stringify(req.notes) === '["[\\"Payment authorised\\"]"]', `notes: ${JSON.stringify(req.notes)}`);
+            const transcript = JSON.parse(req.transcript[0]);
+            expect(transcript.length === 2 && transcript[0].role === 'assistant' && transcript[0].text === 'Welcome back.' && transcript[1].text.includes('Authorised'), `transcript: ${JSON.stringify(transcript)}`);
+            const sent = await js('window.__events.find(e => e[0] === "send")[1]');
+            expect(sent.body === undefined || typeof sent.body === 'object', 'agentchat:send detail');
+        });
+
+        await check('session and done events reach the app; the session id lands in the root, the card form and the address bar', async () => {
+            expect(await js('document.querySelector("#host-full [data-agentchat]").dataset.sessionId') === 's-1', 'root session id');
+            expect(await js('location.search') === '?session_id=s-1', 'address bar');
+            expect(await q(F + 'input[name=session_id]', 'el.value') === 's-1', 'hidden session_id');
+            const session = await js('window.__events.find(e => e[0] === "session")[1]');
+            expect(session.session_id === 's-1' && session.data.owner === 'me', `session detail: ${JSON.stringify(session)}`);
+            const done = await js('window.__events.find(e => e[0] === "done")[1]');
+            expect(done.html.includes('<strong>server</strong>') && done.card_html.includes('tok-1'), 'done detail');
+        });
+
+        await check('steps fold into "4 steps" with a ×2 count and the narration as a caption', async () => {
+            const steps = await js(`(() => { const row = [...document.querySelectorAll("#host-full .ui-chat-msg--assistant")].at(-1); const list = row.querySelector(".ui-chat-steps"); return {toggle: row.querySelector(".ui-chat-steps__toggle")?.textContent, hidden: list.hidden, expanded: row.querySelector(".ui-chat-steps__toggle").getAttribute("aria-expanded"), items: [...list.children].map(li => [li.querySelector("[data-agentchat-step-label]").textContent, li.querySelector(".ui-chat-step__count")?.textContent || "", li.querySelector("[data-agentchat-step-note]").textContent, li.className]) }; })()`);
+            expect(steps.toggle === '4 steps' && steps.hidden && steps.expanded === 'false', `folded: ${JSON.stringify(steps)}`);
+            expect(JSON.stringify(steps.items.map(i => i.slice(0, 3))) === JSON.stringify([['Reading the profile', '', ''], ['Checking listings', '×2', ''], ['Drafting the answer', '', 'Let me look at that.']]), `steps: ${JSON.stringify(steps.items)}`);
+            expect(steps.items.every(i => i[3].includes('is-done')), 'a step is still active');
+            await js('[...document.querySelectorAll("#host-full .ui-chat-steps__toggle")].at(-1).scrollIntoView()');
+            const [x, y] = await js('(() => { const r = [...document.querySelectorAll("#host-full .ui-chat-steps__toggle")].at(-1).getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; })()');
+            for (const t of ['mousePressed', 'mouseReleased']) await b.send('Input.dispatchMouseEvent', {type: t, x, y, button: 'left', clickCount: 1});
+            expect(await js('(() => { const t = [...document.querySelectorAll("#host-full .ui-chat-steps__toggle")].at(-1); return !t.nextElementSibling.hidden && t.getAttribute("aria-expanded") === "true"; })()'), 'the toggle did not open the list');
+        });
+
+        await check('question card submit sends q_* fields as a turn and collapses into an Answered row', async () => {
+            expect(await q(F + '.ui-chat-card--questions input[name=q_mode]:checked', 'el.value') === 'Hybrid', 'prefilled chip');
+            const id = await q(F + '.ui-chat-card--questions input[name=q_min]', 'el.id');
+            expect(/^q-tok1-min$/.test(id), `field id ${id}`);
+            await click(F + '.ui-chat-card--questions input[name=q_min]');
+            await type('5000');
+            await click(F + '.ui-chat-card--questions .ui-chat-card__head'); // blur: digits group
+            expect(await q(F + '.ui-chat-card--questions input[name=q_min]', 'el.value') === '5,000', 'digit grouping on blur');
+            const before = (await state()).requests.length;
+            await click(F + '.ui-chat-card--questions button[type=submit]:not([name])');
+            await eventually(() => q(F + '.ui-chat-answered', 'true'), 'the Answered row');
+            const summary = await text(F + '.ui-chat-answered [data-agentchat-summary]');
+            expect(summary === 'Work arrangement: Hybrid · Minimum pay: 5,000', `summary: ${summary}`);
+            expect(await q(F + '.ui-chat-card--questions', 'el.classList.contains("is-answered") && el.inert'), 'the card did not collapse');
+            await eventually(async () => (await state()).requests.length === before + 1, 'the answers request');
+            const req = await lastRequest();
+            expect(req.answer_questions[0] === '1' && req.question_token[0] === 'tok-1' && req.q_mode[0] === 'Hybrid' && req.q_min[0] === '5000' && req.session_id[0] === 's-1' && !req.message, `answers request: ${JSON.stringify(req)}`);
+            await eventually(() => qt(F + '.ui-chat-msg--assistant [data-agentchat-body]').then(t => t === 'Thanks, I have your answers.'), 'the confirmation', 10000);
+            expect(await count(F + '[data-agentchat-card-slot] > *') === 0, 'the answered card stayed in the slot');
+            expect(await count(F + '.ui-chat-answered') === 1, 'the Answered row is gone');
+            await idle(F);
+        });
+
+        await check('Stop aborts the reply, marks it Stopped and tells the server', async () => {
+            await send(F, 'slow');
+            await eventually(() => count(F + '.ui-chat-msg.is-pending .ui-chat-step'), 'the first step');
+            await eventually(() => q(F + '.ui-chat-msg.is-pending [data-agentchat-body]:not([hidden])', 'true'), 'streamed text');
+            expect(await q(F + '[data-agentchat-composer]', 'el.dataset.state') === 'busy', 'composer is not busy');
+            await click(F + '[data-agentchat-send]');
+            await idle(F);
+            expect(await count(F + '.ui-chat-msg.is-pending') === 0, 'a pending row remained');
+            expect(await qt(F + '.ui-chat-msg--assistant .ui-chat-stopped') === 'Stopped', 'no Stopped mark');
+            expect(await qt(F + '.ui-chat-msg--assistant [data-agentchat-body]').then(t => t.startsWith('still thinking')), 'the partial text was dropped');
+            await eventually(async () => (await state()).cancels === 1, 'the cancel request');
+            expect(await q(F + '[data-agentchat-send]', 'el.getAttribute("aria-label")') === 'Send message', 'the Stop button stayed');
+        });
+
+        await check('a failed turn shows an error with Retry and restores the text; Retry sends it again', async () => {
+            await send(F, 'fail');
+            await eventually(() => q(F + '.ui-chat-error', 'true'), 'the error row');
+            expect(await text(F + '.ui-chat-error [data-agentchat-error-text]') === "The agent couldn't finish that reply.", 'error text');
+            expect(await q(F + '[data-agentchat-input]', 'el.value') === 'fail', 'the text was not restored');
+            expect(await count(F + '.ui-chat-bubble') === 2, 'the failed message stayed in the thread'); // hello there and slow, not fail
+            const before = (await state()).requests.length;
+            await click(F + '[data-agentchat-retry]');
+            await eventually(() => count(F + '.ui-chat-error').then(n => n === 0), 'the error to go');
+            await eventually(async () => (await state()).requests.length === before + 1, 'the retried request');
+            expect((await lastRequest()).message[0] === 'fail', 'retry sent another message');
+            await eventually(() => qt(F + '.ui-chat-msg--assistant [data-agentchat-body]').then(t => t === 'Final server answer.'), 'the retried reply', 10000);
+            expect(await q(F + '[data-agentchat-input]', 'el.value') === '', 'the restored text stayed in the composer after Retry');
+            expect(await qt(F + '.ui-chat-msg--user .ui-chat-bubble') === 'fail', 'the user row after Retry');
+            await idle(F);
+        });
+
+        await check('a second root works alongside: its own session, no transcript, starters send and hide', async () => {
+            await click(C + '[data-agentchat-prompt]');
+            await eventually(() => count(C + '.ui-chat-msg--user'), 'the starter prompt as a user row');
+            await eventually(() => qt(C + '.ui-chat-msg--assistant [data-agentchat-body]').then(t => t === 'Final server answer.'), 'the compact reply', 10000);
+            const req = await lastRequest();
+            expect(req.message[0] === 'hello' && req.session_id[0] === '' && !req.transcript && !req.notes, `compact request: ${JSON.stringify(req)}`);
+            expect(await count(C + '[data-agentchat-empty]') === 0, 'the empty state stayed');
+            expect(await count(F + '.ui-chat-msg--user') === 3, 'the compact chat wrote into the full chat');
+            expect(await q(C + '.ui-chat-composer', 'getComputedStyle(el).maxWidth') === 'none', 'the panel variant is not compact');
+            await idle(C);
+        });
+
+        await check('the panel docks from 1280px and slides over below with a scrim; the rail docks from 1600px', async () => {
+            const panel = F + '[data-agentchat-panel]';
+            const rail = F + '[data-agentchat-rail]';
+            const cs = (sel, prop) => q(sel, `getComputedStyle(el)[${JSON.stringify(prop)}]`);
+            await b.resize(1280);
+            await sleep(100);
+            expect(await cs(panel, 'position') === 'relative' && await cs(panel, 'visibility') === 'visible' && await cs(F + '.ui-chat-toggle--panel', 'display') === 'none' && await cs(F + '[data-agentchat-scrim]', 'display') === 'none', 'the panel is not docked at 1280px');
+            expect(await cs(rail, 'visibility') === 'hidden' && await cs(F + '.ui-chat-toggle--rail', 'display') !== 'none', 'the rail should slide over at 1280px');
+            await b.resize(1000);
+            await eventually(async () => await cs(panel, 'position') === 'absolute' && await cs(panel, 'visibility') === 'hidden' && await cs(F + '.ui-chat-toggle--panel', 'display') !== 'none', 'the panel to become a slide-over');
+            await click(F + '.ui-chat-toggle--panel');
+            await eventually(async () => await cs(panel, 'visibility') === 'visible' && await cs(F + '[data-agentchat-scrim]', 'opacity') === '1', 'the panel and scrim to show');
+            expect(await q(F + '.ui-chat-toggle--panel', 'el.getAttribute("aria-expanded")') === 'true', 'aria-expanded');
+            await key('Escape', 'Escape', 27);
+            await eventually(async () => await cs(panel, 'visibility') === 'hidden', 'Escape to close the panel');
+            await click(F + '.ui-chat-toggle--rail');
+            await eventually(async () => await cs(rail, 'visibility') === 'visible', 'the rail to open');
+            await click(F + '[data-agentchat-scrim]');
+            await eventually(async () => await cs(rail, 'visibility') === 'hidden', 'the scrim to close the rail');
+            await b.resize(1700);
+            await sleep(100);
+            expect(await cs(rail, 'position') === 'relative' && await cs(rail, 'visibility') === 'visible' && await cs(F + '.ui-chat-toggle--rail', 'display') === 'none', 'the rail is not docked at 1700px');
+            await b.resize(1280);
+        });
+
+        await check('chat buttons carry no browser border or grey face (no reliance on a CSS preflight)', async () => {
+            const bad = await js(`[...document.querySelectorAll(".ui-chat button")].filter(b => { const cs = getComputedStyle(b); return cs.borderTopStyle === "outset" || cs.borderTopStyle === "solid" && parseFloat(cs.borderTopWidth) >= 2 || cs.backgroundColor === "rgb(239, 239, 239)" || cs.backgroundColor === "rgb(233, 233, 237)"; }).map(b => b.className || b.outerHTML.slice(0, 60))`);
+            expect(bad.length === 0, `default-styled buttons: ${bad.join(', ')}`);
+            const kinds = await js('new Set([...document.querySelectorAll(".ui-chat button")].map(b => b.className.split(" ")[0])).size');
+            expect(kinds >= 5, `only ${kinds} kinds of button were checked`);
+        });
+
+        await check('no script errors or CSP violations on the chat page', async () => {
+            expect(b.errors.length === 0, b.errors.join('\n'));
+        });
+    } finally {
+        await b.close();
+    }
+}
+
 try {
     await runVariant('standard', '/');
     await runVariant('csp', '/?csp=1');
     await runVariant('host', '/?host=1', {full: false, host: true});
+    await runAgentChat();
 } finally {
     await stop();
 }

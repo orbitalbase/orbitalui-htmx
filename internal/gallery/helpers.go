@@ -37,6 +37,8 @@ body { margin: 0; background: var(--oui-canvas); color: var(--oui-text-primary);
 .g-stack { display: grid; gap: 12px; }
 .g-panel { padding: 16px; background: var(--oui-surface); border-radius: 12px; box-shadow: 0 0 0 1px var(--oui-line); }
 .g-list { padding-left: 1.2rem; }
+.g-chatframe { display: flex; height: 62rem; overflow: hidden; background: var(--oui-surface); border-radius: 12px; box-shadow: 0 0 0 1px var(--oui-line); }
+.g-chatframe--narrow { max-width: 26rem; height: 28rem; }
 @media (max-width: 42rem) { .g-shell { grid-template-columns: 1fr; } .g-nav { position: static; max-height: none; grid-auto-flow: column; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--oui-line); } .g-nav hr { display: none; } .g-main { padding: 1rem; } }
 `
 

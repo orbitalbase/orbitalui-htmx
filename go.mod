@@ -2,7 +2,10 @@ module github.com/orbitalbase/orbitalui-htmx
 
 go 1.26.2
 
-require github.com/a-h/templ v0.3.1020
+require (
+	github.com/a-h/templ v0.3.1020
+	github.com/yuin/goldmark v1.7.13
+)
 
 require (
 	github.com/a-h/parse v0.0.0-20250122154542-74294addb73e // indirect

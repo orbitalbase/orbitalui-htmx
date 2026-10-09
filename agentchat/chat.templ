@@ -1,0 +1,477 @@
+// Package agentchat is the shared agentic chat: the server-sent-event stream
+// an agent turn is written to, the templ components that render the thread,
+// composer and cards, the validated question cards a model can ask, and a safe
+// Markdown renderer. The browser side is assets/agent-chat.js and
+// assets/agent-chat.css; docs/agent-chat.md is the full contract.
+package agentchat
+
+import c "github.com/orbitalbase/orbitalui-htmx/components"
+
+// Chat is the chat root and frame: optional rail, header, thread, composer and
+// panel. It renders the <template>s the runtime clones, so one root is
+// self-contained and several can share a page.
+templ Chat(o ChatOpts) {
+	<section
+		class={ o.class() }
+		data-agentchat
+		data-turn-url={ o.TurnURL }
+		if o.CancelURL != "" {
+			data-cancel-url={ o.CancelURL }
+		}
+		if o.StateURL != "" {
+			data-state-url={ o.StateURL }
+		}
+		data-session-id={ o.SessionID }
+		data-inflight?={ o.resuming() }
+		if o.AutoSend != "" {
+			data-autosend={ o.AutoSend }
+		}
+		data-agentchat-transcript?={ o.Transcript }
+		aria-label={ o.label() }
+		{ o.Attrs... }
+	>
+		if o.Rail != nil {
+			<aside class="ui-chat-rail" data-agentchat-rail aria-label={ or(o.RailLabel, "Conversations") }>
+				@o.Rail
+			</aside>
+		}
+		<div class="ui-chat-main">
+			if o.Header != nil {
+				@o.Header
+			}
+			<div class="ui-chat-stage">
+				<div class="ui-chat-thread-wrap">
+					<div class="ui-chat-thread" data-agentchat-thread tabindex="-1">
+						<div class="ui-chat-col" data-agentchat-col>
+							if o.showEmpty() {
+								<div class="ui-chat-empty" data-agentchat-empty>
+									@o.Empty
+								</div>
+							}
+							if o.Thread != nil {
+								@o.Thread
+							}
+							if o.resuming() {
+								@pendingRow(true)
+							}
+							<div class="ui-chat-card-slot" data-agentchat-card-slot>
+								if o.Card != nil {
+									@o.Card
+								}
+							</div>
+						</div>
+					</div>
+					<button type="button" class="ui-chat-newpill" data-agentchat-newpill hidden>
+						<span class="ui-chat-newpill__arrow">@c.Icon("arrow-right")</span>
+						New message
+					</button>
+				</div>
+				if o.Composer != nil {
+					@o.Composer
+				}
+			</div>
+		</div>
+		if o.Panel != nil {
+			<aside class="ui-chat-panel" data-agentchat-panel aria-label={ or(o.PanelLabel, "Details") }>
+				@o.Panel
+			</aside>
+		}
+		<div class="ui-chat-scrim" data-agentchat-scrim aria-hidden="true"></div>
+		@templates()
+	</section>
+}
+
+// Head is the chat header: an orb, a title and the status line the runtime
+// keeps current. Pass it as ChatOpts.Header.
+templ Head(o HeadOpts) {
+	<header class="ui-chat-head">
+		if o.Leading != nil {
+			@o.Leading
+		}
+		<span class="ui-chat-head__orb" data-agentchat-orb>
+			@c.Orb(c.OrbOpts{Size: 28, State: c.OrbIdle})
+		</span>
+		<div class="ui-chat-head__title">
+			<h1 class="ui-chat-head__name">{ o.Title }</h1>
+			<p class="ui-chat-status" data-agentchat-status><span class="ui-chat-status__text">Ready</span></p>
+		</div>
+		<div class="ui-chat-head__meta">
+			if o.Meta != nil {
+				@o.Meta
+			}
+		</div>
+	</header>
+}
+
+// Toggle is an icon button that opens or closes the rail or the panel where
+// they slide over the chat. It hides itself where that region is docked.
+templ Toggle(o ToggleOpts) {
+	<button type="button" class={ join("ui-chat-iconbtn", "ui-chat-toggle", "ui-chat-toggle--" + string(o.Dock)) } data-agentchat-toggle={ string(o.Dock) } aria-label={ o.Label } aria-expanded="false">
+		@c.Icon(o.icon())
+	</button>
+}
+
+// Thread is the persisted messages as a polite live log. The streaming reply
+// joins it, and stays aria-busy until the turn is done.
+templ Thread(msgs []Message) {
+	<div class="ui-chat-msgs" role="log" aria-live="polite" aria-relevant="additions" aria-label="Conversation" data-agentchat-messages>
+		for _, m := range msgs {
+			switch m.Role {
+				case RoleUser:
+					@userRow(m.Text, rowAttrs(m.ID))
+				case RoleNote:
+					@noteRow(m.Title, m.Text, rowAttrs(m.ID))
+				case RoleStopped:
+					@stoppedRow(rowAttrs(m.ID))
+				case RoleAnswered:
+					@answeredRow(m.Text, rowAttrs(m.ID))
+				default:
+					if m.Content != nil {
+						@assistantRow(AssistantOpts{Content: m.Content, Steps: m.Steps}, rowAttrs(m.ID))
+					} else {
+						@assistantRow(AssistantOpts{Content: Markdown(m.Text), Steps: m.Steps}, rowAttrs(m.ID))
+					}
+			}
+		}
+	</div>
+}
+
+// UserMessage is a user row: a right-aligned bubble of plain text.
+templ UserMessage(text string) {
+	@userRow(text, nil)
+}
+
+// AssistantMessage is a finished assistant row: the orb beside the body, with
+// the settled steps folded behind an "N steps" toggle.
+templ AssistantMessage(o AssistantOpts) {
+	@assistantRow(o, nil)
+}
+
+// NoteMessage is a quiet system note in the thread, such as the outcome of an action.
+templ NoteMessage(title, text string) {
+	@noteRow(title, text, nil)
+}
+
+// StoppedMessage marks a turn the user stopped.
+templ StoppedMessage() {
+	@stoppedRow(nil)
+}
+
+// AnsweredMessage is the one-line row a question card collapses into.
+templ AnsweredMessage(summary string) {
+	@answeredRow(summary, nil)
+}
+
+templ userRow(text string, attrs templ.Attributes) {
+	<article class="ui-chat-msg ui-chat-msg--user" aria-label="You said" { attrs... }>
+		<div class="ui-chat-bubble" data-agentchat-bubble>{ text }</div>
+	</article>
+}
+
+templ assistantRow(o AssistantOpts, attrs templ.Attributes) {
+	<article class="ui-chat-msg ui-chat-msg--assistant" aria-label="Assistant message" { attrs... }>
+		<span class="ui-chat-msg__orb">
+			@c.Orb(c.OrbOpts{Size: 20})
+		</span>
+		<div class="ui-chat-msg__col">
+			if len(o.Steps) > 0 {
+				<button type="button" class="ui-chat-steps__toggle" data-agentchat-steps-toggle aria-expanded="false">{ stepsLabel(o.Steps) }</button>
+				<ol class="ui-chat-steps" aria-label="Progress" hidden>
+					for _, s := range o.Steps {
+						@stepRow(s, true)
+					}
+				</ol>
+			}
+			<div class="ui-chat-msg__body ui-chat-md" data-agentchat-body>
+				if o.Content != nil {
+					@o.Content
+				}
+			</div>
+		</div>
+	</article>
+}
+
+templ stepRow(s Step, done bool) {
+	<li class={ join("ui-chat-step", when(done, "is-done"), when(!done, "is-active")) }>
+		<span class="ui-chat-step__mark" aria-hidden="true">
+			@c.IconSized("check", 12)
+		</span>
+		<span class="ui-chat-step__text">
+			<span class="ui-chat-step__label">
+				<span data-agentchat-step-label>{ s.Label }</span>
+				if s.Count > 1 {
+					<span class="ui-chat-step__count num">×{ itoa(s.Count) }</span>
+				}
+			</span>
+			<span class="ui-chat-step__note" data-agentchat-step-note hidden?={ s.Caption == "" }>{ s.Caption }</span>
+		</span>
+	</li>
+}
+
+// pendingRow is the assistant row of a turn in progress: dots and the step
+// list the stream fills in. adopt marks a row the page rendered for a turn it
+// did not start; the runtime takes it over.
+templ pendingRow(adopt bool) {
+	<article class="ui-chat-msg ui-chat-msg--assistant is-pending" aria-label="Assistant message" aria-busy="true" data-agentchat-pending?={ adopt }>
+		<span class="ui-chat-msg__orb" data-agentchat-row-orb>
+			@c.Orb(c.OrbOpts{Size: 20, State: c.OrbThinking})
+		</span>
+		<div class="ui-chat-msg__col">
+			<ol class="ui-chat-steps" data-agentchat-steps aria-label="Progress" hidden></ol>
+			<div class="ui-chat-typing" data-agentchat-typing>
+				<span class="ui-typing" aria-hidden="true"><span></span><span></span><span></span></span>
+				<span class="ui-chat-typing__label" data-agentchat-row-status aria-hidden="true">Thinking…</span>
+			</div>
+			<div class="ui-chat-msg__body ui-chat-md is-provisional" data-agentchat-body aria-hidden="true" hidden></div>
+		</div>
+	</article>
+}
+
+templ noteRow(title, text string, attrs templ.Attributes) {
+	<div class="ui-chat-note" { attrs... }>
+		<span class="ui-chat-note__icon">
+			@c.IconSized("document", 14)
+		</span>
+		<div class="ui-chat-note__body">
+			<strong data-agentchat-note-title>{ title }</strong>
+			<p data-agentchat-note-text hidden?={ text == "" }>{ text }</p>
+		</div>
+	</div>
+}
+
+templ stoppedRow(attrs templ.Attributes) {
+	<p class="ui-chat-stopped ui-chat-stopped--row" { attrs... }>Stopped</p>
+}
+
+templ answeredRow(summary string, attrs templ.Attributes) {
+	<div class="ui-chat-answered" { attrs... }>
+		<span class="ui-chat-answered__tick">
+			@c.IconSized("check", 12)
+		</span>
+		<span class="ui-chat-answered__label">Answered</span>
+		<span class="ui-chat-answered__text" data-agentchat-summary>{ summary }</span>
+	</div>
+}
+
+// templates holds the markup the runtime clones, so there is one source for
+// icons, orbs and classes.
+templ templates() {
+	<template data-agentchat-tpl="user">
+		@userRow("", nil)
+	</template>
+	<template data-agentchat-tpl="assistant">
+		@pendingRow(false)
+	</template>
+	<template data-agentchat-tpl="step">
+		@stepRow(Step{}, false)
+	</template>
+	<template data-agentchat-tpl="error">
+		<div class="ui-chat-error" role="alert">
+			<span class="ui-chat-error__icon">
+				@c.IconSized("triangle-alert", 14)
+			</span>
+			<span class="ui-chat-error__text" data-agentchat-error-text></span>
+			@c.Button(c.ButtonVariantSecondary, c.ButtonSizeSM, c.ButtonOpts{Label: "Retry", Icon: "refresh", Attrs: templ.Attributes{"data-agentchat-retry": ""}})
+		</div>
+	</template>
+	<template data-agentchat-tpl="answered">
+		@answeredRow("", nil)
+	</template>
+	<template data-agentchat-tpl="note">
+		@noteRow("", "", nil)
+	</template>
+}
+
+// Composer is the message box: an autogrowing textarea (Enter sends,
+// Shift+Enter adds a line), a tools slot, and a send button that becomes Stop
+// while a turn runs.
+templ Composer(o ComposerOpts) {
+	<form class="ui-chat-composer" method="post" data-agentchat-composer data-state="idle" autocomplete="off" { o.Attrs... }>
+		for _, k := range o.hiddenKeys() {
+			<input type="hidden" name={ k } value={ o.Hidden[k] }/>
+		}
+		if o.Quick != nil {
+			<div class="ui-chat-quick" data-agentchat-quick>
+				@o.Quick
+			</div>
+		}
+		<div class="ui-chat-composer__box">
+			<textarea
+				class="ui-chat-input"
+				name={ o.name() }
+				rows="1"
+				aria-label={ o.label() }
+				placeholder={ o.Placeholder }
+				if o.MaxLength > 0 {
+					maxlength={ o.maxLength() }
+				}
+				data-agentchat-input
+			>{ o.Value }</textarea>
+			<div class="ui-chat-composer__bar">
+				if o.Tools != nil {
+					@o.Tools
+				}
+				<span class="ui-chat-composer__spacer"></span>
+				if o.MaxLength > 0 {
+					<span class="ui-chat-count num" data-agentchat-count>{ "0 / " + o.maxLength() }</span>
+				}
+				<button type="submit" class="ui-chat-send ui-press" data-agentchat-send aria-label="Send message">
+					<span class="ui-chat-send__idle">
+						@c.Icon("arrow-right")
+					</span>
+					<span class="ui-chat-send__busy" aria-hidden="true">
+						@c.Orb(c.OrbOpts{Size: 16, State: c.OrbThinking})
+						<span class="ui-chat-send__stop"></span>
+					</span>
+				</button>
+			</div>
+		</div>
+		<p class="ui-chat-hint">
+			@c.Kbd("↵")
+			send
+			<span aria-hidden="true">·</span>
+			@c.Kbd("⇧", "↵")
+			new line
+			if o.Hint != "" {
+				<span aria-hidden="true">·</span>
+				<span>{ o.Hint }</span>
+			}
+		</p>
+	</form>
+}
+
+// QuickPrompts are small buttons above the composer; each sends its Prompt as
+// the user's message.
+templ QuickPrompts(items []Prompt) {
+	for _, p := range items {
+		<button type="button" class="ui-chat-quick__btn ui-press" data-agentchat-prompt={ p.Prompt }>
+			if p.Icon != "" {
+				@c.IconSized(p.Icon, 12)
+			}
+			{ p.Label }
+		</button>
+	}
+}
+
+// Hero is the empty state's heading: an idle orb, a title and a line of context.
+templ Hero(o HeroOpts) {
+	<div class="ui-chat-hero ui-enter-up">
+		<span class="ui-chat-hero__orb">
+			@c.Orb(c.OrbOpts{Size: 64, State: c.OrbIdle})
+		</span>
+		<h2 class="ui-chat-hero__title">{ o.Title }</h2>
+		if o.Body != "" {
+			<p class="ui-chat-hero__body">{ o.Body }</p>
+		}
+	</div>
+}
+
+// Starters are cards in the empty state; each sends its Prompt as the user's message.
+templ Starters(items []Starter) {
+	<div class="ui-chat-starters ui-stagger">
+		for _, s := range items {
+			<button type="button" class="ui-chat-starter ui-press" data-agentchat-prompt={ s.Prompt }>
+				if s.Icon != "" {
+					<span class={ s.iconClass() }>
+						@c.Icon(s.Icon)
+					</span>
+				}
+				<span class="ui-chat-starter__text">
+					if s.Eyebrow != "" {
+						<span class="ui-chat-starter__eyebrow">{ s.Eyebrow }</span>
+					}
+					<span class="ui-chat-starter__title">{ s.Title }</span>
+					if s.Body != "" {
+						<span class="ui-chat-starter__body">{ s.Body }</span>
+					}
+				</span>
+			</button>
+		}
+	</div>
+}
+
+// Card is the shell for an interactive card in the thread. Forms inside it
+// choose a submit mode with data-agentchat-submit; the app owns the body.
+templ Card(o CardOpts) {
+	<div
+		class={ join("ui-chat-card", o.Class) }
+		data-agentchat-card
+		if o.Label != "" {
+			role="group"
+			aria-label={ o.Label }
+		}
+	>
+		<div class="ui-chat-card__inner">
+			if o.Body != nil {
+				@o.Body
+			}
+		</div>
+	</div>
+}
+
+// QuestionForm is the agent's grouped question form. It submits as a turn
+// with q_<key> fields; agent-suggested values come pre-selected, and once
+// answered the runtime collapses it into a one-line summary.
+templ QuestionForm(v QuestionCardView) {
+	<form
+		class="ui-chat-card ui-chat-card--questions ui-enter-up"
+		method="post"
+		data-agentchat-card
+		data-agentchat-submit="turn"
+		data-agentchat-autosubmit?={ v.Card.autoSubmit() }
+		aria-label={ v.Card.heading() }
+	>
+		<input type="hidden" name="session_id" value={ v.SessionID }/>
+		<input type="hidden" name="answer_questions" value="1"/>
+		<input type="hidden" name="question_token" value={ v.Card.Token }/>
+		<div class="ui-chat-card__inner">
+			<div class="ui-chat-card__head">
+				<span class="ui-chat-card__orb">
+					@c.Orb(c.OrbOpts{Size: 20})
+				</span>
+				<div>
+					<h3 class="ui-chat-card__title">{ v.Card.heading() }</h3>
+					if v.Card.Description != "" {
+						<p class="ui-chat-card__desc">{ v.Card.Description }</p>
+					}
+					if v.Card.anyPrefill() {
+						<p class="ui-chat-card__prefilled">
+							@c.IconSized("ai", 12)
+							Prefilled by your agent. Change anything.
+						</p>
+					}
+				</div>
+			</div>
+			<div class="ui-chat-card__body">
+				for _, q := range v.Card.Questions {
+					<div class="ui-chat-q" data-agentchat-q-label={ q.Label }>
+						@questionField(v.Card, q)
+					</div>
+				}
+			</div>
+			<div class="ui-chat-card__foot">
+				<span class="ui-chat-card__spacer"></span>
+				@c.Button(c.ButtonVariantQuiet, c.ButtonSizeSM, c.ButtonOpts{Type: "submit", Name: "skip_questions", Value: "1", Label: "Skip for now", Class: "ui-press", Attrs: templ.Attributes{"formnovalidate": "", "data-agentchat-summary": "Skipped"}})
+				@c.Button(c.ButtonVariantPrimary, c.ButtonSizeSM, c.ButtonOpts{Type: "submit", Label: "Send answers", Class: "ui-press"})
+			</div>
+		</div>
+	</form>
+}
+
+templ questionField(card QuestionCard, q Question) {
+	switch {
+		case q.isChoice():
+			@c.ChipGroup(q.chips(), c.ChipGroupOpts{Name: "q_" + q.Key, Multiple: q.Type == TypeMultiselect, Legend: q.Label, Help: q.Help, Required: q.Required})
+		case q.Type == TypeNumber:
+			@c.LabelledField(q.Label, card.fieldID(q), q.fieldOpts(), c.FieldInput(c.FieldInputOpts{ID: card.fieldID(q), Name: "q_" + q.Key, Value: groupDigits(q.Value), Placeholder: q.Placeholder, Required: q.Required, InputMode: "decimal", Pattern: `[0-9][0-9,.\s]*`, Autocomplete: "off", Numeric: true, Suggested: q.Value != "", AriaDescribedBy: describedBy(card, q), Attrs: templ.Attributes{"data-agentchat-group": "", "title": "Enter a number"}}))
+		case q.Type == TypeTextarea:
+			@c.LabelledField(q.Label, card.fieldID(q), q.fieldOpts(), c.FieldTextarea(c.FieldTextareaOpts{ID: card.fieldID(q), Name: "q_" + q.Key, Value: q.Value, Placeholder: q.Placeholder, Rows: 3, MaxLength: 4000, Required: q.Required, Autogrow: true, Suggested: q.Value != "", AriaDescribedBy: describedBy(card, q)}))
+		default:
+			@c.LabelledField(q.Label, card.fieldID(q), q.fieldOpts(), c.FieldInput(c.FieldInputOpts{ID: card.fieldID(q), Name: "q_" + q.Key, Value: q.Value, Placeholder: q.Placeholder, Required: q.Required, MaxLength: 500, Suggested: q.Value != "", AriaDescribedBy: describedBy(card, q)}))
+	}
+}
+
+// Markdown renders src as safe HTML; see RenderMarkdown.
+templ Markdown(src string) {
+	@templ.Raw(RenderMarkdown(src))
+}

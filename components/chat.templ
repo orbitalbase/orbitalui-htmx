@@ -1,5 +1,8 @@
 package components
 
+// ChatThread is a labelled, polite live log for chat messages.
+//
+// Deprecated: use agentchat.Chat with agentchat.Thread.
 templ ChatThread(id string, label string, className string, children templ.Component) {
 	<div id={ id } class={ className } role="log" aria-label={ label } aria-live="polite" aria-relevant="additions text">
 		if children != nil {
@@ -8,6 +11,9 @@ templ ChatThread(id string, label string, className string, children templ.Compo
 	</div>
 }
 
+// SummaryCard is a titled card of label and value rows.
+//
+// Deprecated: use agentchat.Card with the app's own body.
 templ SummaryCard(title string, iconName string, className string, fields templ.Component) {
 	<article class={ "oui-summary-card " + className } aria-label={ title }>
 		<div class="oui-summary-card__head mb-3 flex items-center gap-2">
@@ -22,6 +28,9 @@ templ SummaryCard(title string, iconName string, className string, fields templ.
 	</article>
 }
 
+// SummaryField is one Alpine-bound row of a SummaryCard.
+//
+// Deprecated: use agentchat.Card with the app's own body.
 templ SummaryField(label string, expression string) {
 	<div class="contents">
 		<dt class="oui-summary-card__term">{ label }</dt>
@@ -29,20 +38,26 @@ templ SummaryField(label string, expression string) {
 	</div>
 }
 
-// Avatar renders a neutral assistant identity that can be reused in chat surfaces.
+// AssistantAvatar renders a neutral assistant identity that can be reused in chat surfaces.
+//
+// Deprecated: use Orb; agentchat.AssistantMessage draws it beside the reply.
 templ AssistantAvatar(sizeClass string, iconSize string) {
 	<div class={ "oui-assistant-avatar grid shrink-0 place-items-center " + sizeClass } aria-hidden="true">
 		@Icon("spark", iconSize)
 	</div>
 }
 
+// AssistantMessage is an assistant reply of plain text.
+//
+// Deprecated: use agentchat.AssistantMessage.
 templ AssistantMessage(text string) {
 	@AssistantMessageContent(assistantMessageText(text))
 }
 
 // AssistantMessageContent uses the same message chrome for cited answers and
 // other server-rendered content. Hosts own the content and source validation.
-
+//
+// Deprecated: use agentchat.AssistantMessage with AssistantOpts.Content.
 templ AssistantMessageContent(content templ.Component) {
 	<article class="oui-assistant-message message-enter flex max-w-[38rem] items-start gap-3" aria-label="Assistant message">
 		@AssistantAvatar("mt-0.5 h-8 w-8 rounded-xl", "h-4 w-4")
@@ -58,22 +73,33 @@ templ assistantMessageText(text string) {
 	<p>{ text }</p>
 }
 
+// UserMessage is a right-aligned user bubble.
+//
+// Deprecated: use agentchat.UserMessage.
 templ UserMessage(text string) {
 	<article class="oui-user-message-row message-enter flex justify-end" aria-label="User message">
 		<div class="oui-user-message max-w-[85%] rounded-2xl rounded-tr-md px-4 py-3"><p>{ text }</p></div>
 	</article>
 }
 
+// SuggestionChip is an Alpine-driven suggestion button.
+//
+// Deprecated: use agentchat.Starters or agentchat.QuickPrompts.
 templ SuggestionChip(label string, action string) {
 	<button type="button" class="oui-suggestion-chip" @click={ action }>{ label }</button>
 }
 
 // SuggestionSubmitChip submits a named value through a native form, including
 // with JavaScript disabled and under a strict CSP without Alpine expressions.
+//
+// Deprecated: use agentchat.Starters or agentchat.QuickPrompts.
 templ SuggestionSubmitChip(label string, name string, value string) {
 	<button type="submit" class="oui-suggestion-chip" name={ name } value={ value }>{ label }</button>
 }
 
+// LoadingSpinner is a small spinning arc.
+//
+// Deprecated: use Orb with OrbThinking; agentchat shows progress with steps.
 templ LoadingSpinner(id string, className string) {
 	<svg id={ id } class={ className } viewBox="0 0 24 24" fill="none" aria-hidden="true">
 		<circle class="opacity-25" cx="12" cy="12" r="9" stroke="currentColor" stroke-width="3"></circle>
