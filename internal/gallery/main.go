@@ -60,7 +60,7 @@ var presets = []preset{
 	{Name: "kindred-dark", Theme: "dark", Stylesheet: "kindred.css"},
 }
 
-var sheets = []string{"tokens.css", "base.css", "motion.css", "controls.css", "theme.css", "shell.css", "inspector.css"}
+var sheets = []string{"tokens.css", "base.css", "motion.css", "controls.css", "theme.css", "shell.css", "inspector.css", "agent-chat.css"}
 
 func main() {
 	out := flag.String("out", "gallery-out", "output directory")

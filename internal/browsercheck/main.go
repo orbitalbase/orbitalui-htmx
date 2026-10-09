@@ -38,6 +38,7 @@ func main() {
 	mux.Handle("/vendor/", http.StripPrefix("/vendor/", http.FileServerFS(vendorFS)))
 	mux.HandleFunc("GET /{$}", page)
 	mux.HandleFunc("GET /kit", kitPage)
+	registerAgentChat(mux)
 	mux.HandleFunc("GET /shell", shellPage)
 	mux.HandleFunc("GET /shell/target", shellTarget)
 	mux.HandleFunc("GET /shell/palette", shellPalette)
