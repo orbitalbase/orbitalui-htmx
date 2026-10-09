@@ -10,6 +10,7 @@ import (
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/extension"
+	east "github.com/yuin/goldmark/extension/ast"
 	"github.com/yuin/goldmark/renderer"
 	"github.com/yuin/goldmark/util"
 )
@@ -17,8 +18,37 @@ import (
 // chatMarkdown is the shared converter; goldmark converters are safe for concurrent use.
 var chatMarkdown = goldmark.New(
 	goldmark.WithExtensions(extension.GFM),
-	goldmark.WithRendererOptions(renderer.WithNodeRenderers(util.Prioritized(linkRenderer{}, 999))),
+	goldmark.WithRendererOptions(renderer.WithNodeRenderers(util.Prioritized(linkRenderer{}, 999), util.Prioritized(tableRenderer{}, 499))),
 )
+
+// tableRenderer wraps each GFM table in a scroll container: a table wider than the
+// answer scrolls sideways inside it instead of squeezing its cells or widening the page.
+// The table itself is written by Goldmark's own renderer, so its escaping is unchanged.
+// Priority 499 sits just ahead of the GFM table renderer's 500; a tie would be unordered.
+type tableRenderer struct{}
+
+type tableFuncCapture struct{ render renderer.NodeRendererFunc }
+
+func (c *tableFuncCapture) Register(kind ast.NodeKind, fn renderer.NodeRendererFunc) {
+	if kind == east.KindTable {
+		c.render = fn
+	}
+}
+
+func (tableRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
+	var inner tableFuncCapture
+	extension.NewTableHTMLRenderer().RegisterFuncs(&inner)
+	reg.Register(east.KindTable, func(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
+		if entering {
+			_, _ = w.WriteString(`<div class="ui-chat-table">`)
+		}
+		status, err := inner.render(w, source, node, entering)
+		if !entering {
+			_, _ = w.WriteString("</div>\n")
+		}
+		return status, err
+	})
+}
 
 // linkRenderer replaces Goldmark's default link renderers because its
 // dangerous-URL check does not cover autolinks. Both Markdown links and
@@ -177,4 +207,7 @@ func RenderMarkdown(src string) string {
 	return rendered.String()
 }
 
-var _ renderer.NodeRenderer = linkRenderer{}
+var (
+	_ renderer.NodeRenderer = linkRenderer{}
+	_ renderer.NodeRenderer = tableRenderer{}
+)

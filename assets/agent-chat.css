@@ -127,7 +127,10 @@
 .ui-chat-md pre code { padding: 0; background: none; box-shadow: none; font-size: inherit; }
 .ui-chat-md blockquote { margin: 0 0 10px; padding-left: 12px; border-left: 2px solid var(--oui-line-2); color: var(--oui-ink-3); }
 .ui-chat-md hr { margin: 14px 0; border: 0; border-top: 1px solid var(--oui-line); }
-.ui-chat-md table { width: 100%; margin: 0 0 12px; border-collapse: collapse; font-size: 13.5px; }
+.ui-chat-table { max-width: 100%; margin: 0 0 12px; overflow-x: auto; }
+.ui-chat-md table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+/* Cells keep whole words (the body's anywhere-wrap would shrink them to one character); a wide table scrolls in .ui-chat-table. */
+.ui-chat-md :is(th, td) { overflow-wrap: normal; }
 .ui-chat-md th, .ui-chat-md td { padding: 6px 10px; text-align: left; border-bottom: 1px solid var(--oui-line); }
 .ui-chat-md th { color: var(--oui-ink); font-weight: 600; }
 /* Text that may still be narration before a tool call: quieter until the reply is final. */
