@@ -4,6 +4,8 @@ package components
 // autogrowing textarea, a tools slot and a round send button. Focus lights the
 // AI glow. Enter inside the textarea is left to the host (submit on Enter is a
 // product decision); the send button is a real submit button.
+//
+// Deprecated: use agentchat.Composer.
 templ ChatComposer(opts ChatComposerOpts) {
 	<form
 		class={ composerClass(opts) }
@@ -50,12 +52,16 @@ templ ChatComposer(opts ChatComposerOpts) {
 
 // TypingIndicator is the three-dot cue shown while the assistant composes a
 // reply. It is a polite live status, so screen readers hear label once.
+//
+// Deprecated: agentchat shows the typing dots and steps itself.
 templ TypingIndicator(label string) {
 	<div class="ui-typing" role="status" aria-label={ label }><span></span><span></span><span></span></div>
 }
 
 // StreamingCaret is the blinking AI-gradient caret appended to text that is
 // still streaming in; remove it when the message completes.
+//
+// Deprecated: agentchat.js appends the caret itself while a reply streams.
 templ StreamingCaret() {
 	<span class="ui-caret" aria-hidden="true"></span>
 }

@@ -8,6 +8,8 @@ import "github.com/a-h/templ"
 
 // ChatComposerOpts configures ChatComposer.
 //
+// Deprecated: use agentchat.ComposerOpts.
+//
 //	Action — form action (a plain POST works without JavaScript); HXPost /
 //	    HXTarget / HXSwap wire it to htmx instead.
 //	Name — the textarea's field name (default "message").

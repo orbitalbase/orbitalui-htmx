@@ -8,6 +8,9 @@ package components
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
+// ChatThread is a labelled, polite live log for chat messages.
+//
+// Deprecated: use agentchat.Chat with agentchat.Thread.
 func ChatThread(id string, label string, className string, children templ.Component) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -41,7 +44,7 @@ func ChatThread(id string, label string, className string, children templ.Compon
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.ResolveAttributeValue(id)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/chat.templ`, Line: 4, Col: 13}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/chat.templ`, Line: 7, Col: 13}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
 		if templ_7745c5c3_Err != nil {
@@ -67,7 +70,7 @@ func ChatThread(id string, label string, className string, children templ.Compon
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/chat.templ`, Line: 4, Col: 65}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/chat.templ`, Line: 7, Col: 65}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 		if templ_7745c5c3_Err != nil {
@@ -91,6 +94,9 @@ func ChatThread(id string, label string, className string, children templ.Compon
 	})
 }
 
+// SummaryCard is a titled card of label and value rows.
+//
+// Deprecated: use agentchat.Card with the app's own body.
 func SummaryCard(title string, iconName string, className string, fields templ.Component) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -137,7 +143,7 @@ func SummaryCard(title string, iconName string, className string, fields templ.C
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/chat.templ`, Line: 12, Col: 70}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/chat.templ`, Line: 18, Col: 70}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 		if templ_7745c5c3_Err != nil {
@@ -158,7 +164,7 @@ func SummaryCard(title string, iconName string, className string, fields templ.C
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/chat.templ`, Line: 15, Col: 10}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/chat.templ`, Line: 21, Col: 10}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
@@ -182,6 +188,9 @@ func SummaryCard(title string, iconName string, className string, fields templ.C
 	})
 }
 
+// SummaryField is one Alpine-bound row of a SummaryCard.
+//
+// Deprecated: use agentchat.Card with the app's own body.
 func SummaryField(label string, expression string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -210,7 +219,7 @@ func SummaryField(label string, expression string) templ.Component {
 		var templ_7745c5c3_Var12 string
 		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/chat.templ`, Line: 27, Col: 44}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/chat.templ`, Line: 36, Col: 44}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 		if templ_7745c5c3_Err != nil {
@@ -223,7 +232,7 @@ func SummaryField(label string, expression string) templ.Component {
 		var templ_7745c5c3_Var13 string
 		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue(expression)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/chat.templ`, Line: 28, Col: 74}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/chat.templ`, Line: 37, Col: 74}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
 		if templ_7745c5c3_Err != nil {
@@ -237,7 +246,9 @@ func SummaryField(label string, expression string) templ.Component {
 	})
 }
 
-// Avatar renders a neutral assistant identity that can be reused in chat surfaces.
+// AssistantAvatar renders a neutral assistant identity that can be reused in chat surfaces.
+//
+// Deprecated: use Orb; agentchat.AssistantMessage draws it beside the reply.
 func AssistantAvatar(sizeClass string, iconSize string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -293,6 +304,9 @@ func AssistantAvatar(sizeClass string, iconSize string) templ.Component {
 	})
 }
 
+// AssistantMessage is an assistant reply of plain text.
+//
+// Deprecated: use agentchat.AssistantMessage.
 func AssistantMessage(text string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -324,6 +338,8 @@ func AssistantMessage(text string) templ.Component {
 
 // AssistantMessageContent uses the same message chrome for cited answers and
 // other server-rendered content. Hosts own the content and source validation.
+//
+// Deprecated: use agentchat.AssistantMessage with AssistantOpts.Content.
 func AssistantMessageContent(content templ.Component) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -399,7 +415,7 @@ func assistantMessageText(text string) templ.Component {
 		var templ_7745c5c3_Var20 string
 		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(text)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/chat.templ`, Line: 58, Col: 10}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/chat.templ`, Line: 73, Col: 10}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 		if templ_7745c5c3_Err != nil {
@@ -413,6 +429,9 @@ func assistantMessageText(text string) templ.Component {
 	})
 }
 
+// UserMessage is a right-aligned user bubble.
+//
+// Deprecated: use agentchat.UserMessage.
 func UserMessage(text string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -441,7 +460,7 @@ func UserMessage(text string) templ.Component {
 		var templ_7745c5c3_Var22 string
 		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(text)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/chat.templ`, Line: 63, Col: 89}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/chat.templ`, Line: 81, Col: 89}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 		if templ_7745c5c3_Err != nil {
@@ -455,6 +474,9 @@ func UserMessage(text string) templ.Component {
 	})
 }
 
+// SuggestionChip is an Alpine-driven suggestion button.
+//
+// Deprecated: use agentchat.Starters or agentchat.QuickPrompts.
 func SuggestionChip(label string, action string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -483,7 +505,7 @@ func SuggestionChip(label string, action string) templ.Component {
 		var templ_7745c5c3_Var24 string
 		templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.ResolveAttributeValue(action)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/chat.templ`, Line: 68, Col: 66}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/chat.templ`, Line: 89, Col: 66}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var24)
 		if templ_7745c5c3_Err != nil {
@@ -496,7 +518,7 @@ func SuggestionChip(label string, action string) templ.Component {
 		var templ_7745c5c3_Var25 string
 		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/chat.templ`, Line: 68, Col: 76}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/chat.templ`, Line: 89, Col: 76}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 		if templ_7745c5c3_Err != nil {
@@ -512,6 +534,8 @@ func SuggestionChip(label string, action string) templ.Component {
 
 // SuggestionSubmitChip submits a named value through a native form, including
 // with JavaScript disabled and under a strict CSP without Alpine expressions.
+//
+// Deprecated: use agentchat.Starters or agentchat.QuickPrompts.
 func SuggestionSubmitChip(label string, name string, value string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -540,7 +564,7 @@ func SuggestionSubmitChip(label string, name string, value string) templ.Compone
 		var templ_7745c5c3_Var27 string
 		templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.ResolveAttributeValue(name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/chat.templ`, Line: 74, Col: 62}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/chat.templ`, Line: 97, Col: 62}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var27)
 		if templ_7745c5c3_Err != nil {
@@ -553,7 +577,7 @@ func SuggestionSubmitChip(label string, name string, value string) templ.Compone
 		var templ_7745c5c3_Var28 string
 		templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.ResolveAttributeValue(value)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/chat.templ`, Line: 74, Col: 78}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/chat.templ`, Line: 97, Col: 78}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var28)
 		if templ_7745c5c3_Err != nil {
@@ -566,7 +590,7 @@ func SuggestionSubmitChip(label string, name string, value string) templ.Compone
 		var templ_7745c5c3_Var29 string
 		templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/chat.templ`, Line: 74, Col: 88}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/chat.templ`, Line: 97, Col: 88}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 		if templ_7745c5c3_Err != nil {
@@ -580,6 +604,9 @@ func SuggestionSubmitChip(label string, name string, value string) templ.Compone
 	})
 }
 
+// LoadingSpinner is a small spinning arc.
+//
+// Deprecated: use Orb with OrbThinking; agentchat shows progress with steps.
 func LoadingSpinner(id string, className string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -613,7 +640,7 @@ func LoadingSpinner(id string, className string) templ.Component {
 		var templ_7745c5c3_Var32 string
 		templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.ResolveAttributeValue(id)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/chat.templ`, Line: 78, Col: 13}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/chat.templ`, Line: 104, Col: 13}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var32)
 		if templ_7745c5c3_Err != nil {
