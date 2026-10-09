@@ -40,7 +40,7 @@ func TestIconPathsAreSVGPathData(t *testing.T) {
 }
 
 func TestTargetAndListIcons(t *testing.T) {
-	for _, name := range []string{"target", "list"} {
+	for _, name := range []string{"target", "list", "history", "panel-right", "sparkles"} {
 		if Path(name) == fallbackIcon {
 			t.Errorf("icon %q is missing", name)
 		}
