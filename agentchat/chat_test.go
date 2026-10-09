@@ -162,6 +162,21 @@ func TestQuestionFormRendersEveryFieldType(t *testing.T) {
 	lacks(t, render(t, QuestionForm(QuestionCardView{Card: one})), "data-agentchat-autosubmit")
 }
 
+func TestQuestionFormRendersDateAndHiddenFields(t *testing.T) {
+	card := QuestionCard{Token: "tok-123456789", Questions: []Question{{Key: "start", Label: "Start date", Type: TypeDate, Value: "2026-10-09", Required: true}}}
+	out := render(t, QuestionForm(QuestionCardView{SessionID: "s1", Card: card, Hidden: map[string]string{
+		"csrf": "t<1>", "_a": "x", "session_id": "evil", "answer_questions": "0", "question_token": "evil"}}))
+	has(t, out, `type="date"`, `name="q_start"`, `value="2026-10-09"`, "required", `name="session_id" value="s1"`, `name="question_token" value="tok-123456789"`)
+	lacks(t, out, "evil", `value="0"`, "maxlength")
+	if i, j := strings.Index(out, `name="_a"`), strings.Index(out, `name="csrf" value="t&lt;1&gt;"`); i < 0 || j < i {
+		t.Errorf("hidden fields must render in key order, escaped:\n%s", out)
+	}
+	if strings.Count(out, `name="session_id"`) != 1 || strings.Count(out, `name="answer_questions"`) != 1 {
+		t.Errorf("reserved fields must render once:\n%s", out)
+	}
+	lacks(t, render(t, QuestionForm(QuestionCardView{Card: card})), `name="csrf"`)
+}
+
 func TestGroupDigits(t *testing.T) {
 	for in, want := range map[string]string{"11000": "11,000", "1234567.5": "1,234,567.5", "-4500": "-4,500", "12": "12", "1,000": "1,000", "": "", "abc": "abc"} {
 		if got := groupDigits(in); got != want {

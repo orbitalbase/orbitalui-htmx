@@ -1106,6 +1106,10 @@ async function runAgentChat() {
             await type('5000');
             await click(F + '.ui-chat-card--questions .ui-chat-card__head'); // blur: digits group
             expect(await q(F + '.ui-chat-card--questions input[name=q_min]', 'el.value') === '5,000', 'digit grouping on blur');
+            expect(await q(F + '.ui-chat-card--questions input[name=q_start]', 'el.type === "date" && el.required') === true, 'date question is not a required date input');
+            await click(F + '.ui-chat-card--questions button[type=submit]:not([name])');
+            expect(await count(F + '.ui-chat-card--questions.is-answered') === 0, 'a required date was skipped');
+            await js(`(() => { const el = document.querySelector("#host-full .ui-chat-card--questions input[name=q_start]"); el.value = "2026-10-09"; el.dispatchEvent(new Event("input", {bubbles: true})); })()`);
             const before = (await state()).requests.length;
             // The stub answers at once, so by the time this script looks the reply may have cleared the card.
             // agentchat:send fires after the collapse and before the request: sample the card there.
@@ -1114,10 +1118,10 @@ async function runAgentChat() {
             await eventually(() => js('!!window.__atSend'), 'the turn to be sent');
             const atSend = await js('window.__atSend');
             expect(atSend.collapsed, 'the card was not collapsed when the turn was sent');
-            expect(atSend.summary === 'Work arrangement: Hybrid · Minimum pay: 5,000', `summary: ${atSend.summary}`);
+            expect(atSend.summary === 'Work arrangement: Hybrid · Minimum pay: 5,000 · Start date: 2026-10-09', `summary: ${atSend.summary}`);
             await eventually(async () => (await state()).requests.length === before + 1, 'the answers request');
             const req = await lastRequest();
-            expect(req.answer_questions[0] === '1' && req.question_token[0] === 'tok-1' && req.q_mode[0] === 'Hybrid' && req.q_min[0] === '5000' && req.session_id[0] === 's-1' && !req.message && req.scope.join() === 'all', `answers request: ${JSON.stringify(req)}`);
+            expect(req.answer_questions[0] === '1' && req.question_token[0] === 'tok-1' && req.q_mode[0] === 'Hybrid' && req.q_min[0] === '5000' && req.q_start[0] === '2026-10-09' && req.session_id[0] === 's-1' && !req.message && req.scope.join() === 'card', `answers request: ${JSON.stringify(req)}`);
             await eventually(() => qt(F + '.ui-chat-msg--assistant [data-agentchat-body]').then(t => t === 'Thanks, I have your answers.'), 'the confirmation', 10000);
             expect(await count(F + '[data-agentchat-card-slot] > *') === 0, 'the answered card stayed in the slot');
             expect(await count(F + '.ui-chat-answered') === 1, 'the Answered row is gone');

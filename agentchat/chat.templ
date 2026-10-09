@@ -456,6 +456,9 @@ templ QuestionForm(v QuestionCardView) {
 		<input type="hidden" name="session_id" value={ v.SessionID }/>
 		<input type="hidden" name="answer_questions" value="1"/>
 		<input type="hidden" name="question_token" value={ v.Card.Token }/>
+		for _, k := range v.hiddenKeys() {
+			<input type="hidden" name={ k } value={ v.Hidden[k] }/>
+		}
 		<div class="ui-chat-card__inner">
 			<div class="ui-chat-card__head">
 				<span class="ui-chat-card__orb">
@@ -498,6 +501,8 @@ templ questionField(card QuestionCard, q Question) {
 			@c.LabelledField(q.Label, card.fieldID(q), q.fieldOpts(), c.FieldInput(c.FieldInputOpts{ID: card.fieldID(q), Name: "q_" + q.Key, Value: groupDigits(q.Value), Placeholder: q.Placeholder, Required: q.Required, InputMode: "decimal", Pattern: `[0-9][0-9,.\s]*`, Autocomplete: "off", Numeric: true, Suggested: q.Value != "", AriaDescribedBy: describedBy(card, q), Attrs: templ.Attributes{"data-agentchat-group": "", "title": "Enter a number"}}))
 		case q.Type == TypeTextarea:
 			@c.LabelledField(q.Label, card.fieldID(q), q.fieldOpts(), c.FieldTextarea(c.FieldTextareaOpts{ID: card.fieldID(q), Name: "q_" + q.Key, Value: q.Value, Placeholder: q.Placeholder, Rows: 3, MaxLength: 4000, Required: q.Required, Autogrow: true, Suggested: q.Value != "", AriaDescribedBy: describedBy(card, q)}))
+		case q.Type == TypeDate:
+			@c.LabelledField(q.Label, card.fieldID(q), q.fieldOpts(), c.FieldInput(c.FieldInputOpts{ID: card.fieldID(q), Name: "q_" + q.Key, Type: "date", Value: q.Value, Required: q.Required, Suggested: q.Value != "", AriaDescribedBy: describedBy(card, q)}))
 		default:
 			@c.LabelledField(q.Label, card.fieldID(q), q.fieldOpts(), c.FieldInput(c.FieldInputOpts{ID: card.fieldID(q), Name: "q_" + q.Key, Value: q.Value, Placeholder: q.Placeholder, Required: q.Required, MaxLength: 500, Suggested: q.Value != "", AriaDescribedBy: describedBy(card, q)}))
 	}

@@ -162,9 +162,10 @@ func agentChatTurn(w http.ResponseWriter, r *http.Request) {
 		card := agentchat.QuestionCard{Token: "tok-1", Title: "A few details", Questions: []agentchat.Question{
 			{Key: "mode", Label: "Work arrangement", Type: agentchat.TypeSelect, Options: []string{"Remote", "Hybrid"}, Value: "Hybrid"},
 			{Key: "min", Label: "Minimum pay", Type: agentchat.TypeNumber},
+			{Key: "start", Label: "Start date", Type: agentchat.TypeDate, Required: true},
 		}}
 		html, _ := templ.ToGoHTML(r.Context(), agentchat.Markdown("Final **server** answer."))
-		cardHTML, _ := templ.ToGoHTML(r.Context(), agentchat.QuestionForm(agentchat.QuestionCardView{SessionID: "s-1", Card: card}))
+		cardHTML, _ := templ.ToGoHTML(r.Context(), agentchat.QuestionForm(agentchat.QuestionCardView{SessionID: "s-1", Card: card, Hidden: map[string]string{"scope": "card"}}))
 		s.Done(agentchat.DoneEvent{HTML: string(html), CardHTML: string(cardHTML)})
 	}
 }

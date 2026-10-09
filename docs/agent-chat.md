@@ -192,7 +192,7 @@ Question cards:
 
 ```go
 type Question struct {
-    Key, Label, Help, Type, Placeholder, Value string // Type: TypeButtons|TypeSelect|TypeMultiselect|TypeNumber|TypeText|TypeTextarea
+    Key, Label, Help, Type, Placeholder, Value string // Type: TypeButtons|TypeSelect|TypeMultiselect|TypeNumber|TypeText|TypeTextarea|TypeDate
     Options, Values []string
     Required bool
 }
@@ -203,20 +203,23 @@ type QuestionSchema struct {
 }
 func ParseQuestions(raw json.RawMessage, s QuestionSchema) (QuestionCard, error)
 func QuestionToolSchema(s QuestionSchema) map[string]any
-type QuestionCardView struct{ SessionID string; Card QuestionCard }
+type QuestionCardView struct{ SessionID string; Card QuestionCard; Hidden map[string]string }
 ```
 
 `raw` is the tool call's arguments object `{title?, description?, questions:[...]}`. Validation: keys from
 `AllowedKeys` and unique; non-empty labels; known types; `buttons` only as the single question of a card;
 choices need 2 to 20 distinct non-empty options; a suggested `value` must be one of the options (snapped to their
-spelling; a list for `multiselect`) or a non-negative number. HTML entities in copy are unescaped (templ escapes
+spelling; a list for `multiselect`), a non-negative number, or a `YYYY-MM-DD` date for `date`. HTML entities in copy are unescaped (templ escapes
 on output). The returned card has **no Token**: the app sets it (for example a hash of session and questions) and
 refuses answers that come back with another one.
 
-Rendering: every choice type is a `ChipGroup` (radio, or checkbox for `multiselect`); `number`, `text` and
-`textarea` use `FieldInput` and `FieldTextarea` inside `LabelledField`; a card that is one unanswered `buttons`
+Rendering: every choice type is a `ChipGroup` (radio, or checkbox for `multiselect`); `number`, `text`, `textarea`
+and `date` (a native `<input type="date">`; the answer is sent and summarised as `YYYY-MM-DD`) use `FieldInput` and `FieldTextarea` inside `LabelledField`; a card that is one unanswered `buttons`
 question auto-submits. Fields are named `q_<key>`; the form also carries `session_id`, `answer_questions=1` and
-`question_token`, and its Skip button `skip_questions=1`. The model never writes HTML.
+`question_token`, and its Skip button `skip_questions=1`.
+`Hidden` entries render as hidden inputs in key order, so a card posts an app's CSRF token without JavaScript;
+`session_id`, `answer_questions` and `question_token` are reserved and skipped. The runtime adds the composer's
+hidden fields to a card's turn only when the card does not carry that key, so none is sent twice. The model never writes HTML.
 
 ### 2.7 DOM events (runtime to app), on the root, `bubbles: true`
 
