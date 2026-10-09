@@ -1013,12 +1013,12 @@ async function runAgentChat() {
     try {
         await b.send('Page.navigate', {url: base + '/agentchat'});
         await eventually(() => js('!!(window.OrbitalChat && document.querySelector("#host-full [data-agentchat-composer]"))'), 'the chat page');
-        await js('(() => { window.__events = []; for (const n of ["session", "step", "done", "error", "action", "send", "summarize"]) document.addEventListener("agentchat:" + n, e => window.__events.push([n, e.detail])); })()');
+        await js('(() => { window.__events = []; for (const n of ["session", "step", "done", "error", "action", "send", "summarize", "starter"]) document.addEventListener("agentchat:" + n, e => window.__events.push([n, e.detail])); })()');
 
         await check('both roots bind, ship the contract markup, carry no global ids and run under script-src \'self\'', async () => {
             expect((await js('fetch(location.href).then(r => r.headers.get("content-security-policy"))')) === "script-src 'self'", 'CSP header missing');
             expect(await js('[...document.querySelectorAll("[data-agentchat]")].every(r => OrbitalChat.get(r) && OrbitalChat.get(r).busy === false) && document.querySelectorAll("[data-agentchat]").length === 2'), 'a root did not bind');
-            const own = ['authorize', 'refuse', 'panel-body', 'rail-link']; // the stub's own markup
+            const own = ['authorize', 'refuse', 'panel-body', 'panel-a', 'panel-b', 'rail-link', 'rail-link2']; // the stub's own markup
             expect(await js(`[...document.querySelectorAll("[data-agentchat] [id]")].map(e => e.id).filter(id => !${JSON.stringify(own)}.includes(id)).length`) === 0, 'a chat element carries a global id');
             expect(await q(F + '.ui-chat-thread', 'getComputedStyle(el).overflowY') === 'auto', 'the thread does not scroll');
             expect(await q(F + '[data-agentchat-messages]', 'el.getAttribute("role") + el.getAttribute("aria-live")') === 'logpolite', 'the thread is not a polite log');
@@ -1117,7 +1117,7 @@ async function runAgentChat() {
             expect(atSend.summary === 'Work arrangement: Hybrid · Minimum pay: 5,000', `summary: ${atSend.summary}`);
             await eventually(async () => (await state()).requests.length === before + 1, 'the answers request');
             const req = await lastRequest();
-            expect(req.answer_questions[0] === '1' && req.question_token[0] === 'tok-1' && req.q_mode[0] === 'Hybrid' && req.q_min[0] === '5000' && req.session_id[0] === 's-1' && !req.message, `answers request: ${JSON.stringify(req)}`);
+            expect(req.answer_questions[0] === '1' && req.question_token[0] === 'tok-1' && req.q_mode[0] === 'Hybrid' && req.q_min[0] === '5000' && req.session_id[0] === 's-1' && !req.message && req.scope.join() === 'all', `answers request: ${JSON.stringify(req)}`);
             await eventually(() => qt(F + '.ui-chat-msg--assistant [data-agentchat-body]').then(t => t === 'Thanks, I have your answers.'), 'the confirmation', 10000);
             expect(await count(F + '[data-agentchat-card-slot] > *') === 0, 'the answered card stayed in the slot');
             expect(await count(F + '.ui-chat-answered') === 1, 'the Answered row is gone');
@@ -1149,10 +1149,31 @@ async function runAgentChat() {
             await eventually(() => count(F + '.ui-chat-error').then(n => n === 0), 'the error to go');
             await eventually(async () => (await state()).requests.length === before + 1, 'the retried request');
             expect((await lastRequest()).message[0] === 'fail', 'retry sent another message');
+            const sent = (await state()).requests.slice(-2).map(r => r.turn_id[0]);
+            expect(/^[0-9a-f-]{36}$/.test(sent[0]) && sent[0] === sent[1], `Retry must reuse the turn id: ${sent}`);
             await eventually(() => qt(F + '.ui-chat-msg--assistant [data-agentchat-body]').then(t => t === 'Final server answer.'), 'the retried reply', 10000);
             expect(await q(F + '[data-agentchat-input]', 'el.value') === '', 'the restored text stayed in the composer after Retry');
             expect(await qt(F + '.ui-chat-msg--user .ui-chat-bubble') === 'fail', 'the user row after Retry');
             await idle(F);
+        });
+
+        await check('the composer notice goes once the user edits', async () => {
+            expect(await text(C + '[data-agentchat-notice]') === 'Press Enter to send this', 'the notice is missing');
+            expect(await count(F + '[data-agentchat-notice]') === 0, 'a composer without a Notice rendered one');
+            await click(C + '[data-agentchat-input]');
+            await type('a');
+            expect(await count(C + '[data-agentchat-notice]') === 0, 'the notice stayed after an edit');
+        });
+
+        await check('an action starter raises agentchat:starter with its name and sends nothing', async () => {
+            const before = (await state()).requests.length;
+            await js('window.__events.length = 0');
+            await click(C + '[data-agentchat-action="import"]');
+            const ev = await js('window.__events.filter(e => e[0] === "starter").map(e => e[1].action)');
+            expect(ev.join() === 'import', `starter events: ${ev}`);
+            await sleep(300);
+            expect((await state()).requests.length === before, 'an action starter sent a turn');
+            expect(await count(C + '.ui-chat-msg--user') === 0 && await count(C + '[data-agentchat-empty]') === 1, 'an action starter changed the thread');
         });
 
         await check('a second root works alongside: its own session, no transcript, starters send and hide', async () => {
@@ -1161,10 +1182,55 @@ async function runAgentChat() {
             await eventually(() => qt(C + '.ui-chat-msg--assistant [data-agentchat-body]').then(t => t === 'Final server answer.'), 'the compact reply', 10000);
             const req = await lastRequest();
             expect(req.message[0] === 'hello' && req.session_id[0] === '' && !req.transcript && !req.notes, `compact request: ${JSON.stringify(req)}`);
+            const ids = (await state()).requests.map(r => r.turn_id[0]);
+            expect(ids.every(id => /^[0-9a-f-]{36}$/.test(id)) && new Set(ids).size === ids.length - 1, `every new turn needs its own id, only the Retry repeats one: ${ids}`);
+            expect(req.csrf && req.csrf.join() === 'c1', `a starter turn lost the composer's hidden field: ${JSON.stringify(req)}`);
             expect(await count(C + '[data-agentchat-empty]') === 0, 'the empty state stayed');
             expect(await count(F + '.ui-chat-msg--user') === 3, 'the compact chat wrote into the full chat');
             expect(await q(C + '.ui-chat-composer', 'getComputedStyle(el).maxWidth') === 'none', 'the panel variant is not compact');
             await idle(C);
+        });
+
+        await check('the user bubble keeps Kindred\'s ink shadow', async () => {
+            const sh = await ql(F + '.ui-chat-bubble', 'getComputedStyle(el).boxShadow');
+            expect(sh.includes('rgba(13, 16, 23, 0.12)'), `bubble shadow: ${sh}`);
+        });
+
+        await check('the controller runs app work: note handle, hold, setCard and setSession', async () => {
+            const root = '#host-full [data-agentchat]';
+            const ctl = expr => js(`(() => { const c = OrbitalChat.get(document.querySelector(${JSON.stringify(root)})); return ${expr}; })()`);
+            // notes
+            await js(`window.__note = OrbitalChat.get(document.querySelector(${JSON.stringify(root)})).note("Reading cv.pdf…", "Pulling out roles"); window.__note.working(true)`);
+            expect(await ql(F + '.ui-chat-note', 'el.classList.contains("is-working")'), 'working(true) did not mark the note');
+            await js('window.__note.update("Profile imported", ""); window.__note.working(false)');
+            expect(await qt(F + '.ui-chat-note [data-agentchat-note-title]') === 'Profile imported' && await ql(F + '.ui-chat-note', '!el.classList.contains("is-working") && el.querySelector("[data-agentchat-note-text]").hidden'), 'update/working(false)');
+            const notes = await count(F + '.ui-chat-note');
+            await js('window.__note.remove()');
+            expect(await count(F + '.ui-chat-note') === notes - 1, 'remove() did not remove the note');
+            // hold
+            const before = (await state()).requests.length;
+            await js(`window.__release = OrbitalChat.get(document.querySelector(${JSON.stringify(root)})).hold("Uploading…")`);
+            expect(await ctl('c.busy') === true && await q(F + '[data-agentchat-composer]', 'el.dataset.state === "held" && el.inert'), 'hold() did not make the composer inert');
+            expect(await q(F + '[data-agentchat-send]', 'el.getAttribute("aria-label")') === 'Send message', 'a held chat offers Stop');
+            expect(await ctl('c.send("blocked")') === undefined, 'send() ran while held');
+            await eventually(async () => await qt(F + '[data-agentchat-status] .ui-chat-status__text:not(.is-out)') === 'Uploading…', 'the held status');
+            await js('window.__release(); window.__release()');
+            expect(await ctl('c.busy') === false && await q(F + '[data-agentchat-composer]', 'el.dataset.state === "idle" && !el.inert'), 'release() did not free the composer');
+            expect((await state()).requests.length === before, 'a held chat sent a turn');
+            await ctl('c.send("via controller")');
+            await eventually(async () => (await state()).requests.length === before + 1, 'the controller turn');
+            expect((await lastRequest()).scope.join() === 'all', `controller.send lost the composer's hidden field: ${JSON.stringify(await lastRequest())}`);
+            await idle(F);
+            // card and session
+            await ctl('c.setCard("<p id=\\"app-card\\">Hello</p>")');
+            expect(await count(F + '[data-agentchat-card-slot] #app-card') === 1, 'setCard did not fill the slot');
+            await ctl('c.setCard("")');
+            expect(await count(F + '[data-agentchat-card-slot] > *') === 0, 'setCard("") did not clear the slot');
+            const search = await js('location.search');
+            await ctl('c.setSession("s-9")');
+            expect(await js(`document.querySelector(${JSON.stringify(root)}).dataset.sessionId`) === 's-9' && await js('location.search') === search, 'setSession(id) must update the root only');
+            await ctl('c.setSession("s-10", "/agentchat?session_id=s-10")');
+            expect(await js('location.search') === '?session_id=s-10', 'setSession(id, url) did not update the address bar');
         });
 
         await check('the panel docks from 1280px and slides over below with a scrim; the rail docks from 1600px', async () => {
@@ -1192,11 +1258,61 @@ async function runAgentChat() {
             await b.resize(1280);
         });
 
+        await check('a slide-over is a modal dialog: focus moves in, Tab is trapped, Escape closes and focus returns; docked it is not', async () => {
+            const panel = F + '[data-agentchat-panel]';
+            const rail = F + '[data-agentchat-rail]';
+            const active = () => js('document.activeElement && document.activeElement.id');
+            const tab = (shift) => b.send('Input.dispatchKeyEvent', {type: 'rawKeyDown', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9, modifiers: shift ? 8 : 0});
+            await b.resize(1000);
+            // The panel slides out from its docked place first; wait until it is parked so it cannot cover the toggle.
+            await eventually(async () => await q(panel, 'getComputedStyle(el).visibility') === 'hidden' && await q(F + '.ui-chat-toggle--panel', 'getComputedStyle(el).display !== "none"'), 'the panel to park');
+            expect(await q(panel, 'el.getAttribute("role")') === null, 'a closed panel is a dialog');
+            await click(F + '.ui-chat-toggle--panel');
+            await eventually(async () => await active() === 'panel-b', 'focus to move to the data-agentchat-autofocus element').catch(async e => { throw new Error(`${e.message}; focus is on ${await js('document.activeElement.outerHTML.slice(0, 80)')}, panel is ${await js('getComputedStyle(document.querySelector("#host-full [data-agentchat-panel]")).visibility + " " + document.querySelector("#host-full [data-agentchat]").className')}`); });
+            expect(await q(panel, 'el.getAttribute("role") + el.getAttribute("aria-modal") + el.getAttribute("aria-label")') === 'dialogtrueDetails', 'dialog semantics');
+            await js('document.getElementById("panel-b").focus()');
+            await tab(false);
+            expect(await active() === 'panel-a', `Tab from the last control went to ${await active()}`);
+            await tab(true);
+            expect(await active() === 'panel-b', `Shift+Tab from the first control went to ${await active()}`);
+            await js('document.getElementById("authorize")?.querySelector("button")?.focus()');
+            await tab(false);
+            expect(await js('!!document.activeElement.closest("[data-agentchat-panel]")'), 'Tab escaped the dialog from outside');
+            await key('Escape', 'Escape', 27);
+            await eventually(async () => await q(panel, 'getComputedStyle(el).visibility') === 'hidden', 'Escape to close');
+            expect(await js('document.activeElement.classList.contains("ui-chat-toggle--panel")'), 'focus did not return to the toggle');
+            expect(await q(panel, 'el.getAttribute("role")') === null && await q(F + '.ui-chat-toggle--panel', 'el.getAttribute("aria-expanded")') === 'false', 'a closed panel kept its dialog role');
+            await click(F + '.ui-chat-toggle--rail');
+            await eventually(async () => await active() === 'rail-link', 'focus to move into the rail');
+            expect(await q(rail, 'el.getAttribute("role") + el.getAttribute("aria-modal")') === 'dialogtrue', 'rail dialog semantics');
+            await click(F + '[data-agentchat-scrim]');
+            await eventually(() => js('document.activeElement.classList.contains("ui-chat-toggle--rail")'), 'focus to return to the rail toggle');
+            await b.resize(1280);
+            await eventually(async () => await q(panel, 'getComputedStyle(el).position') === 'relative', 'the panel to dock');
+            expect(await q(panel, 'el.getAttribute("role")') === null && await q(panel, 'el.hasAttribute("aria-modal")') === false, 'a docked panel is a dialog');
+        });
+
         await check('chat buttons carry no browser border or grey face (no reliance on a CSS preflight)', async () => {
             const bad = await js(`[...document.querySelectorAll(".ui-chat button")].filter(b => { const cs = getComputedStyle(b); return cs.borderTopStyle === "outset" || cs.borderTopStyle === "solid" && parseFloat(cs.borderTopWidth) >= 2 || cs.backgroundColor === "rgb(239, 239, 239)" || cs.backgroundColor === "rgb(233, 233, 237)"; }).map(b => b.className || b.outerHTML.slice(0, 60))`);
             expect(bad.length === 0, `default-styled buttons: ${bad.join(', ')}`);
             const kinds = await js('new Set([...document.querySelectorAll(".ui-chat button")].map(b => b.className.split(" ")[0])).size');
             expect(kinds >= 5, `only ${kinds} kinds of button were checked`);
+        });
+
+        await check('a page rendered mid-turn polls the state endpoint and swaps bare rows into the existing log', async () => {
+            await b.send('Page.navigate', {url: base + '/agentchat/resume'});
+            await eventually(() => js('!!document.querySelector("[data-agentchat-composer]") && !!window.OrbitalChat'), 'the resume page');
+            expect(await js('!!document.querySelector("[data-agentchat-pending]")') && await q('[data-agentchat-composer]', 'el.dataset.state') === 'busy', 'no pending row or busy composer');
+            expect(await q('.ui-chat-msg.is-pending', 'el.getAttribute("aria-busy")') === 'true', 'the pending row is not aria-busy');
+            await eventually(() => count('[data-agentchat-pending]').then(n => n === 0), 'the turn to land', 15000);
+            expect(await count('[role=log]') === 1 && await count('[data-agentchat-messages] > .ui-chat-msg') === 2, 'the rows did not land inside the one existing log');
+            expect(await qt('[data-agentchat-messages] .ui-chat-msg--assistant [data-agentchat-body]') === 'Resumed answer.', 'resumed reply');
+            const ctx = await js('(() => { const chip = document.querySelector("#from-chip").getBoundingClientRect(), bubble = document.querySelector(".ui-chat-bubble").getBoundingClientRect(); return {above: chip.bottom <= bubble.top + 1, right: Math.abs(chip.right - bubble.right) < 2}; })()');
+            expect(ctx.above && ctx.right, `the user context is not a right-aligned row above the bubble: ${JSON.stringify(ctx)}`);
+            expect(await count('[data-agentchat-card-slot] form[data-agentchat-submit=turn]') === 1, 'the card did not land');
+            expect(await q('[data-agentchat-composer]', 'el.dataset.state') === 'idle', 'the composer stayed busy');
+            const polls = (await state()).resumes;
+            expect(polls.length === 2 && polls.every(id => id === 's-r'), `state polls: ${JSON.stringify(polls)}`);
         });
 
         await check('no script errors or CSP violations on the chat page', async () => {

@@ -104,13 +104,13 @@ func TestAssistantMessageWithoutStepsHasNoToggle(t *testing.T) {
 
 func TestComposerAttributes(t *testing.T) {
 	out := render(t, Composer(ComposerOpts{
-		Placeholder: "Ask <anything>", Value: "draft & more", MaxLength: 500, Hint: "Private until published",
+		Placeholder: "Ask <anything>", Value: "draft & more", MaxLength: 500, Counter: true, Notice: Markdown("Press **Enter**"), Hint: "Private until published",
 		Hidden: map[string]string{"scope": "a\"b", "area": "x"}, Quick: QuickPrompts([]Prompt{{Label: "Explore", Prompt: "Explore this", Icon: "ai"}}),
 		Tools: Toggle(ToggleOpts{Dock: DockPanel, Label: "Show details"}), Attrs: templ.Attributes{"action": "/turn"},
 	}))
 	has(t, out, "data-agentchat-composer", `data-state="idle"`, `action="/turn"`, `name="message"`, `aria-label="Message"`, "data-agentchat-input", `maxlength="500"`,
 		`placeholder="Ask &lt;anything&gt;"`, "draft &amp; more", "data-agentchat-count", "0 / 500", "data-agentchat-send", `aria-label="Send message"`,
-		"Private until published", `name="scope" value="a&#34;b"`, `data-agentchat-prompt="Explore this"`, `data-agentchat-toggle="panel"`, "<kbd")
+		"Private until published", "data-agentchat-notice", "<strong>Enter</strong>", `name="scope" value="a&#34;b"`, `data-agentchat-prompt="Explore this"`, `data-agentchat-toggle="panel"`, "<kbd")
 	if strings.Index(out, `name="area"`) > strings.Index(out, `name="scope"`) {
 		t.Error("hidden fields are not in key order")
 	}
@@ -166,6 +166,62 @@ func TestGroupDigits(t *testing.T) {
 	for in, want := range map[string]string{"11000": "11,000", "1234567.5": "1,234,567.5", "-4500": "-4,500", "12": "12", "1,000": "1,000", "": "", "abc": "abc"} {
 		if got := groupDigits(in); got != want {
 			t.Errorf("groupDigits(%q) = %q, want %q", in, got, want)
+		}
+	}
+}
+
+func TestUserContextRendersAboveTheBubble(t *testing.T) {
+	out := render(t, UserMessageWith("hi <b>", Markdown("From **page**")))
+	has(t, out, "ui-chat-user__context", "data-agentchat-user-context", "<strong>page</strong>", "hi &lt;b&gt;", "data-agentchat-bubble")
+	if strings.Index(out, "ui-chat-user__context") > strings.Index(out, "ui-chat-bubble") {
+		t.Error("the context must come before the bubble")
+	}
+	thread := render(t, Rows([]Message{{Role: RoleUser, Text: "a", Context: Markdown("ctx")}, {Role: RoleUser, Text: "b"}}))
+	if strings.Count(thread, "ui-chat-user__context") != 1 {
+		t.Errorf("only the message with Context gets the slot:\n%s", thread)
+	}
+	lacks(t, render(t, UserMessage("plain")), "ui-chat-user")
+}
+
+func TestComposerCounterAndNoticeAreOptIn(t *testing.T) {
+	capped := render(t, Composer(ComposerOpts{MaxLength: 300}))
+	has(t, capped, `maxlength="300"`)
+	lacks(t, capped, "data-agentchat-count", "data-agentchat-notice")
+	lacks(t, render(t, Composer(ComposerOpts{Counter: true})), "data-agentchat-count", "maxlength")
+	has(t, render(t, Composer(ComposerOpts{MaxLength: 300, Counter: true})), `maxlength="300"`, "0 / 300")
+}
+
+func TestRowsAreBareAndThreadWrapsThem(t *testing.T) {
+	msgs := []Message{{ID: "a", Role: RoleUser, Text: "hi"}, {Role: RoleAssistant, Text: "yo"}, {Role: RoleStopped}}
+	rows := render(t, Rows(msgs))
+	has(t, rows, `data-message-id="a"`, "ui-chat-msg--user", "ui-chat-msg--assistant", "ui-chat-stopped--row")
+	lacks(t, rows, `role="log"`, "data-agentchat-messages")
+	if thread := render(t, Thread(msgs)); !strings.Contains(thread, rows) || !strings.Contains(thread, `role="log"`) {
+		t.Errorf("Thread must be the log around Rows:\n%s", thread)
+	}
+	if render(t, Rows(nil)) != "" {
+		t.Error("no messages must render nothing")
+	}
+}
+
+func TestActionStartersAndPromptsRaiseAnActionInsteadOfAPrompt(t *testing.T) {
+	out := render(t, Starters([]Starter{{Title: "Import my CV", Action: "import", Prompt: "ignored", Icon: "upload"}, {Title: "Hello", Prompt: "hello"}}))
+	has(t, out, `data-agentchat-action="import"`, `data-agentchat-prompt="hello"`)
+	lacks(t, out, `data-agentchat-prompt="ignored"`)
+	quick := render(t, QuickPrompts([]Prompt{{Label: "Import", Action: "import"}, {Label: "Ask", Prompt: "ask"}}))
+	has(t, quick, `data-agentchat-action="import"`, `data-agentchat-prompt="ask"`)
+	if strings.Count(quick, "data-agentchat-prompt") != 1 {
+		t.Errorf("an action prompt must not carry a prompt:\n%s", quick)
+	}
+}
+
+func TestToggleDefaultIconsAndOverride(t *testing.T) {
+	has(t, render(t, Toggle(ToggleOpts{Dock: DockRail, Label: "Chats"})), c.Path("history"))
+	has(t, render(t, Toggle(ToggleOpts{Dock: DockPanel, Label: "Details"})), c.Path("panel-right"))
+	has(t, render(t, Toggle(ToggleOpts{Dock: DockPanel, Label: "Close", Icon: "close"})), c.Path("close"))
+	for _, name := range []string{"history", "panel-right", "sparkles"} {
+		if c.Path(name) == "" {
+			t.Errorf("icon %s is missing", name)
 		}
 	}
 }

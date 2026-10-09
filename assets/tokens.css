@@ -234,6 +234,10 @@
   --oui-sh-2: rgb(13 16 23 / 0.08);
   --oui-sh-3: rgb(13 16 23 / 0.18);
   --oui-sh-3b: rgb(13 16 23 / 0.06);
+  /* Ink-toned lifts under the chat bubble and send button, which keep an ink face in both themes. */
+  --oui-sh-ink: rgb(13 16 23 / 0.12);
+  --oui-sh-ink-2: rgb(13 16 23 / 0.2);
+  --oui-sh-ink-3: rgb(13 16 23 / 0.28);
   --oui-shadow-1: 0 0 0 1px var(--oui-line), 0 1px 2px var(--oui-sh-1);
   --oui-shadow-2: 0 0 0 1px var(--oui-line), 0 2px 4px var(--oui-sh-1), 0 8px 24px -6px var(--oui-sh-2);
   --oui-shadow-3: 0 0 0 1px var(--oui-line-2), 0 12px 32px -8px var(--oui-sh-3), 0 2px 6px var(--oui-sh-3b);

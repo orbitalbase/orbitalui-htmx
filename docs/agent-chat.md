@@ -89,10 +89,15 @@ Rules:
 `Accept: text/event-stream`. Fields:
 
 - `session_id` (may be empty) and `message` (the composer textarea's name).
+- `turn_id`: a fresh UUID for every new turn (typed, prompt, card, `controller.send`). Retry reuses the id of the
+  turn it retries, so the app can use `r.FormValue("turn_id")` as its idempotency key.
 - `transcript`: only when the root has `data-agentchat-transcript`; JSON
   `[{"role":"user"|"assistant","text":"..."}]` of the completed turns on screen before this one.
 - `notes`: JSON array of strings, the outcome notes queued by action cards since the last turn (2.6). They are
   put back in the queue if the turn fails.
+- every field of the composer form except the message textarea (a CSRF token, a submission id) on **every** turn,
+  whatever started it (typed, starter, quick prompt, card, `controller.send`); a field the turn already set, such
+  as a card form's own, wins.
 - every field of the submitting form (question answers, hidden fields, the pressed submit button), and for the
   composer its hidden fields.
 - whatever an `agentchat:send` listener changes in `event.detail.body` (the `URLSearchParams`).
@@ -105,7 +110,10 @@ Optional endpoints (root attributes; omit to disable):
 - `data-cancel-url`: `POST session_id` when the user presses Stop (sent with `keepalive`). The runtime always
   aborts its own fetch; the app should finish the turn and send `done` with `stopped` or nothing.
 - `data-state-url`: `GET ?session_id=` returns `{inflight:bool, thread_html?, card_html?}`. Used when the page
-  renders with `InFlight` (a reload mid-turn): polled every 2s (5 minutes at most), then the thread is swapped.
+  renders with `InFlight` (a reload mid-turn): polled every 2s (5 minutes at most). Once `inflight` is false the
+  runtime sets the **inner HTML of the existing log** (`[data-agentchat-messages]`) to `thread_html`, so
+  `thread_html` must be bare rows: render `agentchat.Rows(msgs)`, never `Thread` (which would nest a second log).
+  `card_html` fills the card slot.
 
 ### 2.4 Views
 
@@ -131,17 +139,29 @@ type Message struct {
   `AutoSend` is set, and hidden by CSS once the thread has rows or the card slot has content. It renders the
   runtime `<template>`s itself and carries no global ids.
 - `Head(HeadOpts{Title, Leading, Meta})`: a header with an orb and the status line the runtime keeps current.
-- `Toggle(ToggleOpts{Dock, Label, Icon})`: opens and closes the rail (`DockRail`) or panel (`DockPanel`).
-  The panel docks from 1280px and the rail from 1600px; below that they slide over with a scrim (Escape or a
-  scrim click closes). A toggle hides itself where its region is docked.
-- `Thread([]Message)`: `role="log" aria-live="polite"` list; `UserMessage(text)`,
+- `Toggle(ToggleOpts{Dock, Label, Icon})`: opens and closes the rail (`DockRail`, icon `history`) or panel
+  (`DockPanel`, icon `panel-right`; override with `Icon` or `RegisterIcons`). The panel docks from 1280px and the
+  rail from 1600px; below that they slide over with a scrim. A toggle hides itself where its region is docked.
+  A slide-over is a modal dialog: while open it has `role="dialog" aria-modal="true"` and its label, focus moves
+  to its `[data-agentchat-autofocus]` element (else its first focusable), Tab and Shift+Tab stay inside, Escape,
+  the scrim or the toggle close it, focus returns to the opener, and the toggles' `aria-expanded` follows. Docked,
+  none of that applies (no role, no trap). Only one slide-over is open at a time.
+- `Message.Context` and `UserMessageWith(text, context)`: a slot above a user bubble, right-aligned, for a hand-off
+  chip; the app styles the content.
+- `Thread([]Message)`: `role="log" aria-live="polite"` list around `Rows([]Message)`, the bare role switch
+  (use it for `thread_html`); `UserMessage(text)`,
   `AssistantMessage(AssistantOpts{Content, Steps})`, `NoteMessage(title, text)`, `StoppedMessage()`,
   `AnsweredMessage(summary)` render the same rows.
-- `Composer(ComposerOpts{Name, Label, Placeholder, Value, MaxLength, Hint, Tools, Quick, Hidden, Attrs})`:
-  Enter sends, Shift+Enter adds a line, autogrow, a Stop button while busy, a character count when `MaxLength > 0`.
-- `QuickPrompts([]Prompt{Label, Prompt, Icon})`, `Hero(HeroOpts{Title, Body})` and
-  `Starters([]Starter{Eyebrow, Title, Body, Prompt, Icon, Tone})`: any element with `data-agentchat-prompt` sends
-  its value as the user's message.
+- `Composer(ComposerOpts{Name, Label, Placeholder, Value, MaxLength, Counter, Notice, Hint, Tools, Quick, Hidden, Attrs})`:
+  Enter sends, Shift+Enter adds a line, autogrow, a Stop button while busy. `MaxLength > 0` always sets the
+  `maxlength` attribute; the visible `n / max` count shows only with `Counter`. `Notice` is a slot inside the box,
+  under the textarea (for example "Press Enter to send this" under a prompt prefilled from a URL); the runtime
+  removes it on the first edit and when a turn is sent.
+- `QuickPrompts([]Prompt{Label, Prompt, Action, Icon})`, `Hero(HeroOpts{Title, Body})` and
+  `Starters([]Starter{Eyebrow, Title, Body, Prompt, Action, Icon, Tone})`: an element with `data-agentchat-prompt`
+  sends its value as the user's message. With `Action` set the button carries `data-agentchat-action=<name>`
+  instead: clicking it sends nothing and dispatches a cancelable `agentchat:starter` with `{action}` for the app
+  to handle (an upload picker, a dialog).
 - `Card(CardOpts{Body, Label, Class})`: the card shell (`data-agentchat-card`). CSS hooks for bodies:
   `ui-chat-card__head`, `__title`, `__desc`, `__body`, `__foot`, `__spacer`.
 - `QuestionForm(QuestionCardView)`: the agent-driven form (2.6).
@@ -209,9 +229,20 @@ question auto-submits. Fields are named `q_<key>`; the form also carries `sessio
 | `agentchat:error` | the `error` payload |
 | `agentchat:summarize` | `{form, summary}`: replace `summary` |
 | `agentchat:action` | `{form, response, note}` after an action card response |
+| `agentchat:starter` | `{action}`: an action starter or quick prompt was clicked (cancelable; nothing is sent) |
 
-`window.OrbitalChat = {init(root), get(root), _internals}`. `get` returns the controller
-`{send(text, extraFields?), stop(), busy}` for app buttons such as an "Ask about this page" shortcut.
+`window.OrbitalChat = {init(root), get(root), _internals}`. `get` returns the controller, for app buttons and
+app-run work such as an upload:
+
+| member | behaviour |
+|---|---|
+| `send(text, extraFields?)` | sends a turn as if typed; a no-op while busy or held |
+| `stop()` | the Stop button's action |
+| `busy` | true while a turn runs or the chat is held |
+| `note(title, text)` | appends a note row and returns a handle `{update(title, text), working(bool), remove()}`; `working(true)` gives the icon its breathing AI tint |
+| `setCard(html)` | replaces the card slot; `""` clears it |
+| `setSession(id, url?)` | sets the session id on the root and every `input[name=session_id]`; the address bar changes only when `url` (same-origin) is given |
+| `hold(status?)` | makes the chat busy for the app's own work: composer inert, no Stop offered, `status` in the header. Returns `release()`; holds nest and `release` is idempotent |
 `_internals` (`parseSSE`, `renderMarkdown`, `foldSteps`, `captionOf`, `trimDots`) is for tests.
 
 ### 2.8 Markup attributes the runtime reads
@@ -227,7 +258,7 @@ Root: `data-agentchat`, `data-turn-url`, `data-cancel-url`, `data-state-url`, `d
 
 - `assets/agent-chat.js`: standalone IIFE, auto-inits every `[data-agentchat]` on load and on `htmx:afterSettle`,
   reloads on bfcache restore. Several roots can share a page.
-- `assets/agent-chat.css`: `ui-chat-*` classes, every value an `--oui-*` token (no hard-coded colour; a test
+- `assets/agent-chat.css`: `ui-chat-*` classes (the bubble and send button shadows use `--oui-sh-ink`, `-2` and `-3`, defined in `tokens.css` and identical in both themes), every value an `--oui-*` token (no hard-coded colour; a test
   enforces both). Dark mode, reduced motion, rail and panel docking, and the compact `ui-chat--panel` variant.
 - Both are embedded in `assets.Files`. `node --test assets/*.test.mjs` runs the helper tests;
   `scripts/browser-check.mjs` drives the `/agentchat` page of `internal/browsercheck` in headless Chrome.
