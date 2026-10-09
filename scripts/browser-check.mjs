@@ -1107,11 +1107,14 @@ async function runAgentChat() {
             await click(F + '.ui-chat-card--questions .ui-chat-card__head'); // blur: digits group
             expect(await q(F + '.ui-chat-card--questions input[name=q_min]', 'el.value') === '5,000', 'digit grouping on blur');
             const before = (await state()).requests.length;
+            // The stub answers at once, so by the time this script looks the reply may have cleared the card.
+            // agentchat:send fires after the collapse and before the request: sample the card there.
+            await js(`document.addEventListener("agentchat:send", e => { const card = e.detail.form.closest("[data-agentchat-card]"); window.__atSend = {collapsed: card.classList.contains("is-answered") && card.inert, summary: document.querySelector("#host-full .ui-chat-answered [data-agentchat-summary]")?.textContent}; }, {once: true})`);
             await click(F + '.ui-chat-card--questions button[type=submit]:not([name])');
-            await eventually(() => q(F + '.ui-chat-answered', 'true'), 'the Answered row');
-            const summary = await text(F + '.ui-chat-answered [data-agentchat-summary]');
-            expect(summary === 'Work arrangement: Hybrid · Minimum pay: 5,000', `summary: ${summary}`);
-            expect(await q(F + '.ui-chat-card--questions', 'el.classList.contains("is-answered") && el.inert'), 'the card did not collapse');
+            await eventually(() => js('!!window.__atSend'), 'the turn to be sent');
+            const atSend = await js('window.__atSend');
+            expect(atSend.collapsed, 'the card was not collapsed when the turn was sent');
+            expect(atSend.summary === 'Work arrangement: Hybrid · Minimum pay: 5,000', `summary: ${atSend.summary}`);
             await eventually(async () => (await state()).requests.length === before + 1, 'the answers request');
             const req = await lastRequest();
             expect(req.answer_questions[0] === '1' && req.question_token[0] === 'tok-1' && req.q_mode[0] === 'Hybrid' && req.q_min[0] === '5000' && req.session_id[0] === 's-1' && !req.message, `answers request: ${JSON.stringify(req)}`);
