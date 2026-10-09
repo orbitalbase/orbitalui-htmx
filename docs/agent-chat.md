@@ -214,7 +214,7 @@ on output). The returned card has **no Token**: the app sets it (for example a h
 refuses answers that come back with another one.
 
 Rendering: every choice type is a `ChipGroup` (radio, or checkbox for `multiselect`); `number`, `text`, `textarea`
-and `date` (a native `<input type="date">`; the answer is sent and summarised as `YYYY-MM-DD`) use `FieldInput` and `FieldTextarea` inside `LabelledField`; a card that is one unanswered `buttons`
+and `date` (a native `<input type="date">`; the answer is sent as `YYYY-MM-DD` and summarised as "1 November 2026") use `FieldInput` and `FieldTextarea` inside `LabelledField`; a card that is one unanswered `buttons`
 question auto-submits. Fields are named `q_<key>`; the form also carries `session_id`, `answer_questions=1` and
 `question_token`, and its Skip button `skip_questions=1`.
 `Hidden` entries render as hidden inputs in key order, so a card posts an app's CSRF token without JavaScript;

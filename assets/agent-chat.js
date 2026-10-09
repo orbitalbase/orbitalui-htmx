@@ -742,6 +742,11 @@
         if (!chips.length) {
           const field = q.querySelector("input:not([type=hidden]):not([type=radio]):not([type=checkbox]), textarea, select");
           value = field ? field.value.trim() : "";
+          // A date reads "1 November 2026" in any locale or time zone; the answer sent stays YYYY-MM-DD.
+          if (field && field.type === "date" && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+            const d = new Date(`${value}T00:00:00Z`);
+            if (!isNaN(d)) value = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(d);
+          }
         }
         if (value) lines.push(`${q.dataset.agentchatQLabel}: ${value}`);
       });
