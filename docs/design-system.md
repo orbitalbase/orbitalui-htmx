@@ -348,8 +348,8 @@ stays visible and its close button does nothing, so load `shell.js` whenever
 those components render. A host with its own toast system can load
 `orbital-ui.js` alone: `window.OrbitalShell` is absent and an
 `HX-Trigger: {"toast": ...}` event is ignored.
-Components: `shell.templ`, `palette.templ`, `toast.templ`, `themeswitch.templ`,
-`chatcomposer.templ`. Nothing here names a product: brand, navigation, palette
+Components: `shell.templ`, `palette.templ`, `toast.templ`, `themeswitch.templ`.
+Nothing here names a product: brand, navigation, palette
 content and menus are slots or data supplied by the host.
 
 ### AppShell
@@ -505,12 +505,9 @@ render `ThemeSwitch`, and pins the theme in markup: `<html data-theme="light">`.
 `tokens.css` follows the OS only while `data-theme` is unset, so a pinned page
 never flips.
 
-### Chat composer
+### Chat
 
-`ChatComposer(ChatComposerOpts)` is the message box (autogrowing textarea,
-`Tools` slot, round send button, AI glow on focus, `Busy` state with the orb);
-`TypingIndicator(label)` and `StreamingCaret()` are the working cues. The
-host owns the endpoint, Enter-to-send behaviour and conversation state.
+Chat lives in the `agentchat` package: see `docs/agent-chat.md`.
 
 ## Principles
 
@@ -573,8 +570,7 @@ responsive drawer behaviour and routes.
   `SettingsSection`, `LabelledField`, `ActionList`, `Feed`, `TableShell` rows
   and footer, `Menu` trigger and panel, `WorkspaceSwitcher` panel,
   `Disclosure`, `ChoiceGroup`, `Inspector`, `AsyncRegion`, `SelectionToolbar`,
-  `Drawer`, `ModalShell`, `HTMXPostForm`, `ChatThread`, `SummaryCard`, and
-  `AssistantMessageContent`) may be nil; the wrapper still renders and the
+  `Drawer`, `ModalShell`, and `HTMXPostForm`) may be nil; the wrapper still renders and the
   slot is empty.
 - **`Attrs` never produces a second `class`.** Components that take
   `Attrs templ.Attributes` fold an `Attrs["class"]` value into their own class
@@ -590,7 +586,7 @@ responsive drawer behaviour and routes.
 | `ModalShell`, `ConfirmButton`, `Drawer`, and `EntityPicker` | Alpine plus `assets/orbital-ui.js`, loaded before Alpine | No inline scripts. The runtime installs `window.OrbitalUI` and the `window.LedgerUI` names the markup calls, and stays inert when a host already provides `window.LedgerUI`. Server-driven close: `HX-Trigger: closeDialog` / `drawerClose`; 422 responses swap inline errors. |
 | `AppShell` sidebar, `CommandPalette`, `ToastRegion` / `HX-Trigger` toasts, `ThemeSwitch` | `assets/shell.js` (any position relative to Alpine, independent of `orbital-ui.js`); `assets/theme.js` in `<head>` for the pre-paint theme | Plain DOM delegation: no Alpine, no eval, no inline script or style, so it runs under `script-src 'self'` and beside a host `window.LedgerUI`. The palette fetches its endpoint with same-origin `fetch`. |
 | `BalanceTool` | None for server-rendered totals; Alpine plus the host lines editor for live recalculation | Server totals remain authoritative; the host owns live editor integration. |
-| Dismissible `Alert`, `SuggestionChip` and `EntityPicker` states | Alpine.js; `theme.css` hides `[x-cloak]` until Alpine starts | Expressions are emitted in markup; CSP compatibility depends on the host's Alpine build and policy. |
+| Dismissible `Alert` and `EntityPicker` states | Alpine.js; `theme.css` hides `[x-cloak]` until Alpine starts | Expressions are emitted in markup; CSP compatibility depends on the host's Alpine build and policy. |
 
 `scripts/browser-check.mjs` drives the interactive set in headless Chrome
 with real pointer and keyboard input (modal focus, 422 swaps, server-driven
@@ -605,12 +601,6 @@ The library does not set an application's CSP headers or serve assets
 automatically. Consumers should verify component interaction under their
 actual CSP and after HTMX swaps; successful templ rendering alone does not
 verify browser runtime behavior.
-
-For chat suggestions, prefer `SuggestionSubmitChip` inside a native form when
-the action should work without JavaScript. `SuggestionChip` requires Alpine
-to evaluate its action expression. `AssistantMessageContent` accepts
-application-rendered content such as cited links; the host owns its validation
-and escaping contract (plain text should use `AssistantMessage`).
 
 ## Host table sorting and composition
 

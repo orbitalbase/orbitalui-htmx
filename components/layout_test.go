@@ -33,13 +33,10 @@ func TestFormGridColumnsAndActions(t *testing.T) {
 		`<div class="ui-form-actions ui-form-actions--end ui-form-actions--divided">SAVE</div>`)
 }
 
-// Starter controls and chat surfaces read theme classes, not colour utilities
+// Starter controls read theme classes, not colour utilities
 // that exist only when a host happens to define matching Tailwind colours.
 func TestStarterComponentsUseThemeClasses(t *testing.T) {
 	outs := []string{
-		renderC(t, SummaryCard("Draft", "spark", "card", SummaryField("Company", "c"))),
-		renderC(t, AssistantMessage("Hello")),
-		renderC(t, UserMessage("Hi")),
 		renderC(t, CharacterCount("n", "200")),
 		renderC(t, TextInputField("Name", "n", "n", "m", "", "", "", "", false, "search")),
 	}
@@ -50,9 +47,7 @@ func TestStarterComponentsUseThemeClasses(t *testing.T) {
 			}
 		}
 	}
-	want(t, outs[0], `oui-summary-card__icon`)
-	want(t, outs[1], `oui-assistant-message__body`)
-	want(t, outs[3], `class="oui-character-count"`)
+	want(t, outs[0], `class="oui-character-count"`)
 }
 
 func withChildren(c templ.Component, text string) templ.Component {

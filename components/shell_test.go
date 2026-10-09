@@ -159,15 +159,6 @@ func TestThemeSwitchOptions(t *testing.T) {
 	want(t, renderC(t, ThemeSwitch(ThemeSwitchOpts{})), `data-storage-key="oui-theme"`)
 }
 
-func TestChatComposerAndCues(t *testing.T) {
-	out := renderC(t, ChatComposer(ChatComposerOpts{ID: "c", Action: "/send", Hint: "tip", Busy: true}))
-	for _, needle := range []string{`ui-composer is-busy`, `action="/send"`, `name="message"`, `data-autogrow`, `ui-composer__send`, `aria-label="Send"`, `aria-busy`, `ui-orb`, `tip`, `for="c-input"`} {
-		want(t, out, needle)
-	}
-	want(t, renderC(t, TypingIndicator("Typing")), `aria-label="Typing"`)
-	want(t, renderC(t, StreamingCaret()), `ui-caret`)
-}
-
 // Both shell scripts must reach hosts that serve assets.Files, and the
 // pre-paint script must stay an external, blocking-friendly file.
 func TestShellRuntimeContract(t *testing.T) {
