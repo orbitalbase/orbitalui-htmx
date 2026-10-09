@@ -74,31 +74,7 @@ func init() {
 		groupStack("SectionNav (sticky in real pages)", c.SectionNav([]c.SectionLink{{Label: "Team", ID: "team"}, {Label: "Billing", ID: "billing"}, {Label: "Security", ID: "security"}}, c.SectionNavOpts{})),
 	)})
 
-	register(section{ID: "chat", Title: "Chat and starters", Note: "Thread, messages, suggestion chips, starter controls.", Body: seq(
-		groupStack("ChatThread",
-			c.ChatThread("g-thread", "Conversation", "g-stack", seq(
-				c.UserMessage("Draft a board resolution for the share transfer."),
-				c.AssistantMessage("Here is a first draft. I used the transfer details from the register; please check the figures before approving."),
-				c.UserMessage("A very long unbroken message: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
-				c.AssistantMessageContent(text(`<p>Sources: <a href="/documents/one">Transfer form</a>, <a href="/documents/two">Articles</a>.</p>`)),
-				c.AssistantMessageContent(seq(text(`<p>Streaming a reply`), c.StreamingCaret(), text(`</p>`))),
-				c.TypingIndicator("Assistant is typing"),
-			)),
-		),
-		groupStack("ChatComposer",
-			cell("empty (send dims)", c.ChatComposer(c.ChatComposerOpts{ID: "g-comp-a", Action: "/send", Placeholder: "Ask the assistant, or describe what you need…", Hint: "The assistant can make mistakes. Check important figures.",
-				Tools: c.Button(c.ButtonVariantQuiet, c.ButtonSizeSM, c.ButtonOpts{Icon: "paperclip", Label: "Attach"})})),
-			cell("with text", c.ChatComposer(c.ChatComposerOpts{ID: "g-comp-b", Action: "/send", Value: "Draft a board resolution for the share transfer."})),
-			cell("busy", c.ChatComposer(c.ChatComposerOpts{ID: "g-comp-c", Action: "/send", Value: "Summarise the register", Busy: true})),
-		),
-		group("SuggestionChip and submit chip",
-			c.SuggestionSubmitChip("Summarise the register", "q", "summary"),
-			c.SuggestionSubmitChip("Who approved this?", "q", "who"),
-			raw(`<button type="button" class="oui-suggestion-chip" disabled>Disabled suggestion</button>`),
-		),
-		groupGrid("SummaryCard", c.SummaryCard("Draft", "spark", "", seq(
-			raw(`<div class="contents"><dt class="oui-summary-card__term">Company</dt><dd class="oui-summary-card__value">Acme Ltd</dd></div>`),
-		))),
+	register(section{ID: "starter-fields", Title: "Starter fields", Note: "The original starter controls: oui-control, field label and character count.", Body: seq(
 		groupGrid("Starter fields",
 			cell("oui-control", raw(`<label class="oui-field-label" for="g-s1">Company name</label><input id="g-s1" class="oui-control" placeholder="Acme Ltd"><div class="oui-character-count">12 / 80</div>`)),
 			cell("disabled", raw(`<label class="oui-field-label" for="g-s2">Locked</label><input id="g-s2" class="oui-control" value="Read only" disabled>`)),

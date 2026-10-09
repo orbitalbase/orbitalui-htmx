@@ -263,12 +263,12 @@ Root: `data-agentchat`, `data-turn-url`, `data-cancel-url`, `data-state-url`, `d
 - Both are embedded in `assets.Files`. `node --test assets/*.test.mjs` runs the helper tests;
   `scripts/browser-check.mjs` drives the `/agentchat` page of `internal/browsercheck` in headless Chrome.
 
-## 4. Deprecation
+## 4. Removed components
 
-`components.ChatThread`, `SummaryCard`, `SummaryField`, `AssistantAvatar`, `AssistantMessage`,
-`AssistantMessageContent`, `UserMessage`, `SuggestionChip`, `SuggestionSubmitChip`, `LoadingSpinner`,
-`ChatComposer` (and `ChatComposerOpts`), `TypingIndicator`, `StreamingCaret` carry `// Deprecated:` notices and
-will be removed in a later cleanup release once no app uses them.
+The earlier `components` chat primitives (`ChatThread`, `SummaryCard`, `SummaryField`, `AssistantAvatar`,
+`AssistantMessage`, `AssistantMessageContent`, `UserMessage`, `SuggestionChip`, `SuggestionSubmitChip`,
+`LoadingSpinner`, `ChatComposer`, `TypingIndicator`, `StreamingCaret`) and their `theme.css` rules were removed in
+favour of `agentchat`.
 
 ## 5. App adoption (summary)
 

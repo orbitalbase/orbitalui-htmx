@@ -9,7 +9,7 @@ The original starter set provides:
 
 - `TextInputField`, `NumberInputControl`, `DropdownField`, `CompactDropdown`,
   `TextAreaControl`, and `CharacterCount`.
-- `HTMXPostForm` (the chat components of this set are deprecated; see Agent chat).
+- `HTMXPostForm`.
 - `Icon` and `SelectOption`.
 
 The reusable core set extracted from `ledger-agent/internal/ui/components`
@@ -39,12 +39,6 @@ thread, composer, starter, card and question-form components, validated
 `assets/agent-chat.js` and styled by `assets/agent-chat.css`. The library owns
 the chat UI and the wire protocol; the app keeps the agent, tools, persistence
 and auth. See `docs/agent-chat.md` for the contract.
-
-The earlier chat components (`ChatThread`, `SummaryCard`, `SummaryField`,
-`AssistantAvatar`, `AssistantMessage`, `AssistantMessageContent`, `UserMessage`,
-`SuggestionChip`, `SuggestionSubmitChip`, `LoadingSpinner`, `ChatComposer`,
-`TypingIndicator`, `StreamingCaret`) are deprecated in favour of `agentchat`
-and will be removed in a later release.
 
 ### App shell, command palette, toasts and theme (v2 shell)
 
