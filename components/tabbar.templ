@@ -20,7 +20,13 @@
 package components
 
 templ TabBar(tabs []Tab, active string, opts TabBarOpts) {
-	<nav class={ tabListClass(opts) } aria-label={ tabAriaLabel(opts) }>
+	<nav
+		class={ tabListClass(opts) }
+		aria-label={ tabAriaLabel(opts) }
+		if opts.ID != "" {
+			id={ opts.ID }
+		}
+	>
 		for _, t := range tabs {
 			<a
 				class={ tabItemClass(t.Value, active) }
@@ -34,6 +40,9 @@ templ TabBar(tabs []Tab, active string, opts TabBarOpts) {
 					hx-select={ opts.HXTarget }
 					hx-swap="outerHTML"
 					hx-push-url="true"
+					if oob := oobSelect(opts.HXTarget, opts.ID, opts.SelectOOB); oob != "" {
+						hx-select-oob={ oob }
+					}
 				}
 			>
 				<span class="tab__label">{ t.Label }</span>

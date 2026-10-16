@@ -23,6 +23,11 @@ type SegmentedOpts struct {
 	BaseHref  string // page path (no query)
 	BaseQuery url.Values
 	HXTarget  string // optional htmx partial re-render target
+	// ID is the group's element id; with HXTarget it makes the group
+	// refreshable out-of-band (see TabBarOpts.ID). SelectOOB lists extra
+	// comma-separated selectors swapped alongside it.
+	ID        string
+	SelectOOB string
 	AriaLabel string // accessible name; default "View"
 	Class     string
 }

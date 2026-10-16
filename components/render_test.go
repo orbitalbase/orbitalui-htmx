@@ -542,6 +542,9 @@ func TestEntityPickerRenders(t *testing.T) {
 	want(t, out, `data-oui-picker="{`)
 	want(t, out, `type="hidden"`)
 	want(t, out, `name="account_id"`)
+	// The restored id is in the markup, not only in Alpine state: htmx load
+	// triggers serialise the form before Alpine binds x-bind:value.
+	want(t, out, `x-ref="hidden" value="5"`)
 	want(t, out, `role="combobox"`)
 	want(t, out, `aria-controls="acct-0-list"`)
 	want(t, out, `role="listbox"`)
@@ -720,5 +723,30 @@ func TestDrawerTabsID(t *testing.T) {
 	}
 	if got := DrawerContentID("agent-log"); got != "agent-log-content" {
 		t.Errorf("DrawerContentID = %q", got)
+	}
+}
+
+func TestTabBarAndSegmentedRefreshOutOfBand(t *testing.T) {
+	tabs := []Tab{{Value: "", Label: "All"}, {Value: "A", Label: "A"}}
+	out := renderC(t, TabBar(tabs, "A", TabBarOpts{
+		Param: "status", BaseHref: "/x", HXTarget: "#rows", ID: "x-tabs", SelectOOB: "#x-seg",
+	}))
+	want(t, out, `id="x-tabs"`)
+	want(t, out, `hx-select-oob="#x-tabs, #x-seg"`)
+
+	seg := renderC(t, SegmentedControl([]SegOption{{Value: "", Label: "All"}, {Value: "in", Label: "In"}}, "", SegmentedOpts{
+		Param: "dir", BaseHref: "/x", HXTarget: "#rows", ID: "x-seg",
+	}))
+	want(t, seg, `id="x-seg"`)
+	want(t, seg, `hx-select-oob="#x-seg"`)
+
+	// No ID or no HXTarget: nothing to refresh, so no OOB attribute and no id.
+	for _, o := range []string{
+		renderC(t, TabBar(tabs, "", TabBarOpts{BaseHref: "/x", HXTarget: "#rows"})),
+		renderC(t, TabBar(tabs, "", TabBarOpts{BaseHref: "/x", ID: "x-tabs"})),
+	} {
+		if strings.Contains(o, "hx-select-oob") {
+			t.Errorf("unexpected hx-select-oob: %s", o)
+		}
 	}
 }
