@@ -18,7 +18,13 @@
 package components
 
 templ SegmentedControl(options []SegOption, active string, opts SegmentedOpts) {
-	<nav class={ segmentedClass(opts) } aria-label={ segAriaLabel(opts) }>
+	<nav
+		class={ segmentedClass(opts) }
+		aria-label={ segAriaLabel(opts) }
+		if opts.ID != "" {
+			id={ opts.ID }
+		}
+	>
 		for _, o := range options {
 			if o.Disabled {
 				<span class="segmented__item segmented__item--disabled" aria-disabled="true">{ o.Label }</span>
@@ -35,6 +41,9 @@ templ SegmentedControl(options []SegOption, active string, opts SegmentedOpts) {
 						hx-select={ opts.HXTarget }
 						hx-swap="outerHTML"
 						hx-push-url="true"
+						if oob := oobSelect(opts.HXTarget, opts.ID, opts.SelectOOB); oob != "" {
+							hx-select-oob={ oob }
+						}
 					}
 				>
 					{ o.Label }

@@ -36,9 +36,17 @@ func pickerCreates(o EntityPickerOpts) bool {
 
 templ EntityPicker(opts EntityPickerOpts) {
 	<div class={ pickerClass(opts) } x-data="ouiPicker" data-oui-picker={ pickerConfigJSON(opts) }>
+		// The server-rendered value matters before Alpine binds it: an htmx
+		// hx-trigger="load" sibling (the bank Book… dialog's flow preview)
+		// serialises the form synchronously while swapped-in content is
+		// processed, a microtask before Alpine initialises this picker, so a
+		// prefilled pick read as empty.
 		<input
 			type="hidden"
 			x-ref="hidden"
+			if opts.Value != "" {
+				value={ opts.Value }
+			}
 			x-bind:value="picked"
 			if opts.Name != "" {
 				name={ opts.Name }
