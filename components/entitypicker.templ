@@ -97,8 +97,7 @@ templ EntityPicker(opts EntityPickerOpts) {
 		<ul
 			class="entity-picker__list"
 			x-ref="list"
-			x-show="open"
-			x-cloak
+			popover="manual"
 			x-on:mousedown.prevent
 			x-bind:id="cfg.listId"
 			role="listbox"

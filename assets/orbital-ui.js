@@ -286,7 +286,14 @@
             query: cfg.valueLabel || "",
             display: cfg.valueLabel || "",
             picked: cfg.value || "",
-            open: false,
+            // The list opens in the browser's top layer (the Popover API), so no ancestor can clip it. Setting
+            // open shows or hides that layer, and places the list against the input, wherever it is set from.
+            _open: false,
+            get open() { return this._open; },
+            set open(value) {
+                this._open = !!value;
+                this.syncList();
+            },
             idx: -1,
             items: [],
             busy: false,
@@ -300,6 +307,18 @@
             loadedOnce: false,
             seq: 0,
             list: function () { return this.$refs.list; },
+            syncList: function () {
+                var listEl = this.list();
+                // A list that is not drawn yet (before Alpine has bound it) has nothing to show or place.
+                if (!listEl || typeof listEl.showPopover !== "function") return;
+                var showing = listEl.matches(":popover-open");
+                if (this._open) {
+                    if (!showing) listEl.showPopover();
+                    this.place();
+                } else if (showing) {
+                    listEl.hidePopover();
+                }
+            },
             optId: function (i) { return this.cfg.listId + "-opt-" + i; },
             // One reader for both row kinds: the template iterates it and the
             // keyboard walks it, so aria-activedescendant never points at a row
@@ -333,22 +352,6 @@
             },
             // A transformed ancestor (the drawer's slide) becomes the fixed
             // containing block, so offset the list by that ancestor's box.
-            fixedOrigin: function () {
-                var el = this.list() && this.list().parentElement;
-                while (el && el !== document.documentElement) {
-                    var cs = window.getComputedStyle(el);
-                    if (cs.transform !== "none" || cs.perspective !== "none" ||
-                        (cs.translate && cs.translate !== "none") || (cs.rotate && cs.rotate !== "none") ||
-                        (cs.scale && cs.scale !== "none") || cs.filter !== "none" ||
-                        (cs.backdropFilter && cs.backdropFilter !== "none") ||
-                        /(paint|layout|strict|content)/.test(cs.contain || "")) {
-                        var r = el.getBoundingClientRect();
-                        return {left: r.left, top: r.top};
-                    }
-                    el = el.parentElement;
-                }
-                return null;
-            },
             place: function () {
                 var input = this.$refs.input;
                 var listEl = this.list();
@@ -359,11 +362,6 @@
                 var up = below < height && rect.top > below;
                 var top = up ? Math.max(8, rect.top - 6 - height) : rect.bottom + 6;
                 var left = rect.left;
-                var origin = this.fixedOrigin();
-                if (origin) {
-                    top -= origin.top;
-                    left -= origin.left;
-                }
                 listEl.style.top = top + "px";
                 listEl.style.left = left + "px";
                 listEl.style.width = rect.width + "px";

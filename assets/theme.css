@@ -1409,8 +1409,14 @@ select.field-control:disabled { cursor: not-allowed; }
 .entity-picker__clear svg { width: 0.875rem; height: 0.875rem; }
 /* The runtime places the list with position: fixed (it escapes clipping
    ancestors such as a drawer's scroll area). */
+/* The list is shown in the top layer (popover), positioned from the input in viewport coordinates, so it is never
+   clipped by a scrolling or transformed ancestor. The popover defaults for inset and border are reset here. */
 .entity-picker__list {
   position: fixed;
+  box-sizing: border-box; /* the width place() sets is the input's, padding included */
+  inset: auto;
+  border: 0;
+  color: var(--oui-text-primary);
   z-index: 80;
   overflow-y: auto;
   overscroll-behavior: contain;
