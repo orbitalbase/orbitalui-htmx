@@ -64,7 +64,7 @@ func TestInitials(t *testing.T) {
 		"james tan":           "JT",
 		"Mary Ann de la Cruz": "MC",
 		"  ":                  "?",
-		"cosec@hotmail.com":   "CC",
+		"cosec@example.com":   "CC",
 		"ünïcode name":        "ÜN",
 	}
 	for in, wantOut := range cases {
