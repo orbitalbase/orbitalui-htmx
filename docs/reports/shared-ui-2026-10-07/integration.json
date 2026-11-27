@@ -8,7 +8,7 @@
       "feature_ref": "feat/shared-ui-foundation",
       "source_feature_head": "27a4835945b45ae414ea65f8b0d1e92f0dad1b5d",
       "target_ref": "development",
-      "original_dirty_checkout_preserved": "/Users/mingerz/orbitalbase/orbitalui-htmx"
+      "original_dirty_checkout_preserved": "<local orbitalui-htmx checkout>"
     },
     "cosec-agent": {
       "base_ref": "development",
