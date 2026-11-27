@@ -808,7 +808,8 @@ async function runVariant(name, path, {full = true, host = false} = {}) {
         await check('Card Padded carries a 20px gutter; Bare has no body wrapper and lets host classes lay out the content', async () => {
             const o = await js(`(() => { const p = document.querySelector("#k-card-padded"), g = document.querySelector("#k-card-bare"); const ps = getComputedStyle(p), gs = getComputedStyle(g), hs = getComputedStyle(p.querySelector(".ui-card__header")); return {pad: ps.paddingLeft + "/" + ps.paddingTop, headPad: hs.paddingLeft, align: hs.alignItems, body: !!p.querySelector(".ui-card__body"), bareBody: !!g.querySelector(".ui-card__body"), bareDisplay: gs.display, barePad: gs.paddingLeft, direct: g.querySelectorAll(":scope > span").length}; })()`);
             expect(o.pad === '20px/20px' && o.headPad === '0px' && o.body, `padded card: ${JSON.stringify(o)}`);
-            expect(o.align === 'flex-start', `default header align-items ${o.align}, want flex-start`);
+            // Recent Chrome serialises computed flex-start as "flow-start"; both mean top alignment.
+            expect(o.align === 'flex-start' || o.align === 'flow-start', `default header align-items ${o.align}, want flex-start`);
             await js('document.querySelector("#k-card-padded").style.setProperty("--oui-card-header-align", "center")');
             const centred = await js('getComputedStyle(document.querySelector("#k-card-padded .ui-card__header")).alignItems');
             expect(centred === 'center', `--oui-card-header-align: center gave ${centred}`);

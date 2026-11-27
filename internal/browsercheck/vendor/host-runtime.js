@@ -53,8 +53,19 @@
         cfg = cfg || {};
         cfg.listId = (cfg.id || "picker") + "-list";
         return {
-            cfg: cfg, query: "", display: "", picked: "", open: false, idx: -1, items: [], busy: false, failed: false,
+            cfg: cfg, query: "", display: "", picked: "", _open: false, idx: -1, items: [], busy: false, failed: false,
             creating: false, createFailed: false,
+            // Like the shared picker: setting open shows or hides the list's top layer (Popover API).
+            // The state lives on _open so Alpine tracks it.
+            get open() { return this._open; },
+            set open(value) { this._open = !!value; this.syncList(); },
+            syncList: function () {
+                var el = this.list();
+                if (!el || typeof el.showPopover !== "function") return;
+                var showing = el.matches(":popover-open");
+                if (this._open) { if (!showing) el.showPopover(); }
+                else if (showing) el.hidePopover();
+            },
             list: function () { return this.$refs.list; },
             optId: function (i) { return this.cfg.listId + "-opt-" + i; },
             options: function () { return this.items; },
